@@ -785,6 +785,7 @@ body :not(.email-landing *):is(
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
+  min-width: 0;
   width: 560px;
   margin-left: auto;
   background: var(--landing-panel);
@@ -925,15 +926,15 @@ body :not(.email-landing *):is(
 .landing-footer-columns {
   position: relative;
   z-index: 1;
-  display: flex;
-  padding: 64px var(--landing-gutter) 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(0, 0.6fr);
+  padding: 64px calc(var(--landing-gutter) + 32px) 0;
 }
 
 .landing-footer-brand {
   display: flex;
   flex-direction: column;
-  flex-shrink: 0;
-  width: 312px;
+  min-width: 0;
   gap: 18px;
 }
 
@@ -960,8 +961,7 @@ body :not(.email-landing *):is(
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  flex-shrink: 0;
-  width: 312px;
+  min-width: 0;
   gap: 16px;
 }
 
@@ -1030,6 +1030,22 @@ body :not(.email-landing *):is(
 
   .landing-adapter-list {
     margin-left: auto;
+  }
+}
+
+@media (max-width: 1120px) {
+  .landing-one-call {
+    flex-direction: column;
+    gap: 36px;
+  }
+
+  .landing-one-call .landing-section-label {
+    width: 100%;
+  }
+
+  .landing-one-call .landing-code-panel {
+    width: 100%;
+    margin-left: 0;
   }
 }
 
@@ -1155,17 +1171,18 @@ body :not(.email-landing *):is(
   }
 
   .landing-footer-columns {
-    flex-wrap: wrap;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 36px 24px;
+    padding-inline: var(--landing-gutter);
     padding-top: 40px;
   }
 
   .landing-footer-brand {
-    width: 100%;
+    grid-column: 1 / -1;
   }
 
   .landing-footer-group {
-    width: calc(50% - 12px);
+    width: auto;
   }
 
   .landing-mountains {
