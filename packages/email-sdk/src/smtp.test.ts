@@ -60,14 +60,15 @@ async function captureSmtpData(message: EmailMessage) {
 
   await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
   const { port } = server.address() as net.AddressInfo;
+  let result: Awaited<ReturnType<ReturnType<typeof smtp>["send"]>>;
 
   try {
-    await smtp({ host: "127.0.0.1", port }).send(message, { attempt: 1 });
+    result = await smtp({ host: "127.0.0.1", port }).send(message, { attempt: 1 });
   } finally {
     server.close();
   }
 
-  return { commands, data: captured };
+  return { commands, data: captured, result: result! };
 }
 
 describe("smtp injection guards", () => {
@@ -155,17 +156,32 @@ describe("smtp injection guards", () => {
     expect(transmitted.commands).toContain("RCPT TO:<TO@EXAMPLE.COM>");
     expect(transmitted.commands).toContain("RCPT TO:<CC@EXAMPLE.COM>");
     expect(transmitted.commands).toContain("RCPT TO:<BCC@EXAMPLE.COM>");
+    expect(transmitted.result.id).toBe("test-id");
     const dataHeaderLines = transmitted.data.split(/\r\n\r\n/)[0]?.split(/\r\n|[\r\n]/) ?? [];
     expect(dataHeaderLines.some((line) => line.toLowerCase().startsWith("bcc:"))).toBe(false);
   });
 
-  test("rejects attachments before connecting", async () => {
+  test("encodes non-ASCII subjects and attachments as MIME parts", async () => {
+    const transmitted = await captureSmtpData({
+      ...baseMessage,
+      subject: "Привет, мир",
+      text: "See the report.",
+      attachments: [{ filename: "report.txt", content: "hello attachment" }],
+    });
+
+    expect(transmitted.data).toMatch(/Subject: =\?UTF-8\?[BQ]\?/i);
+    expect(transmitted.data).toContain("Content-Disposition: attachment;");
+    expect(transmitted.data).toContain("filename=report.txt");
+    expect(transmitted.data).toContain("aGVsbG8gYXR0YWNobWVudA==");
+  });
+
+  test("does not reject attachments during validation", async () => {
     await expect(
       send({
         ...baseMessage,
         attachments: [{ filename: "hello.txt", content: "hello" }],
       }),
-    ).rejects.toBeInstanceOf(EmailValidationError);
+    ).rejects.not.toBeInstanceOf(EmailValidationError);
   });
 
   test("accepts addresses with hyphens and plus signs", async () => {
