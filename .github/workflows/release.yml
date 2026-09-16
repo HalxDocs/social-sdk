@@ -24,6 +24,7 @@ concurrency:
 jobs:
   release:
     name: Version or publish
+    # npm Trusted Publishing requires a GitHub-hosted runner for OIDC.
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

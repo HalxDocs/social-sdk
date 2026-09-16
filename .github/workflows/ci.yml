@@ -1,33 +1,29 @@
-# Depot CI runs deterministic release checks on pull requests and main, then
-# runs non-sending provider authentication probes for affected adapters on main.
-
 name: CI
+
 on:
   workflow_dispatch:
   pull_request:
   push:
-    branches:
-      - main
+    branches: [main]
+
 permissions:
   contents: read
+
 jobs:
   verify:
-    name: Verify
-    runs-on: depot-ubuntu-24.04
+    name: Verify (Bun)
+    runs-on: tenki-standard-medium-4c-8g
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.3.14
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
-      - name: Run release checks
-        run: bun run release:ci
+      - run: bun install --frozen-lockfile
+      - run: bun run release:ci
+
   ai-compatibility:
     name: ${{ matrix.name }}
-    runs-on: depot-ubuntu-24.04
+    runs-on: tenki-standard-medium-4c-8g
     strategy:
       fail-fast: false
       matrix:
@@ -39,63 +35,70 @@ jobs:
             node: 22
             case: chat-ai7
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: 1.3.14
-      - name: Setup Node
-        uses: actions/setup-node@v6
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node }}
           package-manager-cache: false
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
-      - name: Build Email SDK
-        run: bunx turbo run build --filter=@opencoredev/email-sdk
-      - name: Run compatibility probe
-        run: bash scripts/check-ai-compatibility.sh ${{ matrix.case }}
-  commonjs-compatibility:
-    name: CommonJS on Node ${{ matrix.node }}
-    runs-on: depot-ubuntu-24.04
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
+      - run: bun install --frozen-lockfile
+      - run: bunx turbo run build --filter=@opencoredev/email-sdk
+      - run: bash scripts/check-ai-compatibility.sh ${{ matrix.case }}
+
+  node:
+    name: Node ${{ matrix.node }} public-package coverage
+    runs-on: tenki-standard-medium-4c-8g
     strategy:
       fail-fast: false
       matrix:
-        node: ["20.19.0", "22.12.0"]
+        node: [20, 22, 24]
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: 1.3.14
-      - name: Setup Node
-        uses: actions/setup-node@v6
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node }}
           package-manager-cache: false
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
-      - name: Build public packages
-        run: bunx turbo run build --filter=@opencoredev/email-sdk --filter=@opencoredev/convex-email
-      - name: Check installed runtime and typed consumers
-        run: bun run pack:check
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
+      - run: bun install --frozen-lockfile
+      - run: bunx turbo run build --filter=@opencoredev/email-sdk
+      - run: node scripts/check-node-compatibility.mjs
+
+  commonjs:
+    name: CommonJS on Node ${{ matrix.node }}
+    runs-on: tenki-standard-small-2c-4g
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [20, 22, 24]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ matrix.node }}
+          package-manager-cache: false
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.3.14
+      - run: bun install --frozen-lockfile
+      - run: bunx turbo run build --filter=@opencoredev/email-sdk
+      - run: node scripts/check-node-compatibility.mjs --require
+
   live-adapters:
     name: Live adapter verification
     if: github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
-    runs-on: depot-ubuntu-24.04
+    runs-on: tenki-standard-medium-4c-8g
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v2
+      - uses: oven-sh/setup-bun@v2
         with:
           bun-version: 1.3.14
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
+      - run: bun install --frozen-lockfile
       - name: Select changed live adapters
         id: plan
         env:
