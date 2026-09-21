@@ -1,13 +1,15 @@
-/* Social SDK docs theme — warm ink-on-paper palette and marker-orange
-   accent from the landing page, set in Geist. */
+/* Social SDK docs theme — monochrome ink-on-paper palette from the
+   landing page, set in Geist. Ink accents on paper in light mode,
+   cream accents on ink in dark mode. */
 
 :root {
   --blume-background: #ffffff;
   --blume-foreground: #1c1a17;
-  --blume-muted: #f7f5f2;
+  --blume-muted: #f1ede7;
   --blume-muted-foreground: #57534c;
-  --blume-border: #e7e3dc;
-  --blume-code-background: #faf9f7;
+  --blume-border: #ddd7cd;
+  --blume-code-background: #f4f1ec;
+  --blume-accent-foreground: #ffffff;
 }
 
 /* Dark mode is the landing page inverted: its ink (#1c1a17) becomes the
