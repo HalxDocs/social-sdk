@@ -1,27 +1,33 @@
 ---
 title: Hosted platforms
-description: Compare Zernio and Post for Me as hosted execution routes, including what each supports, how pricing works, and how they differ from direct integrations.
+description: Compare Zernio and Post for Me as hosted execution routes, including supported operations, platform coverage, webhooks, and pricing.
 ---
 
 A hosted platform is an optional managed backend: instead of calling a social platform's API with credentials you control, the SDK calls Zernio or Post for Me using your own provider account. The provider owns the platform apps, account connections, and upstream API relationships; your application keeps tenant authorization and outcome handling.
 
-Direct integrations remain the credential-free-of-middlemen route: your platform app, your tokens, your review processes, no provider charges. Each [platform page](/platforms) documents that route. Nothing routes through a maintainer-operated service in either mode, and an application can use one provider, both, or neither.
+Direct integrations remain the other route: your platform app, your tokens, your review processes, no provider charges. Each [platform page](/platforms) documents that route. Nothing routes through a maintainer-operated service in either mode, and an application can use one provider, both, or neither.
 
-## Zernio
+## Compare providers
 
-[Zernio](https://zernio.link/leo) connects accounts across X, Threads, Bluesky, YouTube, TikTok, Instagram, LinkedIn, and Facebook through one API. The Social SDK adapter supports account listing, publishing, scheduling, post reads and status, media upload, analytics, verified HMAC webhooks, comments for X, Threads, Bluesky, YouTube, Instagram, LinkedIn, and Facebook, and messaging for X, Bluesky, Instagram, and Facebook.
+|                       | [Zernio](https://zernio.link/leo)                                   | [Post for Me](https://www.postforme.dev)                            |
+| --------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| Platforms             | X, Threads, Bluesky, YouTube, TikTok, Instagram, LinkedIn, Facebook | X, Threads, Bluesky, YouTube, TikTok, Instagram, LinkedIn, Facebook |
+| Publish               | Text, images, video, carousels                                      | Text, images, video, carousels                                      |
+| Scheduling            | Schedule and cancel                                                 | Schedule and cancel                                                 |
+| Post reads and status | All platforms                                                       | All platforms                                                       |
+| Media upload          | All platforms                                                       | All platforms                                                       |
+| Post analytics        | All platforms                                                       | Feed-based, all platforms                                           |
+| Account analytics     | All platforms                                                       | —                                                                   |
+| Comments              | X, Threads, Bluesky, YouTube, Instagram, LinkedIn, Facebook         | —                                                                   |
+| Messages              | X, Bluesky, Instagram, Facebook                                     | —                                                                   |
+| Native post removal   | X, Threads, Bluesky, YouTube, LinkedIn, Facebook                    | —                                                                   |
+| Webhook verification  | `X-Zernio-Signature` HMAC over raw bytes                            | `Post-For-Me-Webhook-Secret` shared secret                          |
+| Pricing               | [zernio.com](https://zernio.link/leo)                               | [postforme.dev](https://www.postforme.dev)                          |
+| Setup guide           | [Zernio setup](/backends/zernio)                                    | [Post for Me setup](/backends/post-for-me)                          |
 
-You pay Zernio directly: create an account and choose a plan at [zernio.com](https://zernio.link/leo), where current pricing is listed. Platform permissions, add-ons such as follower snapshots, and connected-account terms belong to your Zernio plan.
+A dash means the adapter does not expose that operation for the provider's documented API. Rows describe the normalized surface implemented in Social SDK, generated from the same manifests as the [capability matrix](/reference/capabilities); they do not certify a provider account, plan tier, platform permission, or a live request.
 
-[Set up the Zernio backend →](/backends/zernio)
-
-## Post for Me
-
-[Post for Me](https://www.postforme.dev) provides project-scoped connections and publishing through its own API. The Social SDK adapter supports account listing, publishing, scheduling, post reads and status, media upload, feed-based post analytics, and shared-secret webhooks. Comments and normalized messaging are not part of its documented API surface in this adapter.
-
-You pay Post for Me directly: plans and current pricing are listed at [postforme.dev](https://www.postforme.dev). Its documented API has no account-level metrics endpoint in this slice.
-
-[Set up the Post for Me backend →](/backends/post-for-me)
+You pay the selected provider directly and remain responsible for its plan, platform permissions, add-ons, and connected-account terms.
 
 ## What every hosted route shares
 
@@ -33,5 +39,3 @@ You pay Post for Me directly: plans and current pricing are listed at [postforme
 :::warning
 Moving application code from one backend to another does not move connected accounts, scheduled jobs, publication history, analytics history, or provider-native identifiers. Plan a provider migration as new authorization and data-mapping work.
 :::
-
-Support tables are generated from adapter manifests once implementation evidence exists. The [capability matrix](/reference/capabilities) distinguishes code completion, contract testing, live verification, platform approval, and released support instead of reducing those states to one checkmark.

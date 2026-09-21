@@ -83,8 +83,12 @@ export default defineConfig({
               root: "/integrations/tanstack-start",
               icon: "/integrations/tanstack.svg",
             },
-            { label: "Trigger.dev", root: "/integrations/trigger-dev", icon: "zap" },
-            { label: "Inngest", root: "/integrations/inngest", icon: "workflow" },
+            {
+              label: "Trigger.dev",
+              root: "/integrations/trigger-dev",
+              icon: "/integrations/trigger-dev.png",
+            },
+            { label: "Inngest", root: "/integrations/inngest", icon: "/integrations/inngest.svg" },
           ],
         },
         {
