@@ -5,6 +5,20 @@ description: Publish as an explicit LinkedIn author while preserving native URNs
 
 The direct LinkedIn adapter supports text and one registered image, native post reads, comment reads/replies, and returned social-action counts. Configure a member or organization author URN and an explicit monthly API version. Existing authorization is server-owned; this adapter does not grant organization roles or perform account selection for you.
 
+## Setup
+
+<Steps>
+  <Step title="Check product approvals and scopes">
+    Member publishing needs `w_member_social`; organization publishing needs `w_organization_social` and an eligible page role. Community Management comments and social actions use separate feed permissions. A token that publishes successfully may still lack read permission.
+  </Step>
+  <Step title="Pick the author URN and API version">
+    Configure a member or organization author URN and an explicit monthly API version such as `202609`.
+  </Step>
+  <Step title="Configure the adapter">
+    Construct the backend and select the author through a connected-account reference.
+  </Step>
+</Steps>
+
 ```ts
 import { createSocial, connectedAccountRef } from "@opencoredev/social-sdk";
 import { linkedin } from "@opencoredev/social-sdk/linkedin";
@@ -18,27 +32,98 @@ const social = createSocial({
     apiVersion: "202609",
   }),
 });
+
 const account = connectedAccountRef({
   backend: "default",
   platform: "linkedin",
   accountId: "urn:li:organization:123",
 });
-const prepared = social.posts.prepare({
+```
+
+## Examples
+
+### Publish a text post
+
+Preparing performs no network requests. Publish only after your application has authorized the selected account and obtained the intended content.
+
+```ts
+const result = await social.posts.publish({
   targets: [{ account }],
   content: { text: "A short update" },
 });
 ```
 
-Preparing performs no network requests. Publish only after your application has authorized the selected account and obtained the intended content. This slice uses public visibility. Private visibility, multi-image posts, video and structured article cards fail local preparation instead of being silently changed.
+### Upload an image, then publish it
 
-Upload an image through `social.media.upload`, store its account-bound media reference, and use that reference in a publish request. The adapter checks the upstream owner and requires `AVAILABLE` before creating the post. A still-processing image needs an explicit later check through the native image-status helper. It does not start polling in the background.
+Upload through `social.media.upload`, store the account-bound media reference, and use that reference in a publish request. The adapter checks the upstream owner and requires `AVAILABLE` before creating the post. A still-processing image needs an explicit later check through the native image-status helper; the adapter does not poll in the background.
 
-Post creation returns its native URN in the `x-restli-id` header. Missing native identity produces an unknown outcome. Preserve the result and reconcile before retrying. Replies require the complete `commentUrn` returned by comment reads, including its activity and comment identifiers.
+```ts
+const mediaRef = await social.media.upload(
+  {
+    kind: "image",
+    source: { kind: "blob", blob, fingerprint: contentHash },
+    mimeType: "image/png",
+    byteSize: blob.size,
+  },
+  account,
+);
 
-Member publishing needs `w_member_social`; organization publishing needs `w_organization_social` and an eligible page role. Member read access is restricted. Community Management comments and social actions use separate feed permissions. A token that publishes successfully may still lack read permission. Check the current LinkedIn product approvals and role rules before enabling these operations.
+const result = await social.posts.publish({
+  targets: [{ account }],
+  content: {
+    text: "Chart attached",
+    media: [{ kind: "image", source: { kind: "media-ref", ref: mediaRef } }],
+  },
+});
+```
+
+### Handle the returned URN
+
+Post creation returns its native URN in the `x-restli-id` header. Missing native identity produces an unknown outcome. Preserve the result and reconcile before retrying.
+
+```ts
+const outcome = result.outcomes[0];
+if (outcome?.state === "unknown" && outcome.delivery) {
+  const delivery = await social.posts.getDelivery(outcome.delivery);
+  console.log(delivery.state);
+}
+```
+
+### Read comments and reply
+
+Replies require the complete `commentUrn` returned by comment reads, including its activity and comment identifiers.
+
+```ts
+// postRef is the platform-post reference returned by a publish outcome or post read.
+const comments = await social.comments.list(postRef);
+const commentId = comments.items[0]?.id;
+if (typeof commentId !== "string") throw new Error("No comment selected");
+
+await social.comments.reply(
+  { ...postRef, kind: "comment", commentId },
+  { text: "Appreciate the feedback." },
+);
+```
+
+### Read organization metrics
 
 Organization account metrics read the total follower count from the versioned `networkSizes` endpoint. They require `rw_organization_admin` and an administrator role for the configured organization. Member-profile account metrics are unavailable in this slice.
 
-Metrics contain only counts returned by LinkedIn. Missing counts remain absent, and request time is recorded as `fetchedAt`, not `measuredAt`. Messaging is unsupported. Current evidence is offline contract tests; no account, app approval or live post has been verified.
+```ts
+const metrics = await social.analytics.getAccountMetrics(account);
+for (const metric of metrics) console.log(metric.name, metric.value);
+```
+
+Metrics contain only counts returned by LinkedIn. Missing counts remain absent, and request time is recorded as `fetchedAt`, not `measuredAt`.
+
+## Native operations
+
+The native module covers multi-image posts, video and document uploads, polls, reactions, reshares, updates, deletion, and organization analytics. Articles remain approval dependent.
+
+## Limits and requirements
+
+- Member read access is restricted; check the current LinkedIn product approvals and role rules before enabling read operations.
+- Messaging is unsupported.
+- Current evidence is offline contract tests; no account, app approval, or live post has been verified.
 
 Sources: [Organization follower count](https://learn.microsoft.com/en-us/linkedin/marketing/community-management/organizations/organization-lookup-api#retrieve-organization-follower-count), [Posts API](https://learn.microsoft.com/en-us/linkedin/marketing/community-management/shares/posts-api), [Images API](https://learn.microsoft.com/en-us/linkedin/marketing/community-management/shares/images-api), [Comments API](https://learn.microsoft.com/en-us/linkedin/marketing/community-management/shares/comments-api).

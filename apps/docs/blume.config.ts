@@ -14,21 +14,17 @@ export default defineConfig({
   redirects: [
     { from: "/analytics", to: "/reads#post-metrics", status: 301 },
     { from: "/messaging", to: "/comments#messages", status: 301 },
+    { from: "/overview", to: "/", status: 301 },
   ],
   content: {
     root: "docs",
     pages: "pages",
   },
   navigation: {
-    tabs: [
-      { label: "Overview", path: "/overview", icon: "home" },
-      { label: "Platforms", path: "/platforms", icon: "globe-2" },
-      { label: "Reference", path: "/reference", icon: "book-open" },
-    ],
     sidebar: {
       display: "group",
       items: [
-        { label: "Overview", root: "/overview", icon: "home" },
+        { label: "Overview", root: "/", icon: "home" },
         {
           label: "Get started",
           icon: "rocket",
@@ -36,17 +32,21 @@ export default defineConfig({
           items: [
             { label: "Install", root: "/getting-started/installation" },
             { label: "Quickstart", root: "/getting-started/mock-quickstart" },
+            {
+              label: "Choose an integration",
+              root: "/getting-started/choose-an-integration",
+            },
           ],
         },
-        { label: "Platforms", root: "/platforms", icon: "globe-2" },
         {
-          label: "Direct platforms",
-          icon: "plug",
-          collapsed: true,
+          label: "Platforms",
+          icon: "globe-2",
+          collapsed: false,
           items: [
-            { label: "Bluesky", root: "/platforms/bluesky", icon: "/integrations/bluesky.svg" },
+            { label: "Compare platforms", root: "/platforms", icon: "table-2" },
             { label: "X", root: "/platforms/x", icon: "/integrations/x.svg" },
             { label: "Threads", root: "/platforms/threads", icon: "/integrations/threads.svg" },
+            { label: "Bluesky", root: "/platforms/bluesky", icon: "/integrations/bluesky.svg" },
             { label: "YouTube", root: "/platforms/youtube", icon: "/integrations/youtube.svg" },
             { label: "TikTok", root: "/platforms/tiktok", icon: "/integrations/tiktok.svg" },
             {
@@ -62,7 +62,7 @@ export default defineConfig({
           icon: "server",
           items: [
             { label: "Choose a backend", root: "/backends", icon: "route" },
-            { label: "Direct", root: "/backends/direct", icon: "route" },
+            { label: "Direct", root: "/backends/direct", icon: "plug" },
             { label: "Managed setup", root: "/backends/managed", icon: "settings-2" },
             { label: "Zernio", root: "/backends/zernio", icon: "/integrations/zernio.svg" },
             {
@@ -98,7 +98,7 @@ export default defineConfig({
         },
         {
           label: "Reference",
-          icon: "book-open",
+          icon: "library",
           items: [
             { label: "API overview", root: "/reference" },
             "/reference/capabilities",
@@ -116,9 +116,14 @@ export default defineConfig({
     },
   },
   theme: {
-    accent: "teal",
+    accent: { light: "#e8542f", dark: "#f2683f" },
     mode: "system",
     radius: "md",
+    fonts: {
+      display: { name: "Fraunces", weights: ["100..900"] },
+      body: { name: "Fraunces", weights: ["100..900"] },
+      mono: "ibm-plex-mono",
+    },
   },
   ai: {
     llmsTxt: true,

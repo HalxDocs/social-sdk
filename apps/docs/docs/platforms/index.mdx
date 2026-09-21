@@ -5,16 +5,42 @@ description: Compare the social operations, content formats, permissions, and ev
 
 Use this page to choose a platform adapter before you read its setup guide. The matrix describes the normalized surface currently implemented in Social SDK; it does not certify credentials, app review, account eligibility, or a successful live request.
 
-| Platform                          | Publish                        | Read             | Comments    | Analytics                 |
-| --------------------------------- | ------------------------------ | ---------------- | ----------- | ------------------------- |
-| [Bluesky](/platforms/bluesky)     | Text, images                   | Posts, feeds     | Read, write | Post and account          |
-| [X](/platforms/x)                 | Text, images                   | Posts, feeds     | Write       | Post metrics              |
-| [Threads](/platforms/threads)     | Text, images, video, carousels | Posts, feeds     | —           | Post and lifetime metrics |
-| [YouTube](/platforms/youtube)     | Video                          | Videos, channels | Read, write | Post and account          |
-| [TikTok](/platforms/tiktok)       | Images, video, carousels       | Posts, feeds     | —           | Account                   |
-| [Instagram](/platforms/instagram) | Images, video, carousels       | Posts, feeds     | Read, write | Post and account          |
-| [LinkedIn](/platforms/linkedin)   | Text, images                   | Posts, feeds     | Read, write | Post and account          |
+| Platform                                                                | Publish                        | Read             | Comments    | Analytics                 |
+| ----------------------------------------------------------------------- | ------------------------------ | ---------------- | ----------- | ------------------------- |
+| [![](/integrations/x.svg) X](/platforms/x)                               | Text, images                   | Posts, feeds     | Write       | Post metrics              |
+| [![](/integrations/threads.svg) Threads](/platforms/threads)             | Text, images, video, carousels | Posts, feeds     | —           | Post and lifetime metrics |
+| [![](/integrations/bluesky.svg) Bluesky](/platforms/bluesky)             | Text, images                   | Posts, feeds     | Read, write | Post and account          |
+| [![](/integrations/youtube.svg) YouTube](/platforms/youtube)             | Video                          | Videos, channels | Read, write | Post and account          |
+| [![](/integrations/tiktok.svg) TikTok](/platforms/tiktok)                | Images, video, carousels       | Posts, feeds     | —           | Account                   |
+| [![](/integrations/instagram.svg) Instagram](/platforms/instagram)       | Images, video, carousels       | Posts, feeds     | Read, write | Post and account          |
+| [![](/integrations/linkedin.svg) LinkedIn](/platforms/linkedin)          | Text, images                   | Posts, feeds     | Read, write | Post and account          |
 
 A dash means the normalized direct adapter does not expose that operation. Content limits, permissions, account rules, upload behavior, API versions, and processing states remain platform-specific; open the platform guide for those details. Managed backends may expose additional operations for the same platform through their own route.
+
+## Platform guides
+
+<CardGroup cols={2}>
+  <Card title="X" href="/platforms/x">
+    Publish and read posts with bearer-token authorization, typed reactions, and uncertain-write reconciliation.
+  </Card>
+  <Card title="Threads" href="/platforms/threads">
+    Publish containers, carousels, and media with explicit processing outcomes.
+  </Card>
+  <Card title="Bluesky" href="/platforms/bluesky">
+    Publish AT Protocol records with OAuth sessions, rich-text facets, and native thread references.
+  </Card>
+  <Card title="YouTube" href="/platforms/youtube">
+    Upload videos with explicit audience, visibility, and resumable-session handling.
+  </Card>
+  <Card title="TikTok" href="/platforms/tiktok">
+    Publish creator-approved media with consent, privacy settings, and processing checks.
+  </Card>
+  <Card title="Instagram" href="/platforms/instagram">
+    Publish professional-account media with container processing, comments, and metrics.
+  </Card>
+  <Card title="LinkedIn" href="/platforms/linkedin">
+    Publish as a member or organization with native URNs, image processing states, and metrics.
+  </Card>
+</CardGroup>
 
 For the full operation declarations, formats, backend routes, and scope guidance, see the [capability matrix](/reference/capabilities). For the difference between direct adapters and managed backends, see [Choose an integration](/getting-started/choose-an-integration).

@@ -1,3 +1,39 @@
+/* Social SDK docs theme — matches the hand-drawn landing page:
+   Fraunces type, warm ink on paper, marker-orange accent. */
+
+:root {
+  --blume-background: #ffffff;
+  --blume-foreground: #1c1a17;
+  --blume-muted: #f7f5f2;
+  --blume-muted-foreground: #57534c;
+  --blume-border: #e7e3dc;
+  --blume-code-background: #faf9f7;
+}
+
+:root[data-theme="dark"] {
+  --blume-background: #171512;
+  --blume-foreground: #ece8e1;
+  --blume-muted: #211e1a;
+  --blume-muted-foreground: #a8a299;
+  --blume-border: #322e28;
+  --blume-code-background: #1d1a16;
+}
+
+/* Fraunces reads best with the landing page's gentler tracking and optical sizing. */
+body {
+  font-optical-sizing: auto;
+  font-weight: 400;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  letter-spacing: -0.02em !important;
+  font-weight: 500;
+}
+
+h1 {
+  font-weight: 450;
+}
+
 /* Provider marks use real artwork, with dark-mode inversion only for brands
    whose official mark is black. */
 .blume-nav-link img[src^="/integrations/"] {
@@ -9,5 +45,21 @@
 :root[data-theme="dark"] .blume-nav-link img[src$="/x.svg"],
 :root[data-theme="dark"] .blume-nav-link img[src$="/threads.svg"],
 :root[data-theme="dark"] .blume-nav-link img[src$="/tiktok.svg"] {
+  filter: invert(1);
+}
+
+/* Inline platform marks inside article content (tables, headings). */
+article img[src^="/integrations/"] {
+  display: inline-block;
+  width: 1.05em;
+  height: 1.05em;
+  object-fit: contain;
+  vertical-align: -0.15em;
+  margin: 0 0.35em 0 0;
+}
+
+:root[data-theme="dark"] article img[src$="/x.svg"],
+:root[data-theme="dark"] article img[src$="/threads.svg"],
+:root[data-theme="dark"] article img[src$="/tiktok.svg"] {
   filter: invert(1);
 }

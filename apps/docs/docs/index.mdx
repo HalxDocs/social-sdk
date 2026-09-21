@@ -3,43 +3,74 @@ title: Overview
 description: Add typed social platform features to a TypeScript application through direct integrations or optional managed backends.
 ---
 
-Social SDK gives an application one typed model for connected accounts, content, media, publications, and destination outcomes. The selected account determines the integration route. A failed request never moves to a different platform or account automatically.
-
-Choose a direct integration when you want to call a platform with credentials you control. Choose a managed backend when its account connection and operation coverage fit your application. Both routes keep credentials on the server and require the application to authorize every selected account for the current tenant.
-
-Start with [authentication and tenant authorization](/authentication), review [operations and diagnostics](/operations), and see [contributing an adapter](/contributing) when extending the SDK.
-
-Use the [publishing guide](/publishing) and [public reference](/reference) when implementing a production operation.
-
-:::note
-Support is specific to a backend, platform, operation, content format, runtime, and evidence level. A provider's upstream feature is not treated as implemented or live-verified until Social SDK has matching code and evidence.
-:::
+Social SDK gives an application one typed model for connected accounts, content, media, publications, and destination outcomes. The selected account determines the integration route, and a failed request never moves to a different platform or account automatically.
 
 ## Start here
 
 <CardGroup cols={2}>
   <Card title="Install Social SDK" href="/getting-started/installation" icon="package">
-    Add the package and choose an integration route.
+    Add the package and choose direct platform access or a managed backend.
   </Card>
-  <Card
-    title="Run the mock quickstart"
-    href="/getting-started/mock-quickstart"
-    icon="flask-conical"
-  >
-    Exercise the integration without credentials or network requests.
+  <Card title="Run the quickstart" href="/getting-started/mock-quickstart" icon="rocket">
+    Publish through a deterministic mock integration before adding credentials.
   </Card>
   <Card title="Understand the model" href="/concepts/integration-model" icon="waypoints">
-    Separate platforms, backends, formats, and capabilities.
+    See how platforms, backends, content formats, and capabilities fit together.
   </Card>
-  <Card title="Choose a backend" href="/backends" icon="route">
-    Compare direct integrations with optional managed providers.
+  <Card title="Compare platforms" href="/platforms" icon="table-2">
+    Check the support matrix before choosing an adapter or operation.
   </Card>
 </CardGroup>
 
-## What the SDK covers
+## Choose an integration route
 
-The public operation families are accounts, media and publishing, content reads, analytics, comments, supported messages, webhooks, and capability discovery. Individual integrations expose only the operations they implement. Platform-specific and provider-specific access remains available through typed extension surfaces when the shared model cannot represent a richer feature faithfully.
+Choose a direct integration when you want to call a platform with credentials you control. Choose a managed backend when its account connection and operation coverage fit your application. Both routes keep credentials on the server and require the application to authorize every selected account for the current tenant.
+
+<CardGroup cols={2}>
+  <Card title="Direct platforms" href="/platforms" icon="plug">
+    Keep credentials and authorization in your application while calling a supported platform directly.
+  </Card>
+  <Card title="Managed backends" href="/backends" icon="cloud">
+    Delegate account connections and supported operations to an optional backend provider.
+  </Card>
+</CardGroup>
+
+## Explore capabilities
+
+<CardGroup cols={2}>
+  <Card title="Publish content" href="/publishing" icon="send">
+    Create content, attach media, publish to selected destinations, and inspect each outcome.
+  </Card>
+  <Card title="Read and measure" href="/reads" icon="chart-no-axes-combined">
+    Read platform content and request analytics only where the integration exposes them.
+  </Card>
+  <Card title="Comments and messages" href="/comments" icon="message-circle">
+    Work with supported comments, replies, and messaging operations.
+  </Card>
+  <Card title="Events and webhooks" href="/events" icon="webhook">
+    Verify inbound events and process them without hiding uncertain delivery outcomes.
+  </Card>
+</CardGroup>
+
+## Reference
+
+<CardGroup cols={2}>
+  <Card title="API overview" href="/reference" icon="book-open">
+    Browse the public contracts and evidence for the SDK's operation model.
+  </Card>
+  <Card title="Capabilities" href="/reference/capabilities" icon="list-checks">
+    Inspect the capability vocabulary used by adapters and support matrices.
+  </Card>
+  <Card title="CLI" href="/reference/cli" icon="terminal">
+    Find the command reference for project checks and local workflows.
+  </Card>
+  <Card title="Authentication" href="/authentication" icon="lock-keyhole">
+    Keep application authentication separate from social-account authorization.
+  </Card>
+</CardGroup>
+
+:::note
+Support is specific to a backend, platform, operation, content format, runtime, and evidence level. A provider's upstream feature is not treated as implemented or live-verified until Social SDK has matching code and evidence.
+:::
 
 The SDK does not provide a hosted social service, database, queue, credential proxy, scheduler worker, or billing layer. Applications supply platform or managed-provider credentials and choose the storage and job infrastructure they need.
-
-Read the [integration model](/concepts/integration-model), [architecture diagrams](/concepts/architecture), and [agent integration checklist](/agents/integration-checklist) before selecting an adapter.

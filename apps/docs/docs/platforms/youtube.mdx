@@ -3,7 +3,21 @@ title: YouTube
 description: Upload a video to a selected YouTube channel with explicit audience, visibility, media processing, and reconciliation fields.
 ---
 
-The direct YouTube adapter accepts an existing OAuth access token and channel ID. The server package also provides `youtubeOAuth` for Google authorization-code connections and channel discovery; use `ConnectionManager` to keep the attempt server-side, present discovered channels for selection, and persist credentials through an encrypted `credentialSink`. Request `https://www.googleapis.com/auth/youtube.upload` when the connected workflow uploads videos. Refresh with `refreshOAuthToken("youtube", ...)` and persist any rotated refresh token.
+The direct YouTube adapter accepts an existing OAuth access token and channel ID. The server package also provides `youtubeOAuth` for Google authorization-code connections and channel discovery; use `ConnectionManager` to keep the attempt server-side, present discovered channels for selection, and persist credentials through an encrypted `credentialSink`.
+
+## Setup
+
+<Steps>
+  <Step title="Configure Google OAuth">
+    Request `https://www.googleapis.com/auth/youtube.upload` when the connected workflow uploads videos. Refresh with `refreshOAuthToken("youtube", ...)` and persist any rotated refresh token.
+  </Step>
+  <Step title="Store credentials server-side">
+    Set `YOUTUBE_ACCESS_TOKEN` and `YOUTUBE_CHANNEL_ID` in server configuration. Upload bytes and resumable session URIs are secrets too.
+  </Step>
+  <Step title="Configure the adapter">
+    Construct the backend and select the channel through a connected-account reference.
+  </Step>
+</Steps>
 
 ```ts
 import { createSocial, connectedAccountRef } from "@opencoredev/social-sdk";
@@ -17,27 +31,66 @@ const social = createSocial({
     },
   }),
 });
+
 const account = connectedAccountRef({
   backend: "default",
   platform: "youtube",
   accountId: process.env.YOUTUBE_CHANNEL_ID!,
 });
+```
+
+## Examples
+
+### Upload a video
+
+Preparation requires exactly one video, an actual `video/*` MIME type, a title from 1–100 characters, explicit `visibility`, and an explicit `madeForKids` value.
+
+```ts
 const media = {
   kind: "video" as const,
-  source: { kind: "blob" as const, blob },
+  source: { kind: "blob" as const, blob, fingerprint: contentHash },
   mimeType: "video/mp4",
   byteSize: blob.size,
 };
+
 const result = await social.posts.publish({
   targets: [
-    { account, options: { title: "A release", visibility: "private", madeForKids: false } },
+    {
+      account,
+      options: { title: "A release", visibility: "private", madeForKids: false },
+    },
   ],
   content: { text: "Description", media: [media] },
 });
 ```
 
-Preparation requires exactly one video, an actual `video/*` MIME type, a title from 1–100 characters, explicit `visibility`, and an explicit `madeForKids` value. Resumable upload sessions can be persisted with `saveUploadSession`; upload bytes and session URIs are secrets. A non-complete upload is `unknown` and must be resumed or reconciled explicitly.
+### Track upload and processing separately
 
-YouTube separates upload completion from processing. `uploaded` maps to `processing`, `processed` maps to `published`, and `failed`/`rejected` maps to a confirmed media failure. The returned watch URL is produced only with a verified video ID. Reads, lifetime statistics, and comment listing/replies are implemented; scheduling and publish replies are not.
+YouTube separates upload completion from processing. `uploaded` maps to `processing`, `processed` maps to `published`, and `failed`/`rejected` maps to a confirmed media failure. The returned watch URL is produced only with a verified video ID.
 
-Unverified Google projects may be restricted to private uploads, and quota, channel eligibility, scopes and API audit status remain upstream conditions. The adapter does not turn a private upload into public visibility. Current evidence is contract coverage, not a live channel verification. See YouTube's [videos.insert](https://developers.google.com/youtube/v3/docs/videos/insert) documentation for current audit and quota rules.
+```ts
+const outcome = result.outcomes[0];
+if (outcome?.state === "processing" && outcome.delivery) {
+  const delivery = await social.posts.getDelivery(outcome.delivery);
+  console.log(delivery.state);
+}
+```
+
+### Resume an interrupted upload
+
+Resumable upload sessions can be persisted with `saveUploadSession`. A non-complete upload is `unknown` and must be resumed or reconciled explicitly; the adapter does not resume in the background.
+
+## Native operations
+
+The native module covers publish scheduling, thumbnails, captions, playlists, video update/delete, Analytics API reports, and live-broadcast calls. Live broadcasts remain approval and eligibility dependent.
+
+## Limits and requirements
+
+:::warning
+Unverified Google projects may be restricted to private uploads. The adapter does not turn a private upload into public visibility.
+:::
+
+- Quota, channel eligibility, scopes, and API audit status remain upstream conditions.
+- Current evidence is contract coverage, not a live channel verification.
+
+See YouTube's [videos.insert](https://developers.google.com/youtube/v3/docs/videos/insert) documentation for current audit and quota rules.

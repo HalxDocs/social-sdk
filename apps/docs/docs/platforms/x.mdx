@@ -3,7 +3,21 @@ title: X
 description: Publish and read X posts with existing user authorization, explicit media limits, native references, and uncertain-write reconciliation.
 ---
 
-The direct X adapter uses an existing bearer token and user ID. For a multi-user connection flow, use the server entrypoint’s `xOAuth` with `ConnectionManager`; the adapter itself accepts the resulting credentials. Authorization does not transfer between backend instances. Configure the token on your server and treat the user ID as the account identity.
+The direct X adapter uses an existing bearer token and user ID. For a multi-user connection flow, use the server entrypoint's `xOAuth` with `ConnectionManager`; the adapter itself accepts the resulting credentials. Authorization does not transfer between backend instances. Configure the token on your server and treat the user ID as the account identity.
+
+## Setup
+
+<Steps>
+  <Step title="Get API access">
+    Create an app in the X developer portal and confirm your API plan covers the operations you need. Request the `tweet.read`, `tweet.write`, `users.read`, `offline.access`, and `media.write` scopes for the implemented operations.
+  </Step>
+  <Step title="Store credentials server-side">
+    Set `X_USER_ID` and `X_ACCESS_TOKEN` in server configuration. Never ship them to a browser bundle.
+  </Step>
+  <Step title="Configure the adapter">
+    Construct the backend with those credentials and select the account through a connected-account reference.
+  </Step>
+</Steps>
 
 ```ts
 import { createSocial, connectedAccountRef } from "@opencoredev/social-sdk";
@@ -14,31 +28,104 @@ const social = createSocial({
     auth: { userId: process.env.X_USER_ID!, accessToken: process.env.X_ACCESS_TOKEN! },
   }),
 });
+
 const account = connectedAccountRef({
   backend: "default",
   platform: "x",
   accountId: process.env.X_USER_ID!,
 });
+```
+
+## Examples
+
+### Publish a text post
+
+Text uses X's weighted 280-character rules rather than JavaScript code-unit length.
+
+```ts
 const result = await social.posts.publish({
   targets: [{ account }],
   content: { text: "A server-side update" },
 });
+
+console.log(result.outcomes[0]?.state);
 ```
 
-The implemented slice covers text and static JPEG/PNG image targets, native post reads, lifetime public metrics, and replies through `replyTo`. Media upload accepts `Blob` sources up to 5 MiB and permits at most four images. Video and GIF uploads are not advertised until their processing path is implemented. Text uses X's weighted 280-character rules rather than JavaScript code-unit length.
+### Publish with an image
 
-Every target result is independent. A successful HTTP response is not treated as a publication unless X returns a tweet ID. A transport failure after dispatch is `unknown`; reconcile with `social.posts.getDelivery` or the native `getTweet` helper before retrying. The adapter does not fail over to another backend.
+The normalized adapter covers text and static image targets. Images upload as blobs of at most 5 MiB, with up to four images per post.
 
-X access depends on the account's current API plan and OAuth2 scopes, including `tweet.read`, `tweet.write`, `users.read`, `offline.access`, and `media.write` for the implemented operations. API usage can incur upstream charges. Use the documented [connection flow](/authentication) for callbacks and token persistence. API plan access, billing, and app approval remain upstream requirements. Keep access tokens server-side and supply an application authorization policy before publishing for multiple tenants.
+```ts
+const result = await social.posts.publish({
+  targets: [{ account }],
+  content: {
+    text: "Release notes attached",
+    media: [
+      {
+        kind: "image",
+        source: { kind: "blob", blob, fingerprint: contentHash },
+        mimeType: "image/png",
+        byteSize: blob.size,
+      },
+    ],
+  },
+});
+```
 
-The adapter's account listing is credential-scoped and returns the configured user. It does not prove that a frontend-selected handle belongs to the current tenant. Resolve membership in your application before calling a mutation. Current repository evidence is contract and mocked transport coverage; no live X account or paid API plan has been verified here.
+### Reconcile an uncertain outcome
 
-See [X API pricing](https://docs.x.com/x-api/getting-started/pricing), [posts](https://docs.x.com/x-api/posts/creating-a-post), and [media](https://developer.x.com/en/docs/x-api/v1.1/media/upload-media/api-reference/post-media-upload) for current upstream access and limits.
+Every target result is independent. A successful HTTP response is not treated as a publication unless X returns a tweet ID. A transport failure after dispatch is `unknown`; reconcile before retrying. The adapter does not fail over to another backend.
 
-## Typed reactions
+```ts
+const outcome = result.outcomes[0];
+if (outcome?.state === "unknown" && outcome.delivery) {
+  const delivery = await social.posts.getDelivery(outcome.delivery);
+  console.log(delivery.state); // published | failed | unknown
+}
+```
+
+### Like and unlike posts
 
 The X platform entrypoint exports `xLike` and `xUnlike` for credential-ready server code. They require an acting connected-account reference, a native numeric post ID, server-side credentials, and an operation context whose `backendInstance` matches the account. These helpers sit outside `createSocial` authorization and concurrency middleware: authorize the acting account in your application before calling them.
 
-Both require the app’s current API access and `like.write`, `tweet.read`, and `users.read` scopes. They make one mutation request and return the provider-confirmed `liked` state. A lost response, malformed confirmation, or uncertain server failure throws `ambiguous_outcome`; inspect current reaction state before deciding whether to retry. Unliking removes the acting user’s reaction, not the target post.
+```ts
+import { connectedAccountRef } from "@opencoredev/social-sdk";
+import { xLike, xUnlike } from "@opencoredev/social-sdk/x";
 
-Request contracts: [like a post](https://docs.x.com/x-api/users/like-post), [unlike a post](https://docs.x.com/x-api/users/unlike-post).
+const account = connectedAccountRef({
+  backend: "direct",
+  platform: "x",
+  accountId: userId,
+});
+
+const state = await xLike(
+  postId,
+  account,
+  { userId, accessToken },
+  {
+    backendInstance: "direct",
+    correlationId: "reaction",
+    retryBudget: { maxAttempts: 1, maxElapsedMs: 10_000 },
+  },
+);
+console.log(state.liked);
+```
+
+Both require the app's current API access and `like.write`, `tweet.read`, and `users.read` scopes. They make one mutation request and return the provider-confirmed `liked` state. A lost response, malformed confirmation, or uncertain server failure throws `ambiguous_outcome`; inspect current reaction state before deciding whether to retry. Unliking removes the acting user's reaction, not the target post. Request contracts: [like a post](https://docs.x.com/x-api/users/like-post), [unlike a post](https://docs.x.com/x-api/users/unlike-post).
+
+## Native operations
+
+The typed native module also exposes video and GIF uploads, polls, reposts and quotes, deletion, bookmarks, follows, direct-message reads, and filtered streams. Video and GIF processing is asynchronous; persist the returned media state and reconcile it before publishing.
+
+## Limits and requirements
+
+:::warning
+X access depends on the account's current API plan and OAuth2 scopes. API usage can incur upstream charges. API plan access, billing, and app approval remain upstream requirements.
+:::
+
+- The adapter's account listing is credential-scoped and returns the configured user. It does not prove that a frontend-selected handle belongs to the current tenant; resolve membership in your application before calling a mutation.
+- Use the documented [connection flow](/authentication) for callbacks and token persistence.
+- Keep access tokens server-side and supply an application authorization policy before publishing for multiple tenants.
+- Current repository evidence is contract and mocked transport coverage; no live X account or paid API plan has been verified here.
+
+See [X API pricing](https://docs.x.com/x-api/getting-started/pricing), [posts](https://docs.x.com/x-api/posts/creating-a-post), and [media](https://developer.x.com/en/docs/x-api/v1.1/media/upload-media/api-reference/post-media-upload) for current upstream access and limits.
