@@ -1,5 +1,5 @@
-/* Social SDK docs theme — matches the hand-drawn landing page:
-   Fraunces type, warm ink on paper, marker-orange accent. */
+/* Social SDK docs theme — warm ink-on-paper palette and marker-orange
+   accent from the landing page, set in Geist. */
 
 :root {
   --blume-background: #ffffff;
@@ -17,21 +17,6 @@
   --blume-muted-foreground: #a8a299;
   --blume-border: #322e28;
   --blume-code-background: #1d1a16;
-}
-
-/* Fraunces reads best with the landing page's gentler tracking and optical sizing. */
-body {
-  font-optical-sizing: auto;
-  font-weight: 400;
-}
-
-h1, h2, h3, h4, h5, h6 {
-  letter-spacing: -0.02em !important;
-  font-weight: 500;
-}
-
-h1 {
-  font-weight: 450;
 }
 
 /* Provider marks use real artwork, with dark-mode inversion only for brands

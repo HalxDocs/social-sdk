@@ -120,9 +120,9 @@ export default defineConfig({
     mode: "system",
     radius: "md",
     fonts: {
-      display: { name: "Fraunces", weights: ["100..900"] },
-      body: { name: "Fraunces", weights: ["100..900"] },
-      mono: "ibm-plex-mono",
+      display: "geist",
+      body: "geist",
+      mono: "geist-mono",
     },
   },
   ai: {
