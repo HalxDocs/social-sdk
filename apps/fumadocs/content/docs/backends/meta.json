@@ -1,0 +1,10 @@
+{
+  "title": "Backends",
+  "pages": [
+    "index",
+    "direct",
+    "managed",
+    "zernio",
+    "post-for-me"
+  ]
+}

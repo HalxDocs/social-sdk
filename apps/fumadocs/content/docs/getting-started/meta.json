@@ -1,5 +1,9 @@
 {
   "title": "Get started",
-  "icon": "Rocket",
-  "pages": ["install", "quickstart", "credentials", "agent-skill"]
+  "pages": [
+    "installation",
+    "mock-quickstart",
+    "choose-an-integration",
+    "framework-recipes"
+  ]
 }

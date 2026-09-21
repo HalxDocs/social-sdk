@@ -1,0 +1,19 @@
+---
+title: Zernio
+description: Configure the Zernio managed backend with server credentials, explicit accounts, outcomes, and HMAC webhook verification.
+---
+
+Zernio is an optional managed backend. Its API key stays on the server and is passed to the adapter; connected accounts are provider records that your application must map to tenants.
+
+```ts
+import { createSocial } from "@opencoredev/social-sdk";
+import { zernio } from "@opencoredev/social-sdk/cloud/zernio";
+
+const social = createSocial({ backend: zernio({ apiKey: process.env.ZERNIO_API_KEY! }) });
+const accounts = await social.accounts.list({
+  backend: "default",
+  authorization: { tenantId: "tenant-from-session" },
+});
+```
+
+The adapter supports account listing, publishing, post reads and status, media upload, analytics, verified webhooks, comments for X, Threads, Bluesky, YouTube, Instagram, LinkedIn, and Facebook, and messaging for X, Bluesky, Instagram, and Facebook. Provider permissions and recipient or reply-window rules still apply. Verify `X-Zernio-Signature` over the raw request bytes before decoding; accept events into a durable, tenant-resolved inbox. See [events](/docs/events) and [capabilities](/docs/reference/capabilities).

@@ -1,248 +1,26 @@
-import {
-  docs,
-  docsV110,
-  docsV101,
-  docsV100,
-  docsV020,
-  docsV021,
-  docsV030,
-  docsV040,
-  docsV050,
-  docsV060,
-  docsV061,
-  docsV062,
-  docsV063,
-  docsV064,
-  docsV065,
-} from "collections/server";
+import { docs } from "../../.source/server";
 import { loader } from "fumadocs-core/source";
+import { createElement } from "react";
 
-import { buildAdapterFaq, getAdapterSupportEntry } from "./adapter-faq";
-import { resolveDocsIcon } from "./docs-icons";
-import { absolutizeSiteLinks } from "./markdown-links";
-import { docsRoute, siteUrl } from "./shared";
-import { type DocsVersion, docsVersions, getDocsVersionBase, latestDocsVersion } from "./versions";
+const platformIcons = new Set(["bluesky", "x", "threads", "youtube", "tiktok", "instagram", "linkedin"]);
 
-const v110DocsVersion = docsVersions.find((version) => version.collection === "docsV110");
-if (!v110DocsVersion) {
-  throw new Error("Missing docs source config for v1.1.0");
-}
+export const source = loader({
+  source: docs.toFumadocsSource(),
+  baseUrl: "/docs",
+  icon: (icon) => {
+    if (!icon || !platformIcons.has(icon.toLowerCase())) return undefined;
+    const slug = icon.toLowerCase();
+    return createElement("img", {
+      src: `/integrations/${slug}.svg`,
+      alt: "",
+      "aria-hidden": true,
+      className: `fd-platform-icon fd-platform-icon-${slug}`,
+      width: 18,
+      height: 18,
+    });
+  },
+});
 
-const v101DocsVersion = docsVersions.find((version) => version.collection === "docsV101");
-if (!v101DocsVersion) {
-  throw new Error("Missing docs source config for v1.0.1");
-}
-
-const v100DocsVersion = docsVersions.find((version) => version.collection === "docsV100");
-if (!v100DocsVersion) {
-  throw new Error("Missing docs source config for v1.0.0");
-}
-
-const v020DocsVersion = docsVersions.find((version) => version.collection === "docsV020");
-if (!v020DocsVersion) {
-  throw new Error("Missing docs source config for v0.2.0");
-}
-
-const v021DocsVersion = docsVersions.find((version) => version.collection === "docsV021");
-if (!v021DocsVersion) {
-  throw new Error("Missing docs source config for v0.2.1");
-}
-
-const v030DocsVersion = docsVersions.find((version) => version.collection === "docsV030");
-if (!v030DocsVersion) {
-  throw new Error("Missing docs source config for v0.3.0");
-}
-
-const v040DocsVersion = docsVersions.find((version) => version.collection === "docsV040");
-if (!v040DocsVersion) {
-  throw new Error("Missing docs source config for v0.4.0");
-}
-
-const v050DocsVersion = docsVersions.find((version) => version.collection === "docsV050");
-if (!v050DocsVersion) {
-  throw new Error("Missing docs source config for v0.5.0");
-}
-
-const v060DocsVersion = docsVersions.find((version) => version.collection === "docsV060");
-if (!v060DocsVersion) {
-  throw new Error("Missing docs source config for v0.6.0");
-}
-
-const v061DocsVersion = docsVersions.find((version) => version.collection === "docsV061");
-if (!v061DocsVersion) {
-  throw new Error("Missing docs source config for v0.6.1");
-}
-
-const v062DocsVersion = docsVersions.find((version) => version.collection === "docsV062");
-if (!v062DocsVersion) {
-  throw new Error("Missing docs source config for v0.6.2");
-}
-
-const v063DocsVersion = docsVersions.find((version) => version.collection === "docsV063");
-if (!v063DocsVersion) {
-  throw new Error("Missing docs source config for v0.6.3");
-}
-
-const v064DocsVersion = docsVersions.find((version) => version.collection === "docsV064");
-if (!v064DocsVersion) {
-  throw new Error("Missing docs source config for v0.6.4");
-}
-
-const v065DocsVersion = docsVersions.find((version) => version.collection === "docsV065");
-if (!v065DocsVersion) {
-  throw new Error("Missing docs source config for v0.6.5");
-}
-
-const sources = {
-  docs: loader({
-    source: docs.toFumadocsSource(),
-    baseUrl: docsRoute,
-    icon: resolveDocsIcon,
-  }),
-  docsV110: loader({
-    source: docsV110.toFumadocsSource(),
-    baseUrl: getDocsVersionBase(v110DocsVersion),
-    icon: resolveDocsIcon,
-  }),
-  docsV101: loader({
-    source: docsV101.toFumadocsSource(),
-    baseUrl: getDocsVersionBase(v101DocsVersion),
-    icon: resolveDocsIcon,
-  }),
-  docsV100: loader({
-    source: docsV100.toFumadocsSource(),
-    baseUrl: getDocsVersionBase(v100DocsVersion),
-    icon: resolveDocsIcon,
-  }),
-  docsV065: loader({
-    source: docsV065.toFumadocsSource(),
-    baseUrl: getDocsVersionBase(v065DocsVersion),
-    icon: resolveDocsIcon,
-  }),
-  docsV064: loader({
-    source: docsV064.toFumadocsSource(),
-    baseUrl: getDocsVersionBase(v064DocsVersion),
-    icon: resolveDocsIcon,
-  }),
-  docsV063: loader({
-    source: docsV063.toFumadocsSource(),
-    baseUrl: getDocsVersionBase(v063DocsVersion),
-    icon: resolveDocsIcon,
-  }),
-  docsV062: loader({
-    source: docsV062.toFumadocsSource(),
-    baseUrl: getDocsVersionBase(v062DocsVersion),
-    icon: resolveDocsIcon,
-  }),
-  docsV061: loader({
-    source: docsV061.toFumadocsSource(),
-    baseUrl: getDocsVersionBase(v061DocsVersion),
-    icon: resolveDocsIcon,
-  }),
-  docsV060: loader({
-    source: docsV060.toFumadocsSource(),
-    baseUrl: getDocsVersionBase(v060DocsVersion),
-    icon: resolveDocsIcon,
-  }),
-  docsV050: loader({
-    source: docsV050.toFumadocsSource(),
-    baseUrl: getDocsVersionBase(v050DocsVersion),
-    icon: resolveDocsIcon,
-  }),
-  docsV040: loader({
-    source: docsV040.toFumadocsSource(),
-    baseUrl: getDocsVersionBase(v040DocsVersion),
-    icon: resolveDocsIcon,
-  }),
-  docsV030: loader({
-    source: docsV030.toFumadocsSource(),
-    baseUrl: getDocsVersionBase(v030DocsVersion),
-    icon: resolveDocsIcon,
-  }),
-  docsV021: loader({
-    source: docsV021.toFumadocsSource(),
-    baseUrl: getDocsVersionBase(v021DocsVersion),
-    icon: resolveDocsIcon,
-  }),
-  docsV020: loader({
-    source: docsV020.toFumadocsSource(),
-    baseUrl: getDocsVersionBase(v020DocsVersion),
-    icon: resolveDocsIcon,
-  }),
-};
-
-export const source = sources[latestDocsVersion.collection];
-
-export function getDocsSource(version: DocsVersion) {
-  return sources[version.collection];
-}
-
-export function markdownPathToSlugs(segs: string[]) {
-  if (segs.length === 0) return [];
-
-  const out = [...segs];
-  out[out.length - 1] = out[out.length - 1].replace(/\.md$/, "");
-  if (out[out.length - 1] === "index") out.pop();
-  return out;
-}
-
-export function slugsToMarkdownPath(slugs: string[], version: DocsVersion = latestDocsVersion) {
-  const segments = [...slugs];
-  if (segments.length === 0) {
-    segments.push("index.md");
-  } else {
-    segments[segments.length - 1] += ".md";
-  }
-
-  return {
-    segments,
-    url: `${getDocsVersionBase(version)}/${segments.join("/")}`,
-  };
-}
-
-export function getPageMarkdownUrl(slugs: string[]) {
-  const segments = [...slugs];
-  if (segments.length === 0) {
-    segments.push("index.md");
-  } else {
-    segments[segments.length - 1] += ".md";
-  }
-
-  return {
-    segments,
-    url: `${docsRoute}/${segments.join("/")}`,
-  };
-}
-
-export async function getLLMText(
-  page: (typeof source)["$inferPage"],
-  version: DocsVersion = latestDocsVersion,
-) {
-  const docsBasePath = getDocsVersionBase(version);
-  const getText = Reflect.get(page.data, "getText");
-  if (typeof getText !== "function") {
-    throw new Error(`Page ${page.url} does not expose generated Markdown text`);
-  }
-
-  const processed = absolutizeSiteLinks(
-    (await getText.call(page.data, "processed"))
-      .replaceAll("](/docs/", `](${docsBasePath}/`)
-      .replaceAll('href="/docs/', `href="${docsBasePath}/`),
-  );
-
-  const adapterEntry = version.current ? getAdapterSupportEntry(page.path) : undefined;
-  const faq = adapterEntry ? renderFaqMarkdown(buildAdapterFaq(adapterEntry)) : "";
-
-  return `# ${page.data.title} (${siteUrl}${page.url})
-
-${processed}${faq}`;
-}
-
-function renderFaqMarkdown(items: { question: string; answer: string }[]) {
-  return `
-
-## Frequently asked questions
-
-${items.map((item) => `### ${item.question}\n\n${item.answer}`).join("\n\n")}
-`;
+export function markdownUrl(slugs: string[]) {
+  return slugs.length ? `/docs/${slugs.join("/")}.md` : "/docs/index.md";
 }

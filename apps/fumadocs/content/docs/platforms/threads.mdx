@@ -1,0 +1,36 @@
+---
+title: Threads
+description: Publish Threads containers, carousels, and media while preserving processing outcomes for explicit reconciliation.
+icon: threads
+---
+
+The direct Threads adapter uses an existing user access token and Threads user ID. OAuth and account selection are application responsibilities. Set `THREADS_GRAPH_VERSION` deliberately when a version other than the adapter default (`v1.0`) is required.
+
+```ts
+import { createSocial, connectedAccountRef } from "@opencoredev/social-sdk";
+import { threads } from "@opencoredev/social-sdk/threads";
+
+const social = createSocial({
+  backend: threads({
+    graphVersion: process.env.THREADS_GRAPH_VERSION,
+    auth: { userId: process.env.THREADS_USER_ID!, accessToken: process.env.THREADS_ACCESS_TOKEN! },
+  }),
+});
+const account = connectedAccountRef({
+  backend: "default",
+  platform: "threads",
+  accountId: process.env.THREADS_USER_ID!,
+});
+const result = await social.posts.publish({
+  targets: [{ account }],
+  content: { text: "Hello Threads" },
+});
+```
+
+Text, one HTTPS image or video, and carousels are supported. Carousel children are created before the parent container. The adapter accepts at most ten media items and requires caller-provided HTTPS URLs; it does not upload local bytes. Scheduling is unavailable in this slice and must be implemented by an application-owned durable job runner.
+
+Threads publishing has two upstream phases: container creation and `threads_publish`. If the publish call does not return a native post ID, the result is `processing`; retain the delivery reference and reconcile explicitly. A returned ID produces `published`. Unknown upstream responses remain unknown. There is no automatic polling or cross-provider fallback.
+
+Reads and lifetime metrics are declared. The normalized adapter does not expose comments or messaging. Use the native escape hatch only with an explicit `{ acknowledgeUnsafe: true }` acknowledgement and enforce tenant authorization around it.
+
+The token, user ID, scopes, app review and account eligibility remain server-owned setup. Existing repository evidence covers adapter contract behavior and mocked transports; no live Threads account has been verified. Consult Meta's [Threads API collection](https://www.postman.com/meta/threads/documentation/dht3nzz/threads-api) for current fields, permissions, media processing and version changes.

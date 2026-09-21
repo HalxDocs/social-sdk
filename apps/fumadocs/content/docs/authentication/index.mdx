@@ -1,0 +1,121 @@
+---
+title: Authentication
+description: Separate application credentials, user grants, callbacks, token storage, reconnects, and tenant authorization.
+---
+
+Authentication has two layers. The platform or managed provider authenticates the connection. Your application authenticates the user and decides which tenant may use that connection.
+
+## Keep credentials server-side
+
+Platform app secrets, OAuth client secrets, access and refresh tokens, provider API keys, and webhook secrets belong in a server-side secret store. A browser can request a connection or operation through your application, but it must not receive unrestricted credentials or native clients.
+
+## Connection lifecycle
+
+Treat start, callback, successful connection, reconnect, unlink, disconnect, and upstream revocation as separate states. Store the backend instance, platform account identifier, tenant membership, scopes, token revision, and reconnect status in application-owned records. A display handle is not a stable authorization key.
+
+The current adapter reports permission and reconnect failures as structured outcomes. The application chooses whether to ask the user to reconnect, remove a membership, or revoke an upstream grant.
+
+See [tenant authorization](/docs/concepts/tenant-authorization) and the [account ownership diagram](/docs/concepts/architecture#account-connection-and-ownership) for the request boundary.
+
+## Discover accounts before selection
+
+Use `ConnectionManager` from `@opencoredev/social-sdk/server` with a `ConnectionStore` and the platform's OAuth provider factory. Call `begin` with the authenticated tenant and principal, requested platforms, and an exact redirect allowlist. Keep the returned attempt ID in your server session.
+
+In the callback handler, pass the original callback URL and returned state to `discover`. The manager checks the authenticated principal, redirect, state, and expiry before claiming the code exchange. It saves the provider's account references before returning them for your account picker. Browser-supplied account identifiers do not create grants.
+
+After the user chooses accounts, call `select` with the attempt ID, authenticated tenant and principal, and `selectedAccountIds`. Selection uses the saved discovery result and consumes the attempt together with its grants in one store transaction. `complete` combines discovery and selection for applications that already know their selected accounts.
+
+The [integration skill](/docs/agents/integrate-social-sdk) includes an executable handler recipe. Its provider and storage are injected by the application.
+
+## Store contract and recovery
+
+A production `ConnectionStore` must persist attempts and discovered accounts, atomically claim discovery, and atomically consume an attempt with all selected grants. The exchange claim must survive process restarts and must not expire automatically. `MemoryConnectionStore` implements this contract for tests, but loses state when the process exits.
+
+Repeated callbacks can read a saved discovery result without exchanging the code again. If a code exchange is still running, or the process lost its response before saving discovery, the manager reports `reconnect_required`. Let an in-flight exchange finish or start a fresh connection. Replaying a one-use authorization code cannot safely recover missing credentials.
+
+Connection attempts expire after ten minutes by default. Account selection must finish before expiry. Keep the PKCE verifier and provider state private in server storage; encrypt stored credentials separately and use compare-and-set token revisions when refreshing.
+
+## Direct OAuth providers
+
+The server package includes direct OAuth factories for YouTube, X, TikTok, Threads, Instagram Login, and LinkedIn. Create them only in server code. Each factory accepts an injected `fetch` for deterministic tests, an optional `credentialSink`, and provider credentials. The `redirectUri` passed to the factory must match the exact callback URI registered with the provider and with `ConnectionManager.begin`.
+
+| Provider        | Default authorization scopes                                     | PKCE                            | Token lifecycle                                                                                                                                             |
+| --------------- | ---------------------------------------------------------------- | ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| YouTube         | `openid`, profile, `youtube.readonly`                            | Provider flow does not add PKCE | Google refresh tokens use `refreshOAuthToken("youtube", ...)`; request `youtube.upload` when uploading videos.                                              |
+| X               | `tweet.read`, `users.read`, `offline.access`                     | S256                            | Refresh tokens can rotate; persist the returned replacement atomically.                                                                                     |
+| TikTok          | `user.info.basic`, `video.publish`                               | S256                            | Refresh tokens can rotate; scopes are sent comma-delimited.                                                                                                 |
+| Threads         | `threads_basic`, `threads_content_publish`                       | No fabricated PKCE              | Call `exchangeLongLivedOAuthToken("threads", ...)`, then `refreshOAuthToken("threads", ...)`.                                                               |
+| Instagram Login | `instagram_business_basic`, `instagram_business_content_publish` | No fabricated PKCE              | Call `exchangeLongLivedOAuthToken("instagram", ...)`, then `refreshOAuthToken("instagram", ...)`.                                                           |
+| LinkedIn        | `openid`, `profile`, `w_member_social`                           | No fabricated PKCE              | Refresh is not exposed by LinkedIn's authorization-code response; reconnect when the grant is unavailable. Set `linkedinApiVersion` explicitly as `YYYYMM`. |
+
+The defaults are a starting point. Pass `scopes` for the operation you are connecting, such as Google's `https://www.googleapis.com/auth/youtube.upload` for uploads or LinkedIn's organization permission when your app has that product approval. Provider app review, account eligibility, callback registration, and quota remain application setup responsibilities.
+
+A complete server flow looks like this:
+
+```ts
+import {
+  ConnectionManager,
+  MemoryConnectionStore,
+  type OAuthCredentialSink,
+  youtubeOAuth,
+} from "@opencoredev/social-sdk/server";
+
+const store = new MemoryConnectionStore(); // tests only; use durable storage in production
+const credentialRows = new Map<string, unknown>();
+const credentials: OAuthCredentialSink = {
+  async save(input) {
+    // Replace this map with encrypted, tenant-scoped persistence in production.
+    const key = `${input.attempt.tenantId}:${input.account.ref.platform}:${input.account.ref.accountId}`;
+    credentialRows.set(key, input.token);
+  },
+};
+const provider = youtubeOAuth({
+  clientId: process.env.GOOGLE_OAUTH_CLIENT_ID!,
+  clientSecret: process.env.GOOGLE_OAUTH_CLIENT_SECRET!,
+  redirectUri: "https://app.example.com/oauth/youtube/callback",
+  scopes: ["openid", "https://www.googleapis.com/auth/youtube.upload"],
+  credentialSink: credentials,
+});
+const manager = new ConnectionManager({ store });
+
+export async function handleConnection(input: {
+  readonly tenantId: string;
+  readonly principalId: string;
+  readonly callbackUrl: string;
+  readonly returnedState: string;
+  readonly selectedAccountId: string;
+}) {
+  // Authenticated server request: return started.authorizationUrl to the browser.
+  const started = await manager.begin({
+    backend: "direct",
+    tenantId: input.tenantId,
+    principalId: input.principalId,
+    platforms: ["youtube"],
+    capabilities: ["posts.publish"],
+    redirectUri: "https://app.example.com/oauth/youtube/callback",
+    allowedRedirectUris: ["https://app.example.com/oauth/youtube/callback"],
+    provider,
+  });
+
+  // Callback request: keep the complete callback URL and the state extracted from it.
+  const discovered = await manager.discover({
+    attemptId: started.attempt.id,
+    tenantId: input.tenantId,
+    principalId: input.principalId,
+    callbackUrl: input.callbackUrl,
+    returnedState: input.returnedState,
+    allowedRedirectUris: ["https://app.example.com/oauth/youtube/callback"],
+    provider,
+  });
+  // Show discovered account IDs to the authenticated user, then accept only their choice.
+  const grants = await manager.select({
+    attemptId: started.attempt.id,
+    tenantId: input.tenantId,
+    principalId: input.principalId,
+    selectedAccountIds: [input.selectedAccountId],
+  });
+  return { started, discovered, grants };
+}
+```
+
+`MemoryConnectionStore` and an in-memory credential sink are suitable for tests only. A production sink must encrypt tokens at rest, restrict reads by tenant and principal, redact tokens from logs, and support atomic refresh-token rotation. The callback URL and returned state come from the provider redirect; do not accept an account ID or token from browser form data. The repository contains runnable TypeScript versions of this flow in `examples/snippets/oauth-youtube.ts` and `examples/snippets/oauth-tiktok.ts`. They use environment variables for client credentials and stop after returning the authorization URL until an application supplies a callback.

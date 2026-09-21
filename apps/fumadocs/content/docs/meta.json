@@ -1,15 +1,20 @@
 {
-  "title": "Email SDK",
+  "title": "Social SDK",
   "pages": [
     "index",
     "getting-started",
-    "adapters",
+    "platforms",
+    "backends",
+    "authentication",
+    "publishing",
+    "reads",
+    "comments",
+    "events",
     "concepts",
-    "plugins",
-    "ui",
-    "integrations",
+    "reference",
+    "operations",
+    "testing",
     "agents",
-    "guides",
-    "reference"
+    "contributing"
   ]
 }

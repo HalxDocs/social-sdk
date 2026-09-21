@@ -1,72 +1,11 @@
 import type { BaseLayoutProps } from "fumadocs-ui/layouts/shared";
 
-import { ThemeToggle } from "@/components/theme-toggle";
-import { VersionPicker } from "@/components/version-picker";
-
 import { appName, gitConfig } from "./shared";
 
-type BaseOptionsConfig = {
-  mainLinks?: boolean;
-  versionPicker?: boolean;
-};
-
-export function baseOptions({
-  mainLinks = true,
-  versionPicker = true,
-}: BaseOptionsConfig = {}): BaseLayoutProps {
+export function baseOptions(): BaseLayoutProps {
   return {
-    nav: {
-      title: appName,
-    },
-    slots: {
-      themeSwitch: ThemeToggle,
-    },
-    links: [
-      ...(mainLinks
-        ? [
-            {
-              type: "main" as const,
-              text: "Docs",
-              url: "/docs",
-              active: "nested-url" as const,
-            },
-            {
-              type: "main" as const,
-              text: "Blog",
-              url: "/blog",
-              active: "nested-url" as const,
-            },
-            {
-              type: "main" as const,
-              text: "Compare",
-              url: "/compare",
-              active: "nested-url" as const,
-            },
-            {
-              type: "main" as const,
-              text: "Tools",
-              url: "/tools",
-              active: "nested-url" as const,
-            },
-            {
-              type: "main" as const,
-              text: "Stats",
-              url: "/stats",
-              active: "url" as const,
-            },
-          ]
-        : []),
-      ...(versionPicker
-        ? [
-            {
-              type: "custom" as const,
-              secondary: true,
-              children: <VersionPicker />,
-            },
-          ]
-        : []),
-    ],
+    nav: { title: appName },
+    links: [{ type: "main", text: "Docs", url: "/docs", active: "nested-url" }],
     githubUrl: `https://github.com/${gitConfig.user}/${gitConfig.repo}`,
   };
 }
-

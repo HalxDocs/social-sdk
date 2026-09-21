@@ -1,5 +1,7 @@
 {
-  "title": "For agents",
-  "icon": "Bot",
-  "pages": ["index", "machine-readable-docs"]
+  "title": "Agents",
+  "pages": [
+    "integrate-social-sdk",
+    "integration-checklist"
+  ]
 }

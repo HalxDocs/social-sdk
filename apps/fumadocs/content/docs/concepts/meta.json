@@ -1,10 +1,9 @@
 {
   "title": "Concepts",
-  "icon": "BookOpen",
   "pages": [
-    "adapter-model",
-    "fallbacks-and-retries",
-    "hooks",
-    "sending-modes"
+    "integration-model",
+    "architecture",
+    "references-and-outcomes",
+    "tenant-authorization"
   ]
 }

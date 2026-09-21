@@ -1,0 +1,34 @@
+---
+title: Operations
+description: Configure timeouts, retries, concurrency, rate limits, provider charges, diagnostics, and safe server boundaries.
+---
+
+Social SDK performs only the work an application explicitly requests. It does not start polling, queues, timers, telemetry, or background network requests at import time.
+
+## Request controls
+
+Pass cancellation and a bounded retry budget to external operations. Use idempotency for writes where the adapter supports it. A timeout or cancellation after dispatch is an unknown outcome until the backend is reconciled. Do not treat elapsed time as proof that no public post exists.
+
+## Cost and limits
+
+The package does not bill or proxy usage. Platform and managed-provider plans may charge separately, and each provider or platform can apply quotas or rate limits. Report retry-after information and provider request identifiers without logging credentials or content.
+
+## Diagnostics
+
+Diagnostics should be explicit, read-only by default, and redact secrets, tokens, media, message bodies, and account credentials. A capability check may contact a backend only when the application requests it and should include freshness and provenance in the result.
+
+## Route webhook payloads
+
+Verify the exact raw bytes before decoding an event. Zernio uses a body HMAC. Post for Me uses a shared secret header, which does not authenticate the body itself. Use the verifier for the configured backend rather than trying both schemes.
+
+`acceptWebhook` resolves each account ID against application-owned tenant mappings. It delivers the full event only to tenants authorized for every account in that payload. An unknown account, no account IDs, or accounts belonging to unrelated tenants quarantines the event. Resolving the union of known accounts is unsafe because it can expose another account's data.
+
+Persist inbox acceptance before acknowledging delivery. Duplicate acceptance does not mean that a worker has applied the event. Keep worker completion separate so a restarted worker can recover pending records.
+
+Operation guides: [reads and analytics](/docs/reads), [comments and messaging](/docs/comments), and [events](/docs/events).
+
+## Bound overlapping work
+
+`createSocial({ concurrency: 4, maxQueued: 100, ... })` gives each configured backend instance four active operation slots and at most 100 queued operations. Reads, uploads, publishing, comments, messages, and lifecycle mutations share that backend's slots. Another backend can proceed independently. A full queue fails with `rate_limited` before adapter I/O; an aborted queued request is removed without dispatch.
+
+These limits govern this client instance. Raw adapter/native access bypasses them, and separate client instances do not coordinate quotas. Sequential transport requests sharing one operation context consume its `retryBudget.maxElapsedMs`; queued time precedes transport dispatch. Persist application jobs explicitly if work must survive process restarts.
