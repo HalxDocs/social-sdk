@@ -2,7 +2,7 @@ import { defineMeta } from "blume";
 
 export default defineMeta({
   title: "Reference",
-  icon: "book-open",
+  icon: "library",
   order: 8,
-  pages: ["index", "cli", "capabilities", "pagination"],
+  pages: ["index", "capabilities", "pagination", "cli", "errors", "security", "faq"],
 });

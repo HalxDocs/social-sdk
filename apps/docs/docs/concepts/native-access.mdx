@@ -1,0 +1,33 @@
+---
+title: Native access
+description: Reach platform-specific operations through typed native modules while keeping tenant authorization explicit.
+---
+
+The shared operation model covers what every platform can express faithfully. Everything else lives behind typed native access, which is deliberately explicit about what it skips.
+
+## Two native surfaces
+
+Adapters expose a typed native module for platform-specific operations: reposts, quotes, polls, follows, profile updates, feed discovery, thumbnails, captions, and more. The [capability matrix](/reference/capabilities) lists each platform's native declarations.
+
+```ts
+const native = social.native("default", { acknowledgeUnsafe: true });
+const thread = await native.getThread(account, { uri, cid });
+```
+
+Selected reactions also ship as credential-ready helpers importable straight from a platform entrypoint, such as `xLike` and `xUnlike`, for server code that manages its own credentials.
+
+## What acknowledgeUnsafe means
+
+Native calls bypass the client's normalized middleware: tenant authorization checks and per-backend concurrency limits do not apply. The `acknowledgeUnsafe` flag is the contract that your application takes over those responsibilities. Authorize the acting account against the current tenant before every native call, exactly as the client would have.
+
+## Native references are preserved
+
+Native operations return provider-native identifiers, like Bluesky's AT URI and CID or LinkedIn URNs, and the normalized model preserves them in platform post references. Persist what you need for later calls; a like record's own URI, for example, is what unlike requires.
+
+## The same outcome rules apply
+
+Native mutations use bounded transport and do not retry a lost response. Reconcile uncertain acceptance before submitting again, and treat provider-controlled processing or moderation states as pending rather than complete. Fixture coverage of a native operation is not evidence of live authorization or publication.
+
+## When to use which surface
+
+Use the normalized operations when the shared model expresses your intent: they carry authorization, concurrency, idempotency, and outcome handling for you. Reach for native access when a platform feature has no faithful shared representation, and wrap it in the same application policy you would want the client to enforce.

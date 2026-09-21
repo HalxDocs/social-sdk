@@ -1,0 +1,44 @@
+---
+title: FAQ
+description: Common questions about Social SDK hosting, pricing, runtimes, scheduling, live verification, and platform support.
+---
+
+## Is there a hosted Social SDK service?
+
+No. Social SDK is a library. It provides no hosted service, database, queue, credential proxy, scheduler worker, or billing layer. Direct integrations call platforms with your credentials; optional hosted platforms call Zernio or Post for Me with your own provider account.
+
+## What does it cost?
+
+The package is open source under the MIT license. Platforms and managed providers charge separately under your own accounts: X API plans, Meta app products, Zernio or Post for Me subscriptions. The SDK never pools keys or resells provider usage.
+
+## Which runtimes are supported?
+
+Node 22.12+, Node 24, and Bun are the tested targets. The package is ESM-only; CommonJS is not supported. Deno, edge runtimes, and Cloudflare Workers are not tested targets.
+
+## Does it work in the browser or React?
+
+No. The SDK is server-only because credentials and connected-account references are server secrets. There is no React dependency. Your frontend talks to your own server routes, which call the SDK.
+
+## Can it schedule posts?
+
+The SDK exposes scheduling operations where a backend supports them, and it never runs background jobs itself. Durable timing belongs to your application through a job runner such as [Trigger.dev](/integrations/trigger-dev) or [Inngest](/integrations/inngest).
+
+## Why did my publish return processing or unknown?
+
+Platforms separate acceptance from publication. Processing means the platform is still working; unknown means the response was lost after dispatch. Both are reconciled explicitly with the saved delivery reference. Treating them as success or silently retrying can double-post. See [references and outcomes](/concepts/references-and-outcomes).
+
+## Which platforms and operations are supported?
+
+The [platform matrix](/platforms) summarizes the direct adapters, and the [capability matrix](/reference/capabilities) lists every declaration with its formats and limits. Support is specific to a backend, platform, operation, content format, runtime, and evidence level.
+
+## Has every adapter been verified against live accounts?
+
+No. Current repository evidence is deterministic contract and fixture coverage plus mocked transports. The [evidence levels](/testing/evidence-levels) page explains exactly what each level proves. Live verification requires approved accounts and credentials and is recorded separately when it happens.
+
+## How do I test without credentials?
+
+Use the deterministic mock backend from the testing entrypoint. It supports explicit accounts, fixtures, scenarios, and a fake clock, so the [quickstart](/getting-started/mock-quickstart) runs without network access.
+
+## Can I access platform features the shared model doesn't cover?
+
+Yes, through typed native modules and the explicitly unsafe native escape hatch. Those paths bypass normalized middleware, so your application must supply tenant authorization around them. See [native access](/concepts/native-access).

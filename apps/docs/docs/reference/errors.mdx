@@ -1,0 +1,79 @@
+---
+title: Errors
+description: Handle SocialError codes, retry dispositions, preparation issues, and redacted serialization in Social SDK.
+---
+
+Every failure surfaces as a `SocialError` with a stable code, the operation that failed, and a machine-readable retry disposition. Errors are redacted by design: no credentials, tokens, media, or message content.
+
+## Catch and branch on the code
+
+```ts
+import { SocialError } from "@opencoredev/social-sdk";
+
+try {
+  await social.posts.publish({ targets: [{ account }], content: { text } });
+} catch (error) {
+  if (error instanceof SocialError) {
+    switch (error.code) {
+      case "reconnect_required":
+        // Send the tenant back through the connection flow.
+        break;
+      case "rate_limited":
+        // Honor the retry disposition below.
+        break;
+      case "ambiguous_outcome":
+        // Reconcile before any retry.
+        break;
+      default:
+        report(error.toJSON());
+    }
+  }
+}
+```
+
+## Error codes
+
+| Code                     | Meaning                                                                                                          |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------- |
+| `invalid_config`         | The adapter or client was constructed with unusable configuration.                                               |
+| `invalid_input`          | The request failed local validation before any network call.                                                     |
+| `unsupported_capability` | The selected backend does not declare this operation or format.                                                  |
+| `missing_permission`     | The credential lacks a scope or product permission the operation needs.                                          |
+| `reconnect_required`     | The stored authorization is no longer usable; the account must reconnect.                                        |
+| `ineligible_account`     | The account class cannot perform the operation, such as a personal account where a professional one is required. |
+| `approval_required`      | The operation exists but needs a platform review, audit, or app product.                                         |
+| `rate_limited`           | The platform, provider, or the client's own queue limit rejected the call.                                       |
+| `billing_required`       | The provider or platform plan does not cover the operation.                                                      |
+| `media_error`            | Media validation, upload, or processing failed with a confirmed error.                                           |
+| `not_found`              | The referenced resource does not exist on the backend.                                                           |
+| `gone`                   | The resource existed but has been removed.                                                                       |
+| `upstream_failure`       | The platform or provider returned a confirmed server-side failure.                                               |
+| `ambiguous_outcome`      | The response was lost after dispatch; the write may have happened.                                               |
+| `cancelled`              | The application aborted the operation.                                                                           |
+| `timeout`                | The retry budget's time allowance elapsed.                                                                       |
+| `runtime_unsupported`    | The current runtime lacks a primitive the operation requires.                                                    |
+| `unauthorized`           | The credential was rejected outright by the backend.                                                             |
+| `idempotency_conflict`   | An idempotency key was reused with different content, options, replies, or schedules.                            |
+
+## Retry dispositions
+
+Each error carries a `retryDisposition` stating what a safe client may do next:
+
+| Disposition                        | What it means                                                                 |
+| ---------------------------------- | ----------------------------------------------------------------------------- |
+| `{ kind: "never" }`                | Retrying cannot succeed; fix the input, permission, or configuration.         |
+| `{ kind: "after-delay", delayMs }` | Retry after the stated delay, typically for rate limits.                      |
+| `{ kind: "after-reconnect" }`      | Retry only after the account completes a new connection flow.                 |
+| `{ kind: "reconcile-first" }`      | Reconcile the saved reference before deciding; blind retries can double-post. |
+
+Honor `reconcile-first` strictly for public writes: it is the disposition attached to ambiguous outcomes.
+
+## What an error carries
+
+Beyond `code` and `message`, a `SocialError` includes the `operation` name, the `backend` and `account` reference where relevant, `correlationId` for tracing, the provider's `upstreamStatus` and `upstreamCode` when one responded, structured `details`, and for local validation failures a list of preparation `issues` pinpointing each rejected field.
+
+## Serialization
+
+`error.toJSON()` returns the redacted, JSON-safe shape with all of the fields above and the retry disposition. Log or transport that shape instead of the raw provider response; it is designed to be safe for application logs.
+
+Preparation failures are reported before any network call, so a request with an invalid media source or an over-limit text never reaches the platform. See [operations](/operations) for budgets, cancellation, and diagnostics.

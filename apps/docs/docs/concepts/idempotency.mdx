@@ -1,0 +1,48 @@
+---
+title: Idempotency and retries
+description: Use idempotency keys, fingerprints, and bounded retry budgets so at-least-once execution never double-posts.
+---
+
+Publishing is a public write. Social SDK's idempotency and retry model exists so a crashed process, a replayed job, or a double-submitted form cannot post the same content twice.
+
+## Idempotency keys
+
+A publish request accepts an application-chosen `idempotencyKey`. Derive it from your own durable identity for the intent, such as a draft ID, so every retry of the same intent carries the same key.
+
+```ts
+const result = await social.posts.publish({
+  targets: [{ account }],
+  content: { text: "Release day" },
+  idempotencyKey: draftId,
+});
+```
+
+Configure a durable store through `createSocial({ idempotencyStore })` when publications must survive process restarts. The testing entrypoint ships `MemoryIdempotencyStore` for local development and CI.
+
+## Fingerprints detect changed intent
+
+Idempotency fingerprints include target content, options, reply references, and schedules. Reusing a key with changed content produces an `idempotency_conflict` error instead of silently publishing something different. Provider request keys also include the tenant scope, so a shared account cannot collapse two tenants' independent intentions into one provider request.
+
+## Retry budgets are bounded
+
+Every external operation accepts a retry budget with a maximum attempt count and a total elapsed-time budget. Reads may retry within that budget. Public writes are dispatched once; the transport does not resend a mutation whose response was lost.
+
+## Unknown is not failure
+
+A timeout or transport failure after dispatch produces an `unknown` outcome, because the platform may have completed the write. Blindly retrying an unknown outcome is how applications double-post. Preserve the delivery reference, reconcile with `posts.getDelivery`, and retry only after the reconciled state says the write did not happen.
+
+```ts
+const outcome = result.outcomes[0];
+if (outcome?.state === "unknown" && outcome.delivery) {
+  const delivery = await social.posts.getDelivery(outcome.delivery);
+  if (delivery.state === "failed") {
+    // Safe to retry with the same idempotency key.
+  }
+}
+```
+
+## Retries select failed targets only
+
+Each target gets an independent outcome. A retry must select only the failed or uncertain targets, keeping successful deliveries untouched. The request-level key plus per-target fingerprints make that selection safe.
+
+Job runners with at-least-once semantics pair well with this model: the runner may re-execute, and the key makes re-execution harmless. See the [Trigger.dev](/integrations/trigger-dev) and [Inngest](/integrations/inngest) patterns.

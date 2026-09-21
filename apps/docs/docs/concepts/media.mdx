@@ -1,0 +1,42 @@
+---
+title: Media
+description: Attach images and video through URLs, blobs, streams, and uploaded references with bounded memory and explicit processing states.
+---
+
+Media attachments describe real bytes and where they come from. The SDK bounds what it buffers, validates what each platform accepts, and keeps processing states explicit.
+
+## Four media sources
+
+Every attachment names a `kind` (image or video) and a `source`:
+
+```ts
+// A public HTTPS URL the platform fetches itself
+{ kind: "image", source: { kind: "https-url", url: "https://cdn.example.com/a.jpg" } }
+
+// Bytes you hold in memory
+{ kind: "video", source: { kind: "blob", blob, fingerprint: contentHash }, mimeType: "video/mp4", byteSize: blob.size }
+
+// A replayable stream factory for large files
+{ kind: "video", source: { kind: "stream", open: () => file.stream(), fingerprint: contentHash } }
+
+// A previously uploaded, account-bound media reference
+{ kind: "image", source: { kind: "media-ref", ref: mediaRef } }
+```
+
+Blob and stream sources require a content fingerprint, which feeds idempotency so a retried request reuses the same upload identity. Optional fields like `mimeType`, `byteSize`, dimensions, `durationSeconds`, `altText`, and captions travel with the attachment where platforms accept them.
+
+## Streams are bounded and replayable
+
+Uploads read streams with bounded buffering, so a large video does not sit fully in memory. The source must be replayable: the adapter may need a fresh stream for a retry, which is why the stream source is a factory function rather than a consumed stream.
+
+## Platforms differ, loudly
+
+Each adapter validates media against its platform's real rules during local preparation: which sources it accepts, size ceilings, item counts, required fields. TikTok accepts verified HTTPS origins only. X uploads blobs up to 5 MiB per image. Bluesky enforces a four-image maximum. YouTube requires exactly one video with explicit visibility. Nothing is silently cropped, converted, or dropped; unsupported input fails preparation with a structured issue. The platform pages document each rule set.
+
+## Upload once, reference later
+
+Where a platform separates upload from publishing, `social.media.upload` returns an account-bound media reference you can persist and use in later publish requests through the media-ref source. Adapters check upstream readiness before publishing; a still-processing upload needs an explicit later status check, never background polling.
+
+## Processing is a state, not a promise
+
+Video pipelines return processing outcomes: the upload completed but the platform is still working. Keep the delivery reference and reconcile explicitly. A confirmed platform identity produces published; a confirmed rejection produces failed; a lost response stays unknown until reconciled. See [references and outcomes](/concepts/references-and-outcomes).
