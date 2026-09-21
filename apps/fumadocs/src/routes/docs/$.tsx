@@ -4,6 +4,7 @@ import browserCollections from "collections/browser";
 import { useFumadocsLoader } from "fumadocs-core/source/client";
 import { DocsLayout } from "fumadocs-ui/layouts/docs";
 import { DocsBody, DocsDescription, DocsPage, DocsTitle } from "fumadocs-ui/layouts/docs/page";
+import { useRef } from "react";
 import { z } from "zod";
 
 import { useMDXComponents } from "@/components/mdx";
@@ -54,8 +55,11 @@ const contentLoader = browserCollections.docs.createClientLoader({
 function Page() {
   const data = Route.useLoaderData() as LoaderData;
   const loaded = useFumadocsLoader(data);
+  // The tree is global navigation. Keep the same object as pages change so
+  // the sidebar does not reset its open sections or scroll position.
+  const pageTree = useRef(loaded.pageTree).current;
   return (
-    <DocsLayout {...baseOptions()} tree={loaded.pageTree as never}>
+    <DocsLayout {...baseOptions()} tree={pageTree as never}>
       {contentLoader.useContent(loaded.path)}
     </DocsLayout>
   );
