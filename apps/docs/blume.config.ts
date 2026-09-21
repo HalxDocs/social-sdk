@@ -23,6 +23,7 @@ export default defineConfig({
     sidebar: {
       display: "group",
       items: [
+        { label: "Overview", root: "/overview", icon: "home" },
         {
           label: "Get started",
           icon: "rocket",
