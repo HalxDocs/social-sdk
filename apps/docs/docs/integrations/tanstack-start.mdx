@@ -1,0 +1,96 @@
+---
+title: TanStack Start
+description: Publish to social platforms from TanStack Start server functions and API routes with Social SDK.
+---
+
+TanStack Start runs its server functions and API routes on Node, so Social SDK slots in directly: construct the client in server-only code, call it from server functions, and keep webhook verification on the raw request.
+
+## Install
+
+```package-install
+@opencoredev/social-sdk
+```
+
+## Create the client in server code
+
+```ts src/server/social.ts
+import { createSocial } from "@opencoredev/social-sdk";
+import { bluesky } from "@opencoredev/social-sdk/bluesky";
+
+export const social = createSocial({
+  backend: bluesky({
+    auth: {
+      service: process.env.BLUESKY_SERVICE!,
+      did: process.env.BLUESKY_DID!,
+      accessJwt: process.env.BLUESKY_ACCESS_JWT!,
+    },
+  }),
+});
+```
+
+## Publish from a server function
+
+Server functions execute only on the server, so credentials and account references never reach the client bundle:
+
+```ts src/routes/compose.tsx
+import { createServerFn } from "@tanstack/react-start";
+import { connectedAccountRef } from "@opencoredev/social-sdk";
+import { social } from "../server/social";
+
+export const publishPost = createServerFn({ method: "POST" })
+  .validator((data: { text: string; draftId: string }) => data)
+  .handler(async ({ data }) => {
+    const session = await requireSession(); // your auth
+    const accountId = await resolveAuthorizedAccount(session); // your tenant check
+
+    const result = await social.posts.publish({
+      targets: [
+        {
+          account: connectedAccountRef({
+            backend: "default",
+            platform: "bluesky",
+            accountId,
+          }),
+        },
+      ],
+      content: { text: data.text },
+      idempotencyKey: data.draftId,
+    });
+
+    return {
+      status: result.status,
+      outcomes: result.outcomes.map((o) => ({ state: o.state })),
+    };
+  });
+```
+
+Resolve the account from your own tenant data inside the handler. Client-supplied account IDs must never select the publishing account.
+
+## Webhooks through an API route
+
+API routes receive a web-standard `Request`, so verification reads the raw bytes directly:
+
+```ts src/routes/api/events.ts
+import { createAPIFileRoute } from "@tanstack/react-start/api";
+
+export const APIRoute = createAPIFileRoute("/api/events")({
+  POST: async ({ request }) => {
+    const body = new Uint8Array(await request.arrayBuffer());
+    const verification = await adapter.webhooks?.verify(
+      { headers: Object.fromEntries(request.headers), body },
+      context,
+    );
+    if (!verification?.valid) return new Response("unauthorized", { status: 401 });
+    // decode, resolve tenants, accept into your durable inbox
+    return new Response("accepted", { status: 202 });
+  },
+});
+```
+
+Follow the [events guide](/events) for decoding, tenant quarantine, and the durable inbox worker.
+
+## Notes
+
+- Deploy on a Node 22.12+ or Node 24 target; the SDK is ESM-only. Edge presets are not tested SDK runtimes.
+- Keep the client module out of route components; only server functions and API routes may import it.
+- Scheduled publishing belongs to a durable job runner such as [Trigger.dev](/integrations/trigger-dev) or [Inngest](/integrations/inngest).

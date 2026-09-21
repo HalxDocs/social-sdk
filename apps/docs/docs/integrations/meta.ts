@@ -11,6 +11,7 @@ export default defineMeta({
     "supabase",
     "express",
     "hono",
+    "tanstack-start",
     "nestjs",
     "trigger-dev",
     "inngest",
