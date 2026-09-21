@@ -15,6 +15,8 @@ export default defineConfig({
     { from: "/analytics", to: "/reads#post-metrics", status: 301 },
     { from: "/messaging", to: "/comments#messages", status: 301 },
     { from: "/overview", to: "/", status: 301 },
+    { from: "/backends/direct", to: "/backends", status: 301 },
+    { from: "/backends/managed", to: "/backends", status: 301 },
   ],
   content: {
     root: "docs",
@@ -49,8 +51,7 @@ export default defineConfig({
               icon: "server",
               collapsed: true,
               items: [
-                { label: "Choose a backend", root: "/backends" },
-                { label: "Managed setup", root: "/backends/managed" },
+                { label: "Overview", root: "/backends" },
                 { label: "Zernio", root: "/backends/zernio", icon: "/integrations/zernio.svg" },
                 {
                   label: "Post for Me",

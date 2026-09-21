@@ -1,17 +1,37 @@
 ---
-title: Backends
-description: Select the integration route that owns authentication and executes each Social SDK operation for a target account.
+title: Hosted platforms
+description: Compare Zernio and Post for Me as hosted execution routes, including what each supports, how pricing works, and how they differ from direct integrations.
 ---
 
-A backend is a configured execution route. Direct integrations call a platform API. Managed backends call Zernio or Post for Me using the developer's provider account. The package does not route traffic through a maintainer-operated service.
+A hosted platform is an optional managed backend: instead of calling a social platform's API with credentials you control, the SDK calls Zernio or Post for Me using your own provider account. The provider owns the platform apps, account connections, and upstream API relationships; your application keeps tenant authorization and outcome handling.
 
-<CardGroup cols={2}>
-  <Card title="Direct integrations" href="/backends/direct" icon="unplug">
-    Use platform credentials and authorization flows you control.
-  </Card>
-  <Card title="Managed providers" href="/backends/managed" icon="cloud">
-    Use an optional provider for supported account and operation workflows.
-  </Card>
-</CardGroup>
+Direct integrations remain the credential-free-of-middlemen route: your platform app, your tokens, your review processes, no provider charges. Each [platform page](/platforms) documents that route. Nothing routes through a maintainer-operated service in either mode, and an application can use one provider, both, or neither.
 
-Support tables are generated from adapter manifests once implementation evidence exists. They distinguish code completion, contract testing, live verification, platform approval, and released support instead of reducing those states to one checkmark.
+## Zernio
+
+[Zernio](https://zernio.link/leo) connects accounts across X, Threads, Bluesky, YouTube, TikTok, Instagram, LinkedIn, and Facebook through one API. The Social SDK adapter supports account listing, publishing, scheduling, post reads and status, media upload, analytics, verified HMAC webhooks, comments for X, Threads, Bluesky, YouTube, Instagram, LinkedIn, and Facebook, and messaging for X, Bluesky, Instagram, and Facebook.
+
+You pay Zernio directly: create an account and choose a plan at [zernio.com](https://zernio.link/leo), where current pricing is listed. Platform permissions, add-ons such as follower snapshots, and connected-account terms belong to your Zernio plan.
+
+[Set up the Zernio backend →](/backends/zernio)
+
+## Post for Me
+
+[Post for Me](https://www.postforme.dev) provides project-scoped connections and publishing through its own API. The Social SDK adapter supports account listing, publishing, scheduling, post reads and status, media upload, feed-based post analytics, and shared-secret webhooks. Comments and normalized messaging are not part of its documented API surface in this adapter.
+
+You pay Post for Me directly: plans and current pricing are listed at [postforme.dev](https://www.postforme.dev). Its documented API has no account-level metrics endpoint in this slice.
+
+[Set up the Post for Me backend →](/backends/post-for-me)
+
+## What every hosted route shares
+
+- The provider API key stays on your server and is passed to the adapter. Connected accounts are provider records that your application must map to tenants before any operation.
+- Provider acceptance is not platform publication. Preserve the provider record, inspect every destination result, and reconcile pending or uncertain deliveries.
+- Webhooks are verified with the provider's real signature or shared-secret mechanism before an event is durably accepted. See [events](/events).
+- Social SDK does not pool keys, resell provider usage, transfer authorizations between providers, or imply a sponsorship relationship.
+
+:::warning
+Moving application code from one backend to another does not move connected accounts, scheduled jobs, publication history, analytics history, or provider-native identifiers. Plan a provider migration as new authorization and data-mapping work.
+:::
+
+Support tables are generated from adapter manifests once implementation evidence exists. The [capability matrix](/reference/capabilities) distinguishes code completion, contract testing, live verification, platform approval, and released support instead of reducing those states to one checkmark.

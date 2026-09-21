@@ -1,8 +1,8 @@
 import { defineMeta } from "blume";
 
 export default defineMeta({
-  title: "Backends",
-  icon: "route",
+  title: "Hosted platforms",
+  icon: "server",
   order: 5,
-  pages: ["index", "direct", "managed", "zernio", "post-for-me"],
+  pages: ["index", "zernio", "post-for-me"],
 });
