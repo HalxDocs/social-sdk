@@ -116,7 +116,7 @@ export default defineConfig({
     },
   },
   theme: {
-    accent: "#e8542f",
+    accent: { light: "#e8542f", dark: "#f4f1ea" },
     mode: "system",
     radius: "md",
     fonts: {

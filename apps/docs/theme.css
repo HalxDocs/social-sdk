@@ -11,7 +11,9 @@
 }
 
 /* Dark mode is the landing page inverted: its ink (#1c1a17) becomes the
-   paper, warm cream becomes the ink, and the marker orange stays true. */
+   paper and warm cream becomes the ink. The accent inverts too — cream
+   instead of orange — so anything sitting on an accent surface needs
+   ink-colored text. */
 :root[data-theme="dark"] {
   --blume-background: #1c1a17;
   --blume-foreground: #f4f1ea;
@@ -19,6 +21,7 @@
   --blume-muted-foreground: #b3aca0;
   --blume-border: #38332c;
   --blume-code-background: #211e1a;
+  --blume-accent-foreground: #1c1a17;
 }
 
 /* Provider marks use real artwork, with dark-mode inversion only for brands
