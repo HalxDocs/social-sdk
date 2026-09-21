@@ -12,6 +12,7 @@ export default defineMeta({
     "events",
     "backends",
     "platforms",
+    "integrations",
     "operations",
     "reference",
     "testing",

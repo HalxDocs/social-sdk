@@ -1,0 +1,110 @@
+---
+title: Supabase
+description: Store Social SDK connections, delivery outcomes, and webhook events in Supabase Postgres with row-level security.
+---
+
+Supabase pairs with Social SDK as the durable store: Postgres holds connected accounts, publication records, delivery references, and the webhook inbox, protected by row-level security, while your Node or Bun server runs the SDK itself.
+
+## Install
+
+```package-install
+@opencoredev/social-sdk
+```
+
+## Where the SDK runs
+
+Run the SDK in your server — a Node service, a Next.js backend, or a Bun process — using the service-role Supabase client for storage. Supabase Edge Functions run on Deno, which is not one of the SDK's tested runtimes (Node 22.12+, Node 24, Bun); keep SDK calls out of edge functions and call your server instead.
+
+## Schema
+
+```sql
+create table connected_accounts (
+  id uuid primary key default gen_random_uuid(),
+  tenant_id uuid not null references tenants (id),
+  platform text not null,
+  account_id text not null,
+  backend text not null default 'default',
+  created_at timestamptz not null default now(),
+  unique (tenant_id, platform, account_id)
+);
+
+create table deliveries (
+  id uuid primary key default gen_random_uuid(),
+  tenant_id uuid not null references tenants (id),
+  idempotency_key text not null,
+  state text not null,
+  delivery_ref jsonb,
+  created_at timestamptz not null default now(),
+  unique (tenant_id, idempotency_key)
+);
+
+alter table connected_accounts enable row level security;
+alter table deliveries enable row level security;
+```
+
+Row-level security keeps each tenant's accounts and outcomes isolated even if a query is written badly. Tokens do not belong in these tables; keep them in your server's secret store.
+
+## Publish with tenant authorization from Postgres
+
+```ts
+import { createClient } from "@supabase/supabase-js";
+import { createSocial, connectedAccountRef } from "@opencoredev/social-sdk";
+import { linkedin } from "@opencoredev/social-sdk/linkedin";
+
+const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
+const social = createSocial({
+  backend: linkedin({
+    auth: { accessToken: process.env.LINKEDIN_ACCESS_TOKEN!, author: process.env.LINKEDIN_AUTHOR! },
+    apiVersion: "202609",
+  }),
+});
+
+export async function publishForTenant(tenantId: string, draftId: string, text: string) {
+  // The tenant's own row is the authorization: no row, no publish.
+  const { data: acct } = await supabase
+    .from("connected_accounts")
+    .select("platform, account_id, backend")
+    .eq("tenant_id", tenantId)
+    .eq("platform", "linkedin")
+    .single();
+  if (!acct) throw new Error("Tenant has no authorized LinkedIn account");
+
+  const result = await social.posts.publish({
+    targets: [
+      {
+        account: connectedAccountRef({
+          backend: acct.backend,
+          platform: "linkedin",
+          accountId: acct.account_id,
+        }),
+      },
+    ],
+    content: { text },
+    idempotencyKey: draftId,
+  });
+
+  await supabase.from("deliveries").upsert({
+    tenant_id: tenantId,
+    idempotency_key: draftId,
+    state: result.outcomes[0]?.state ?? "unknown",
+    delivery_ref: result.outcomes[0]?.delivery ?? null,
+  });
+
+  return result;
+}
+```
+
+The unique constraint on the tenant and idempotency key gives you a durable record per publication attempt, and the saved delivery reference is what later reconciliation reads.
+
+## Reconcile from a worker
+
+Run reconciliation from pg_cron plus a server endpoint, or any scheduler you own. Read rows whose state is `processing` or `unknown`, call `social.posts.getDelivery` with the saved reference, and update the row. The SDK does not poll in the background.
+
+## Webhook inbox
+
+Accept verified provider events into an `events_inbox` table with a unique dedupe key, following the [events guide](/events). Insert the event and its tenant resolution in one transaction, quarantine events that match no `connected_accounts` row, and let a worker process pending rows idempotently.
+
+## Notes
+
+- Use the service-role key only in server code; the anon key never authorizes publishing.
+- Supabase Auth identifies your user; the `connected_accounts` row is what authorizes a platform account for that tenant. Keep the two checks separate, as described in [authentication](/authentication).

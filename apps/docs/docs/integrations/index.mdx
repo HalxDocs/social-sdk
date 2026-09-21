@@ -1,0 +1,53 @@
+---
+title: Integrations
+description: Use Social SDK with Next.js, Convex, Supabase, Express, Hono, NestJS, Trigger.dev, Inngest, and other TypeScript stacks.
+---
+
+Social SDK is a server-side TypeScript library with no framework dependency. It runs anywhere its tested runtimes run: Node 22.12+, Node 24, and Bun. These guides show the recommended wiring for popular stacks: where the client lives, where credentials stay, how webhooks reach the verifier, and where durable state belongs.
+
+Every integration keeps the same rules. Credentials and connected-account references stay on the server. Your application authorizes the tenant before every operation. Publishing returns one outcome per destination, and uncertain outcomes are reconciled explicitly.
+
+## Frameworks
+
+<CardGroup cols={2}>
+  <Card title="Next.js" href="/integrations/nextjs">
+    Publish from App Router route handlers and server actions.
+  </Card>
+  <Card title="Express" href="/integrations/express">
+    Wire routes and raw-body webhook verification in the standard Node server.
+  </Card>
+  <Card title="Hono" href="/integrations/hono">
+    Use the fetch-native handler pattern on Node or Bun.
+  </Card>
+  <Card title="NestJS" href="/integrations/nestjs">
+    Provide the client through dependency injection with a webhook controller.
+  </Card>
+</CardGroup>
+
+## Backends and data
+
+<CardGroup cols={2}>
+  <Card title="Convex" href="/integrations/convex">
+    Call the SDK from Node actions and keep deliveries in Convex tables.
+  </Card>
+  <Card title="Supabase" href="/integrations/supabase">
+    Store connections and delivery outcomes in Postgres with row-level security.
+  </Card>
+</CardGroup>
+
+## Job runners
+
+The SDK never starts background work: no polling, no timers, no queues. Scheduled publishing and reconciliation belong to a durable job runner you own.
+
+<CardGroup cols={2}>
+  <Card title="Trigger.dev" href="/integrations/trigger-dev">
+    Run scheduled publishes and reconciliation tasks with retries you control.
+  </Card>
+  <Card title="Inngest" href="/integrations/inngest">
+    Drive event-based publishing flows with durable steps and idempotency.
+  </Card>
+</CardGroup>
+
+:::note
+These pages document integration patterns for the stacks named. They do not change what the SDK supports: the [capability matrix](/reference/capabilities) remains the source of truth for platforms, operations, and evidence levels.
+:::

@@ -1,0 +1,99 @@
+---
+title: Inngest
+description: Drive event-based social publishing flows with durable Inngest steps, retries, and Social SDK idempotency keys.
+---
+
+Inngest gives Social SDK applications durable, event-driven execution: a publish request becomes an event, each SDK call becomes a step with its own retry state, and reconciliation becomes a follow-up step instead of a background poller the SDK refuses to own.
+
+## Install
+
+```package-install
+@opencoredev/social-sdk
+```
+
+## Publish as a durable function
+
+Each `step.run` result is memoized, so a replayed function does not repeat a completed publish. The draft ID doubles as the SDK idempotency key for defense in depth.
+
+```ts src/inngest/publish.ts
+import { inngest } from "./client";
+import { createSocial, connectedAccountRef } from "@opencoredev/social-sdk";
+import { instagram } from "@opencoredev/social-sdk/instagram";
+
+const social = createSocial({
+  backend: instagram({
+    auth: {
+      accessToken: process.env.INSTAGRAM_ACCESS_TOKEN!,
+      accountId: process.env.INSTAGRAM_ACCOUNT_ID!,
+    },
+  }),
+});
+
+export const publishPost = inngest.createFunction(
+  { id: "publish-post", retries: 3 },
+  { event: "post/publish.requested" },
+  async ({ event, step }) => {
+    const draft = await step.run("load-draft", () => loadDraft(event.data.draftId));
+
+    const result = await step.run("publish", () =>
+      social.posts.publish({
+        targets: [
+          {
+            account: connectedAccountRef({
+              backend: "default",
+              platform: "instagram",
+              accountId: draft.accountId,
+            }),
+          },
+        ],
+        content: {
+          text: draft.caption,
+          media: [{ kind: "image", source: { kind: "https-url", url: draft.imageUrl } }],
+        },
+        idempotencyKey: event.data.draftId,
+      }),
+    );
+
+    await step.run("save-outcomes", () => saveOutcomes(event.data.draftId, result.outcomes));
+
+    // Instagram containers can return processing; reconcile after a pause.
+    const pending = result.outcomes.find((o) => o.state === "processing");
+    if (pending?.delivery) {
+      await step.sleep("wait-for-processing", "2m");
+      const outcome = await step.run("reconcile", () => social.posts.getDelivery(pending.delivery));
+      await step.run("save-final", () => saveDeliveryState(event.data.draftId, outcome.state));
+      return { state: outcome.state };
+    }
+
+    return { state: result.outcomes[0]?.state };
+  },
+);
+```
+
+Send the event from your API when a user hits publish:
+
+```ts
+await inngest.send({ name: "post/publish.requested", data: { draftId } });
+```
+
+## Scheduled publishing
+
+Delay the same function with a timestamp instead of running your own timer:
+
+```ts
+await inngest.send({
+  name: "post/publish.requested",
+  data: { draftId },
+  ts: draft.publishAt.getTime(),
+});
+```
+
+:::warning
+Retries re-run a failed step. If the publish step failed with an `unknown` outcome, the saved delivery reference must be reconciled before any retry publishes again; that is why outcomes are persisted in their own step. Blind retries of uncertain public writes can double-post.
+:::
+
+## Notes
+
+- Inngest functions run in your own Node service, a tested SDK runtime; the serve handler mounts next to your other routes.
+- Step memoization plus SDK idempotency keys keep at-least-once execution from becoming duplicate posts.
+- Provider webhooks still follow the [events guide](/events); an accepted inbox row can emit an Inngest event to fan out processing.

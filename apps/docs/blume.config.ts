@@ -25,19 +25,8 @@ export default defineConfig({
       display: "group",
       items: [
         { label: "Overview", root: "/", icon: "home" },
-        {
-          label: "Get started",
-          icon: "rocket",
-          collapsed: false,
-          items: [
-            { label: "Install", root: "/getting-started/installation" },
-            { label: "Quickstart", root: "/getting-started/mock-quickstart" },
-            {
-              label: "Choose an integration",
-              root: "/getting-started/choose-an-integration",
-            },
-          ],
-        },
+        { label: "Install", root: "/getting-started/installation", icon: "package" },
+        { label: "Quickstart", root: "/getting-started/mock-quickstart", icon: "rocket" },
         {
           label: "Platforms",
           icon: "globe-2",
@@ -55,21 +44,37 @@ export default defineConfig({
               icon: "/integrations/instagram.svg",
             },
             { label: "LinkedIn", root: "/platforms/linkedin", icon: "/integrations/linkedin.svg" },
+            {
+              label: "Hosted platforms",
+              icon: "server",
+              collapsed: true,
+              items: [
+                { label: "Choose a backend", root: "/backends" },
+                { label: "Managed setup", root: "/backends/managed" },
+                { label: "Zernio", root: "/backends/zernio", icon: "/integrations/zernio.svg" },
+                {
+                  label: "Post for Me",
+                  root: "/backends/post-for-me",
+                  icon: "/integrations/post-for-me.svg",
+                },
+              ],
+            },
           ],
         },
         {
-          label: "Backends",
-          icon: "server",
+          label: "Integrations",
+          icon: "blocks",
+          collapsed: false,
           items: [
-            { label: "Choose a backend", root: "/backends", icon: "route" },
-            { label: "Direct", root: "/backends/direct", icon: "plug" },
-            { label: "Managed setup", root: "/backends/managed", icon: "settings-2" },
-            { label: "Zernio", root: "/backends/zernio", icon: "/integrations/zernio.svg" },
-            {
-              label: "Post for Me",
-              root: "/backends/post-for-me",
-              icon: "/integrations/post-for-me.svg",
-            },
+            { label: "All integrations", root: "/integrations" },
+            "/integrations/nextjs",
+            "/integrations/convex",
+            "/integrations/supabase",
+            "/integrations/express",
+            "/integrations/hono",
+            "/integrations/nestjs",
+            "/integrations/trigger-dev",
+            "/integrations/inngest",
           ],
         },
         {

@@ -1,0 +1,114 @@
+---
+title: Hono
+description: Publish to social platforms from Hono routes on Node or Bun using web-standard Request and Response with Social SDK.
+---
+
+Hono's fetch-native design fits Social SDK directly: routes receive a standard `Request`, webhook verification reads its raw bytes, and the same app runs on Node 22.12+ or Bun without adapters.
+
+## Install
+
+```package-install
+@opencoredev/social-sdk
+```
+
+## Publish from a route
+
+```ts src/app.ts
+import { Hono } from "hono";
+import { createSocial, connectedAccountRef } from "@opencoredev/social-sdk";
+import { bluesky } from "@opencoredev/social-sdk/bluesky";
+
+const social = createSocial({
+  backend: bluesky({
+    auth: {
+      service: process.env.BLUESKY_SERVICE!,
+      did: process.env.BLUESKY_DID!,
+      accessJwt: process.env.BLUESKY_ACCESS_JWT!,
+    },
+  }),
+});
+
+const app = new Hono();
+
+app.post("/publish", async (c) => {
+  const tenant = await requireTenant(c); // your auth middleware
+  const { text, draftId } = await c.req.json();
+
+  const result = await social.posts.publish({
+    targets: [
+      {
+        account: connectedAccountRef({
+          backend: "default",
+          platform: "bluesky",
+          accountId: await resolveAuthorizedAccount(tenant),
+        }),
+      },
+    ],
+    content: { text },
+    idempotencyKey: draftId,
+  });
+
+  return c.json({
+    status: result.status,
+    outcomes: result.outcomes.map((o) => ({ state: o.state })),
+  });
+});
+
+export default app;
+```
+
+## Webhooks from the raw request
+
+Hono exposes the untouched request as `c.req.raw`, which is exactly what verification needs:
+
+```ts
+app.post("/events", async (c) => {
+  const body = new Uint8Array(await c.req.raw.arrayBuffer());
+  const verification = await adapter.webhooks?.verify(
+    { headers: Object.fromEntries(c.req.raw.headers), body },
+    context,
+  );
+  if (!verification?.valid) return c.text("unauthorized", 401);
+  // decode, resolve tenants, accept into your durable inbox
+  return c.text("accepted", 202);
+});
+```
+
+See the [events guide](/events) for the decode, quarantine, and worker steps.
+
+## Mount the example handler
+
+The repository's example handler speaks Request/Response, so it drops into Hono with one adapter line:
+
+```ts
+import { Hono } from "hono";
+import { createExampleHandler } from "@opencoredev/social-sdk-example/app";
+import { createHonoFetch } from "@opencoredev/social-sdk-example/frameworks/hono";
+
+const example = createHonoFetch(createExampleHandler());
+const app = new Hono();
+app.all("/social/*", (c) => example(c.req.raw));
+```
+
+[Framework recipes](/getting-started/framework-recipes) documents what the example handler provides.
+
+## Run on Node or Bun
+
+```ts src/server.ts
+// Bun
+import app from "./app.js";
+Bun.serve({ port: 3030, fetch: app.fetch });
+```
+
+```ts
+// Node
+import { serve } from "@hono/node-server";
+import app from "./app.js";
+serve({ fetch: app.fetch, port: 3030 });
+```
+
+## Notes
+
+- Both runtimes are tested SDK targets; the SDK is ESM-only.
+- Cloudflare Workers is not a tested SDK runtime. For Workers-fronted apps, run the SDK in a Node or Bun service behind the Worker.
+- Keep one client instance per process so per-backend concurrency limits apply.

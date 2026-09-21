@@ -1,0 +1,104 @@
+---
+title: Express
+description: Publish to social platforms from Express routes and verify webhooks against the raw request body with Social SDK.
+---
+
+Express applications construct one Social SDK client at startup and call it from route handlers. The one Express-specific requirement is webhook verification: it needs the untouched request bytes, so the events route must use the raw body parser.
+
+## Install
+
+```package-install
+@opencoredev/social-sdk
+```
+
+## Create the client once
+
+```ts src/social.ts
+import { createSocial } from "@opencoredev/social-sdk";
+import { threads } from "@opencoredev/social-sdk/threads";
+
+export const social = createSocial({
+  backend: threads({
+    auth: {
+      userId: process.env.THREADS_USER_ID!,
+      accessToken: process.env.THREADS_ACCESS_TOKEN!,
+    },
+  }),
+});
+```
+
+## Publish from a route
+
+```ts src/routes/publish.ts
+import { Router, json } from "express";
+import { connectedAccountRef } from "@opencoredev/social-sdk";
+import { social } from "../social.js";
+
+export const publishRouter = Router();
+
+publishRouter.post("/publish", json(), async (req, res) => {
+  const tenant = await requireTenant(req); // your auth middleware result
+  const accountId = await resolveAuthorizedAccount(tenant); // your lookup
+
+  const result = await social.posts.publish({
+    targets: [
+      {
+        account: connectedAccountRef({
+          backend: "default",
+          platform: "threads",
+          accountId,
+        }),
+      },
+    ],
+    content: { text: req.body.text },
+    idempotencyKey: req.body.draftId,
+  });
+
+  res.status(200).json({
+    status: result.status,
+    outcomes: result.outcomes.map((o) => ({ state: o.state })),
+  });
+});
+```
+
+Never take the account ID from the request body. Resolve it from your own tenant data so one tenant cannot publish through another's account.
+
+## Reconcile uncertain outcomes
+
+```ts
+publishRouter.post("/reconcile", json(), async (req, res) => {
+  const saved = await loadDelivery(req.body.deliveryId); // your storage
+  const outcome = await social.posts.getDelivery(saved.ref);
+  await saveDeliveryState(req.body.deliveryId, outcome.state);
+  res.json({ state: outcome.state });
+});
+```
+
+## Webhooks need the raw body
+
+`express.json()` consumes and reparses the body, which breaks signature verification. Use `express.raw()` on the events route only:
+
+```ts src/routes/events.ts
+import { Router, raw } from "express";
+
+export const eventsRouter = Router();
+
+eventsRouter.post("/events", raw({ type: "*/*", limit: "1mb" }), async (req, res) => {
+  const body = new Uint8Array(req.body as Buffer);
+  const verification = await adapter.webhooks?.verify(
+    { headers: req.headers as Record<string, string>, body },
+    context,
+  );
+  if (!verification?.valid) return res.status(401).send("unauthorized");
+  // decode, resolve tenants, accept into your durable inbox
+  res.status(202).send("accepted");
+});
+```
+
+Follow the [events guide](/events) for decoding, quarantine, and the inbox worker.
+
+## Notes
+
+- The SDK is ESM-only; run Express with `"type": "module"` on Node 22.12+ or Node 24.
+- Keep the client instance shared. Its per-backend concurrency limits work best with one instance per process.
+- Scheduled publishing belongs to a job runner such as [Trigger.dev](/integrations/trigger-dev), not to an in-process timer that dies with the dyno.

@@ -1,0 +1,121 @@
+---
+title: Next.js
+description: Publish to social platforms from Next.js App Router route handlers and server actions with Social SDK.
+---
+
+Social SDK runs in Next.js server code: route handlers, server actions, and server components. It must never reach a client component, because backend credentials and connected-account references are server secrets.
+
+## Install
+
+```package-install
+@opencoredev/social-sdk
+```
+
+## Create the client in server-only code
+
+Keep one module that constructs the client and mark it server-only so a client import fails at build time.
+
+```ts lib/social.ts
+import "server-only";
+import { createSocial } from "@opencoredev/social-sdk";
+import { x } from "@opencoredev/social-sdk/x";
+
+export const social = createSocial({
+  backend: x({
+    auth: { userId: process.env.X_USER_ID!, accessToken: process.env.X_ACCESS_TOKEN! },
+  }),
+});
+```
+
+## Publish from a route handler
+
+```ts app/api/publish/route.ts
+import { connectedAccountRef } from "@opencoredev/social-sdk";
+import { social } from "@/lib/social";
+
+export async function POST(request: Request) {
+  const session = await requireSession(request); // your auth
+  const { text } = await request.json();
+
+  const account = connectedAccountRef({
+    backend: "default",
+    platform: "x",
+    accountId: await resolveAuthorizedAccount(session), // your tenant check
+  });
+
+  const result = await social.posts.publish({
+    targets: [{ account }],
+    content: { text },
+  });
+
+  return Response.json({
+    status: result.status,
+    outcomes: result.outcomes.map((o) => ({ state: o.state })),
+  });
+}
+```
+
+The account ID must come from your own tenant-authorization lookup, never from the request body. See [tenant authorization](/concepts/tenant-authorization).
+
+## Publish from a server action
+
+```ts app/compose/actions.ts
+"use server";
+
+import { connectedAccountRef } from "@opencoredev/social-sdk";
+import { social } from "@/lib/social";
+
+export async function publishPost(formData: FormData) {
+  const session = await requireSession();
+  const account = connectedAccountRef({
+    backend: "default",
+    platform: "x",
+    accountId: await resolveAuthorizedAccount(session),
+  });
+
+  return social.posts.publish({
+    targets: [{ account }],
+    content: { text: String(formData.get("text")) },
+    idempotencyKey: String(formData.get("draftId")),
+  });
+}
+```
+
+Pass an idempotency key derived from your own draft identity so a double-submitted form cannot publish twice.
+
+## Mount the example handler
+
+The repository ships a complete Request/Response handler with account selection, publishing, reconciliation, and webhook intake. Mount it under a catch-all route:
+
+```ts app/api/social/[...path]/route.ts
+import { createNextRoute } from "@opencoredev/social-sdk-example/frameworks/next-route";
+
+export const { GET, POST } = createNextRoute();
+```
+
+See [framework recipes](/getting-started/framework-recipes) for the handler's behavior and configuration.
+
+## Webhooks
+
+Verify provider events against the raw request bytes before parsing. Next.js route handlers give you the untouched body through `request.arrayBuffer()`:
+
+```ts app/api/events/route.ts
+export async function POST(request: Request) {
+  const body = new Uint8Array(await request.arrayBuffer());
+  const verification = await adapter.webhooks?.verify(
+    { headers: Object.fromEntries(request.headers), body },
+    context,
+  );
+  if (!verification?.valid) return new Response("unauthorized", { status: 401 });
+  // decode, resolve tenants, and accept into your durable inbox
+  return new Response("accepted", { status: 202 });
+}
+```
+
+Follow the [events guide](/events) for decoding, tenant quarantine, and the durable inbox worker.
+
+## Notes
+
+- Deploy targets must run Node 22.12+ or Node 24. The SDK is ESM-only.
+- The edge runtime is not a tested target; keep these routes on the Node runtime.
+- Scheduling needs a durable job runner such as [Trigger.dev](/integrations/trigger-dev) or [Inngest](/integrations/inngest); a serverless route alone cannot guarantee a future publish.

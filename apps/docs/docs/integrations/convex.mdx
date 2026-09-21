@@ -1,0 +1,124 @@
+---
+title: Convex
+description: Publish to social platforms from Convex actions and store connections, deliveries, and webhook events in Convex tables.
+---
+
+Convex applications call Social SDK from actions running in the Node runtime, and keep the durable state the SDK deliberately does not own — connections, publication records, delivery references, and the webhook inbox — in Convex tables.
+
+## Install
+
+```package-install
+@opencoredev/social-sdk
+```
+
+## Publish from a Node action
+
+The SDK requires the Node runtime, so put publishing in a file with the `"use node"` directive. Store credentials in Convex environment variables, never in tables or client code.
+
+```ts convex/social.ts
+"use node";
+
+import { action } from "./_generated/server";
+import { api } from "./_generated/api";
+import { v } from "convex/values";
+import { createSocial, connectedAccountRef } from "@opencoredev/social-sdk";
+import { x } from "@opencoredev/social-sdk/x";
+
+export const publish = action({
+  args: { draftId: v.id("drafts"), text: v.string() },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Unauthenticated");
+
+    // Resolve the tenant's authorized account from your own table.
+    const account = await ctx.runQuery(api.accounts.authorizedFor, {
+      subject: identity.subject,
+    });
+    if (!account) throw new Error("No authorized account");
+
+    const social = createSocial({
+      backend: x({
+        auth: { userId: process.env.X_USER_ID!, accessToken: process.env.X_ACCESS_TOKEN! },
+      }),
+    });
+
+    const result = await social.posts.publish({
+      targets: [
+        {
+          account: connectedAccountRef({
+            backend: "default",
+            platform: "x",
+            accountId: account.accountId,
+          }),
+        },
+      ],
+      content: { text: args.text },
+      idempotencyKey: args.draftId,
+    });
+
+    // Persist every outcome; a mutation records it durably.
+    await ctx.runMutation(api.deliveries.record, {
+      draftId: args.draftId,
+      outcomes: result.outcomes.map((o) => ({
+        state: o.state,
+        delivery: o.delivery ?? null,
+      })),
+    });
+
+    return result.status;
+  },
+});
+```
+
+Using the Convex draft ID as the idempotency key means a retried action cannot double-publish.
+
+## Reconcile processing outcomes
+
+Store the delivery reference, then reconcile from a later action instead of polling in the background:
+
+```ts convex/reconcile.ts
+"use node";
+
+export const reconcile = action({
+  args: { deliveryId: v.id("deliveries") },
+  handler: async (ctx, args) => {
+    const saved = await ctx.runQuery(api.deliveries.get, { id: args.deliveryId });
+    const outcome = await social.posts.getDelivery(saved.ref);
+    await ctx.runMutation(api.deliveries.update, { id: args.deliveryId, state: outcome.state });
+  },
+});
+```
+
+Convex [scheduled functions](https://docs.convex.dev/scheduling/scheduled-functions) or crons can trigger reconciliation at the cadence you choose. The schedule belongs to your application; the SDK never polls on its own.
+
+## Webhooks through an HTTP action
+
+Convex HTTP actions expose the raw request, which webhook verification requires:
+
+```ts convex/http.ts
+import { httpRouter } from "convex/server";
+import { httpAction } from "./_generated/server";
+
+const http = httpRouter();
+
+http.route({
+  path: "/events",
+  method: "POST",
+  handler: httpAction(async (ctx, request) => {
+    const body = new Uint8Array(await request.arrayBuffer());
+    // Verify against raw bytes, decode, then accept into an "inbox" table.
+    // Quarantine events whose accounts resolve to no authorized tenant.
+    return new Response("accepted", { status: 202 });
+  }),
+});
+
+export default http;
+```
+
+Model the durable inbox from the [events guide](/events) as a Convex table, with a mutation that inserts the event and its dedupe key in one transaction.
+
+## Notes
+
+- Only `"use node"` actions can run the SDK; queries and mutations cannot make network calls.
+- Keep platform tokens in Convex environment variables and pass account selection through your own authorization queries.
+- Publishing state machines survive action retries because outcomes and idempotency keys live in tables.

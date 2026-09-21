@@ -1,0 +1,95 @@
+---
+title: Trigger.dev
+description: Run scheduled social publishing and delivery reconciliation as durable Trigger.dev tasks with Social SDK.
+---
+
+Social SDK deliberately owns no scheduler: nothing in the SDK fires later, polls, or retries an uncertain public write on its own. Trigger.dev supplies that missing piece as durable tasks with retries and delays you configure, while the SDK keeps every platform call explicit.
+
+## Install
+
+```package-install
+@opencoredev/social-sdk
+```
+
+## Scheduled publish as a task
+
+Store the draft and its target account in your database, then let the task publish at the scheduled moment. The draft ID doubles as the idempotency key, so a retried task run cannot double-post.
+
+```ts trigger/publish-scheduled.ts
+import { task } from "@trigger.dev/sdk/v3";
+import { createSocial, connectedAccountRef } from "@opencoredev/social-sdk";
+import { threads } from "@opencoredev/social-sdk/threads";
+
+const social = createSocial({
+  backend: threads({
+    auth: {
+      userId: process.env.THREADS_USER_ID!,
+      accessToken: process.env.THREADS_ACCESS_TOKEN!,
+    },
+  }),
+});
+
+export const publishScheduled = task({
+  id: "publish-scheduled-post",
+  retry: { maxAttempts: 3 },
+  run: async (payload: { draftId: string }) => {
+    const draft = await loadDraft(payload.draftId); // your storage
+    if (draft.status !== "scheduled") return { skipped: true };
+
+    const result = await social.posts.publish({
+      targets: [
+        {
+          account: connectedAccountRef({
+            backend: "default",
+            platform: "threads",
+            accountId: draft.accountId,
+          }),
+        },
+      ],
+      content: { text: draft.text },
+      idempotencyKey: payload.draftId,
+    });
+
+    await saveOutcomes(payload.draftId, result.outcomes); // your storage
+    return { status: result.status };
+  },
+});
+```
+
+Trigger it with a delay when the user schedules:
+
+```ts
+await publishScheduled.trigger({ draftId }, { delay: draft.publishAt });
+```
+
+:::warning
+Configure retries with the SDK's outcome model in mind. A task that failed with an `unknown` outcome must reconcile before publishing again; blind retries of uncertain public writes can double-post. Persist outcomes inside the task before it completes.
+:::
+
+## Reconciliation as a scheduled task
+
+Platforms like Threads, Instagram, TikTok, and YouTube return processing states. Reconcile them on a schedule instead of polling inline:
+
+```ts trigger/reconcile.ts
+import { schedules } from "@trigger.dev/sdk/v3";
+
+export const reconcileDeliveries = schedules.task({
+  id: "reconcile-deliveries",
+  cron: "*/5 * * * *",
+  run: async () => {
+    const pending = await loadPendingDeliveries(100); // state processing/unknown
+    for (const row of pending) {
+      const outcome = await social.posts.getDelivery(row.ref);
+      await saveDeliveryState(row.id, outcome.state);
+    }
+  },
+});
+```
+
+Each `getDelivery` call is an explicit read; nothing in the SDK re-fires the publish.
+
+## Notes
+
+- Trigger.dev tasks run on Node, a tested SDK runtime; keep the SDK client at module scope so warm task runs reuse it.
+- Keep platform tokens in Trigger.dev environment variables, scoped per deployment environment.
+- Task retries plus SDK idempotency keys are the supported pattern for at-least-once schedulers publishing at-most-once content.

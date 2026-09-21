@@ -1,0 +1,116 @@
+---
+title: NestJS
+description: Provide Social SDK through NestJS dependency injection and verify webhooks with a raw-body controller.
+---
+
+In NestJS, Social SDK becomes an injectable provider: one client instance constructed from configuration, shared across services, with a controller that keeps webhook bodies raw for verification.
+
+## Install
+
+```package-install
+@opencoredev/social-sdk
+```
+
+## Provide the client
+
+```ts src/social/social.module.ts
+import { Module } from "@nestjs/common";
+import { ConfigModule, ConfigService } from "@nestjs/config";
+import { createSocial } from "@opencoredev/social-sdk";
+import { x } from "@opencoredev/social-sdk/x";
+
+export const SOCIAL = Symbol("SOCIAL");
+
+@Module({
+  imports: [ConfigModule],
+  providers: [
+    {
+      provide: SOCIAL,
+      inject: [ConfigService],
+      useFactory: (config: ConfigService) =>
+        createSocial({
+          backend: x({
+            auth: {
+              userId: config.getOrThrow("X_USER_ID"),
+              accessToken: config.getOrThrow("X_ACCESS_TOKEN"),
+            },
+          }),
+        }),
+    },
+  ],
+  exports: [SOCIAL],
+})
+export class SocialModule {}
+```
+
+## Publish from a service
+
+```ts src/publishing/publishing.service.ts
+import { Inject, Injectable } from "@nestjs/common";
+import { connectedAccountRef } from "@opencoredev/social-sdk";
+import { SOCIAL } from "../social/social.module";
+
+@Injectable()
+export class PublishingService {
+  constructor(@Inject(SOCIAL) private readonly social: ReturnType<typeof createSocial>) {}
+
+  async publish(tenantId: string, draftId: string, text: string) {
+    const accountId = await this.resolveAuthorizedAccount(tenantId); // your lookup
+
+    const result = await this.social.posts.publish({
+      targets: [
+        {
+          account: connectedAccountRef({
+            backend: "default",
+            platform: "x",
+            accountId,
+          }),
+        },
+      ],
+      content: { text },
+      idempotencyKey: draftId,
+    });
+
+    await this.saveOutcomes(tenantId, draftId, result.outcomes); // your storage
+    return result;
+  }
+}
+```
+
+Guards and your tenant lookup own authorization. The SDK checks capabilities and account-to-backend binding, not your application's user model.
+
+## Webhooks with a raw body
+
+Enable Nest's raw-body support and read `req.rawBody` in the events controller:
+
+```ts src/main.ts
+const app = await NestFactory.create(AppModule, { rawBody: true });
+```
+
+```ts src/events/events.controller.ts
+import { Controller, Post, Req, Res } from "@nestjs/common";
+import type { RawBodyRequest } from "@nestjs/common";
+
+@Controller("events")
+export class EventsController {
+  @Post()
+  async receive(@Req() req: RawBodyRequest<Request>, @Res() res: Response) {
+    const body = new Uint8Array(req.rawBody!);
+    const verification = await adapter.webhooks?.verify(
+      { headers: req.headers as Record<string, string>, body },
+      context,
+    );
+    if (!verification?.valid) return res.status(401).send("unauthorized");
+    // decode, resolve tenants, accept into your durable inbox
+    return res.status(202).send("accepted");
+  }
+}
+```
+
+The [events guide](/events) covers decoding, tenant quarantine, and the durable inbox worker.
+
+## Notes
+
+- Run on Node 22.12+ or Node 24; the SDK is ESM-only, so use a NestJS setup that emits or runs ESM.
+- One provider instance per process keeps per-backend concurrency limits meaningful.
+- Put scheduled publishing in a durable job runner like [Trigger.dev](/integrations/trigger-dev) or [Inngest](/integrations/inngest) rather than `@nestjs/schedule` timers that vanish on redeploys, unless a missed run is acceptable.
