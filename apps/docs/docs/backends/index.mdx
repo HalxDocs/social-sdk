@@ -1,0 +1,17 @@
+---
+title: Backends
+description: Select the integration route that owns authentication and executes each Social SDK operation for a target account.
+---
+
+A backend is a configured execution route. Direct integrations call a platform API. Managed backends call Zernio or Post for Me using the developer's provider account. The package does not route traffic through a maintainer-operated service.
+
+<CardGroup cols={2}>
+  <Card title="Direct integrations" href="/backends/direct" icon="unplug">
+    Use platform credentials and authorization flows you control.
+  </Card>
+  <Card title="Managed providers" href="/backends/managed" icon="cloud">
+    Use an optional provider for supported account and operation workflows.
+  </Card>
+</CardGroup>
+
+Support tables are generated from adapter manifests once implementation evidence exists. They distinguish code completion, contract testing, live verification, platform approval, and released support instead of reducing those states to one checkmark.

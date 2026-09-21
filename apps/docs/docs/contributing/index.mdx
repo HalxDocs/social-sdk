@@ -1,0 +1,18 @@
+---
+title: Contributing
+description: Add a social adapter with typed capabilities, contract fixtures, source evidence, and honest verification states.
+---
+
+An adapter is complete only when its implementation, capability manifest, contract tests, docs, and evidence agree. Start with current primary platform or provider documentation and record API revision, endpoint, scopes, account eligibility, request and result shape, retry semantics, and verification date.
+
+## Conformance requirements
+
+- Keep platform and backend identities separate.
+- Validate external data as `unknown` before mapping it into shared types.
+- Preserve provider-specific options and native access rather than silently dropping fields.
+- Map processing, accepted, published, failed, and unknown states distinctly.
+- Verify webhook signatures over the raw request body using the provider's actual mechanism.
+- Add deterministic fixtures for success, partial failure, permission, reconnect, rate limit, duplicate event, out-of-order event, and uncertain write scenarios.
+- Keep credentials and real content out of fixtures, logs, docs, and CI output.
+
+The [evidence levels](/testing/evidence-levels) page explains what contract tests can and cannot prove. Live verification and platform approval remain separate human-owned gates.

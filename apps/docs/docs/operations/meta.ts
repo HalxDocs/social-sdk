@@ -1,0 +1,3 @@
+import { defineMeta } from "blume";
+
+export default defineMeta({ title: "Operations", icon: "settings-2", order: 7, pages: ["index"] });

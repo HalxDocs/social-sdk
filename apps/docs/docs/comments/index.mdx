@@ -1,0 +1,57 @@
+---
+title: Comments and messaging
+description: Read and reply to comments, use native reactions, and work with supported private conversations across authorized social accounts.
+---
+
+Public replies and private conversations share an account connection, but use different references and permissions. Start with the section for the interaction you need:
+
+- [Comments and replies](#comments-and-replies) attach to a native post.
+- [Reactions](#reactions) use platform-specific like/unlike helpers.
+- [Messages](#messages) belong to an authorized conversation.
+
+## Comments and replies
+
+Comments use a native `platform-post` reference for reads and a `comment` reference for replies. A reply is an engagement mutation with its own authorization and uncertain-outcome handling; it is not a publish request with special text.
+
+```ts
+// social is configured; postRef came from an authorized native post read.
+const comments = await social.comments.list(postRef);
+const commentId = comments.items[0]?.id;
+if (typeof commentId !== "string") throw new Error("No comment selected");
+
+const reply = await social.comments.reply(
+  { ...postRef, kind: "comment", commentId },
+  { text: "Thanks for sharing." },
+);
+```
+
+This fragment uses Zernio’s returned comment ID and retains the post’s account and backend reference. Do not fabricate a `commentId`, account reference, or tenant grant. If `comments.read` or `comments.write` is absent, the client returns an unavailable-capability error; the application should expose that as unsupported rather than an empty inbox. The deterministic mock backend advertises comments for local contract tests; managed adapters still depend on provider permissions. Zernio currently advertises comments for X, Threads, Bluesky, YouTube, LinkedIn, Instagram, and Facebook. See [capabilities](/reference/capabilities).
+
+## Reactions
+
+Selected reactions are available as typed native helpers: [X like/unlike](/platforms/x) and [Bluesky like-record creation/deletion](/platforms/bluesky). They do not delete or hide comments. Their application authorization requirements and uncertain-write handling are documented on each platform page. No generic moderation API is claimed.
+
+## Messages
+
+Messaging is available only on adapters that advertise `messages.read` or `messages.write`. The current Zernio manifest advertises conversation listing, message listing, and sending for X, Bluesky, Instagram, and Facebook. The local mock and Post for Me adapters do not advertise normalized messaging.
+
+```ts
+// social and accountRef belong to your authorized Zernio connection.
+const conversations = await social.messages.listConversations(accountRef);
+const conversationId = conversations.items[0]?.id;
+if (typeof conversationId !== "string") throw new Error("No conversation selected");
+
+const conversation = {
+  kind: "conversation" as const,
+  version: 1 as const,
+  backend: accountRef.backend,
+  platform: accountRef.platform,
+  accountId: accountRef.accountId,
+  conversationId,
+};
+
+const messages = await social.messages.listMessages(conversation);
+const sent = await social.messages.send(conversation, { text: "Hello" });
+```
+
+Treat this as a configured-application fragment: conversation and recipient IDs must come from an authorized provider read, and provider reply-window or recipient rules still apply. A missing capability is an explicit unsupported result. The SDK does not emulate an inbox, scrape messages, or promise delivery receipts. See [tenant authorization](/concepts/tenant-authorization) and [capabilities](/reference/capabilities).

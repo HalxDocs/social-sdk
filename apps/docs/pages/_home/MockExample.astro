@@ -1,0 +1,18 @@
+<div class="overflow-hidden rounded-blume border border-border bg-muted">
+  <div class="border-b border-border px-4 py-2 text-sm text-muted-foreground">Deterministic mock</div>
+  <pre class="overflow-x-auto px-4 py-4 text-sm"><code>{`import { createSocial, connectedAccountRef } from "@opencoredev/social-sdk";
+import { MemoryIdempotencyStore, mockBackend } from "@opencoredev/social-sdk/testing";
+
+const social = createSocial({
+  backend: mockBackend({ scenario: "immediate-text-success" }),
+  idempotencyStore: new MemoryIdempotencyStore(),
+});
+
+const result = await social.posts.publish({
+  targets: [{ account: connectedAccountRef({ backend: "default", platform: "x", accountId: "mock-account-1" }) }],
+  content: { text: "Hello from the deterministic mock." },
+  idempotencyKey: "docs-quickstart-1",
+});
+
+console.log(result.status, result.outcomes[0]?.state); // complete published`}</code></pre>
+</div>

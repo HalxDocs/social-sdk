@@ -1,0 +1,48 @@
+---
+title: Framework recipes
+description: Mount the example Request/Response handler in Node, Bun, Next.js App Router, and Hono fetch-based servers with server-side authorization.
+---
+
+The example exposes one standard `Request`/`Response` handler. Keep the backend, session, and membership configuration on the server, then adapt that handler to your framework's fetch entry point.
+
+## Node or Bun
+
+`apps/example/src/server.ts` converts Node's incoming request to a web `Request` and writes the returned `Response`. The same pattern works in Bun's `Bun.serve`:
+
+```ts
+import { createExampleHandler } from "../../apps/example/src/app.js";
+
+const handler = createExampleHandler();
+Bun.serve({ port: 3030, fetch: handler.handle });
+```
+
+The default backend is the deterministic local mock. Configure a managed backend explicitly on the server and provide an authenticated session and membership check before using real accounts.
+
+## Next.js App Router
+
+Create the catch-all route `app/api/social/[...path]/route.ts` and delegate both methods to the handler. The route module must remain server-only:
+
+```ts
+import { createNextRoute } from "../../apps/example/src/frameworks/next-route.js";
+
+export const { GET, POST } = createNextRoute();
+```
+
+For application-specific configuration, pass an injected handler to `createNextRoute` rather than reading provider keys in a client component.
+
+## Hono
+
+Hono's fetch entry point accepts the same web primitives. Use the adapter where your Hono app is created:
+
+```ts
+import { Hono } from "hono";
+import { createExampleHandler } from "../../apps/example/src/app.js";
+import { createHonoFetch } from "../../apps/example/src/frameworks/hono.js";
+
+const example = createHonoFetch(createExampleHandler());
+const app = new Hono();
+app.all("/social/*", (c) => example(c.req.raw));
+export default app;
+```
+
+All three routes preserve the same account authorization, per-target publication outcomes, idempotency, reconciliation, and webhook verification behavior. Test them with the mock backend before adding provider credentials.

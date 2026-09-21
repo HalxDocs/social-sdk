@@ -1,0 +1,20 @@
+---
+title: Platforms
+description: Compare the social operations, content formats, permissions, and evidence available through each direct platform adapter.
+---
+
+Use this page to choose a platform adapter before you read its setup guide. The matrix describes the normalized surface currently implemented in Social SDK; it does not certify credentials, app review, account eligibility, or a successful live request.
+
+| Platform                          | Publish                        | Read             | Comments    | Analytics                 |
+| --------------------------------- | ------------------------------ | ---------------- | ----------- | ------------------------- |
+| [Bluesky](/platforms/bluesky)     | Text, images                   | Posts, feeds     | Read, write | Post and account          |
+| [X](/platforms/x)                 | Text, images                   | Posts, feeds     | Write       | Post metrics              |
+| [Threads](/platforms/threads)     | Text, images, video, carousels | Posts, feeds     | —           | Post and lifetime metrics |
+| [YouTube](/platforms/youtube)     | Video                          | Videos, channels | Read, write | Post and account          |
+| [TikTok](/platforms/tiktok)       | Images, video, carousels       | Posts, feeds     | —           | Account                   |
+| [Instagram](/platforms/instagram) | Images, video, carousels       | Posts, feeds     | Read, write | Post and account          |
+| [LinkedIn](/platforms/linkedin)   | Text, images                   | Posts, feeds     | Read, write | Post and account          |
+
+A dash means the normalized direct adapter does not expose that operation. Content limits, permissions, account rules, upload behavior, API versions, and processing states remain platform-specific; open the platform guide for those details. Managed backends may expose additional operations for the same platform through their own route.
+
+For the full operation declarations, formats, backend routes, and scope guidance, see the [capability matrix](/reference/capabilities). For the difference between direct adapters and managed backends, see [Choose an integration](/getting-started/choose-an-integration).

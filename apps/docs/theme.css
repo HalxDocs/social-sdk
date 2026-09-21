@@ -1,0 +1,13 @@
+/* Provider marks use real artwork, with dark-mode inversion only for brands
+   whose official mark is black. */
+.blume-nav-link img[src^="/integrations/"] {
+  width: 1.125rem;
+  height: 1.125rem;
+  object-fit: contain;
+}
+
+:root[data-theme="dark"] .blume-nav-link img[src$="/x.svg"],
+:root[data-theme="dark"] .blume-nav-link img[src$="/threads.svg"],
+:root[data-theme="dark"] .blume-nav-link img[src$="/tiktok.svg"] {
+  filter: invert(1);
+}

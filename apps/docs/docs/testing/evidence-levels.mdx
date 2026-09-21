@@ -1,0 +1,16 @@
+---
+title: Evidence levels
+description: Read support claims by implementation, contract, live account, approval, and release evidence for each capability.
+---
+
+Social integrations can compile while remaining unusable for a particular account, scope, runtime, or platform approval state. Social SDK records those facts separately.
+
+| Level              | What it proves                                                                              | What it does not prove                              |
+| ------------------ | ------------------------------------------------------------------------------------------- | --------------------------------------------------- |
+| Implemented        | The adapter contains a real code path for the capability.                                   | The upstream request succeeds.                      |
+| Contract-tested    | Fixtures and protocol tests cover requests, responses, errors, and lifecycle mapping.       | A current live account accepts the operation.       |
+| Live-verified      | A named account class completed the recorded operation on a stated date.                    | Every account, format, region, or permission works. |
+| Approval-dependent | Code and permitted test-mode evidence exist, but public use needs platform review or audit. | Public production approval has been granted.        |
+| Released           | The verified package artifact exposes the documented module and behavior.                   | A user's credentials or account are eligible.       |
+
+A support entry also names the backend, platform, operation, format, runtime, scopes, account class, API revision, and verification date. `Unsupported by platform`, `not implemented`, `permission required`, `reconnect required`, `account ineligible`, `runtime unavailable`, and `unknown until request` remain distinct outcomes.

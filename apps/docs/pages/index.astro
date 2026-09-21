@@ -1,0 +1,83 @@
+---
+import PageLayout from "blume/components/layout/PageLayout.astro";
+import data from "blume:data";
+
+import InstallCommand from "./_home/InstallCommand.astro";
+import MockExample from "./_home/MockExample.astro";
+
+const { config } = data;
+---
+
+<PageLayout
+  site={{ title: config.title, description: config.description }}
+  logo={config.logo}
+  banner={config.banner}
+  analytics={config.analytics}
+  navigation={data.navigation}
+  favicon={config.favicon}
+  appleIcon={config.appleIcon}
+  fontCssVars={data.fontCssVars}
+  themeMode={config.theme.mode}
+  searchEnabled={config.search.enabled}
+  siteUrl={config.site}
+  ogEnabled={config.og.enabled}
+  structuredDataEnabled={config.structuredData}
+  page={{
+    title: "Social SDK",
+    description: config.description,
+    route: "/",
+  }}
+>
+  <section class="mx-auto max-w-5xl px-6 py-20 sm:py-28">
+    <p class="mb-5 font-mono text-sm font-medium text-accent">Social SDK</p>
+    <h1 class="max-w-3xl font-display text-4xl font-semibold tracking-tight sm:text-6xl">
+      Social platform integrations for TypeScript apps.
+    </h1>
+    <p class="mt-6 max-w-2xl text-lg leading-8 text-muted-foreground">
+      Connect accounts and build publishing, reads, analytics, comments, supported messaging, and event flows through direct integrations or optional managed backends.
+    </p>
+
+    <div class="mt-10 flex flex-wrap gap-3">
+      <a class="rounded-blume bg-action px-4 py-2.5 font-medium text-accent-foreground" href="/docs/getting-started/mock-quickstart">
+        Read the quickstart
+      </a>
+      <a class="rounded-blume border border-border px-4 py-2.5 font-medium hover:bg-muted" href="/docs/backends/direct">
+        Direct integrations
+      </a>
+      <a class="rounded-blume border border-border px-4 py-2.5 font-medium hover:bg-muted" href="/docs/backends/managed">
+        Managed providers
+      </a>
+    </div>
+
+    <div class="mt-14 max-w-2xl">
+      <InstallCommand />
+    </div>
+
+    <div class="mt-6 max-w-3xl">
+      <MockExample />
+    </div>
+
+    <div class="mt-16 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <a class="rounded-blume border border-border p-5 hover:border-accent" href="/docs/concepts/integration-model">
+        <h2 class="font-semibold">Publishing</h2>
+        <p class="mt-2 text-sm text-muted-foreground">Explicit targets and destination-specific outcomes.</p>
+      </a>
+      <a class="rounded-blume border border-border p-5 hover:border-accent" href="/docs/concepts/references-and-outcomes">
+        <h2 class="font-semibold">Reads and analytics</h2>
+        <p class="mt-2 text-sm text-muted-foreground">Typed native content references and honest unavailable states.</p>
+      </a>
+      <a class="rounded-blume border border-border p-5 hover:border-accent" href="/docs/concepts/tenant-authorization">
+        <h2 class="font-semibold">Accounts</h2>
+        <p class="mt-2 text-sm text-muted-foreground">Server-side authorization and backend-owned connections.</p>
+      </a>
+      <a class="rounded-blume border border-border p-5 hover:border-accent" href="/docs/testing/evidence-levels">
+        <h2 class="font-semibold">Testing</h2>
+        <p class="mt-2 text-sm text-muted-foreground">Deterministic mocks and precise verification evidence.</p>
+      </a>
+    </div>
+
+    <p class="mt-12 text-sm text-muted-foreground">
+      Social SDK is open source. Social platforms and managed services may charge separately for the accounts and operations you use.
+    </p>
+  </section>
+</PageLayout>

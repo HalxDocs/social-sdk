@@ -1,0 +1,54 @@
+---
+title: Quickstart
+description: Build and verify your first Social SDK flow without credentials, platform calls, or billable provider requests.
+---
+
+The deterministic testing backend is the safe first integration target. It accepts explicit accounts, fixtures, scenarios, and a fake clock so the same input produces the same observable result in local development and CI.
+
+```ts
+import { createSocial, connectedAccountRef } from "@opencoredev/social-sdk";
+import { MemoryIdempotencyStore, mockBackend } from "@opencoredev/social-sdk/testing";
+
+const mock = mockBackend({ scenario: "immediate-text-success" });
+const social = createSocial({
+  backend: mock,
+  idempotencyStore: new MemoryIdempotencyStore(),
+});
+
+const result = await social.posts.publish({
+  targets: [
+    {
+      account: connectedAccountRef({
+        backend: "default",
+        platform: "x",
+        accountId: "mock-account-1",
+      }),
+    },
+  ],
+  content: { text: "Hello from the deterministic mock." },
+  idempotencyKey: "docs-quickstart-1",
+});
+
+console.log(result.status, result.outcomes[0]?.state);
+// complete published
+```
+
+This is the same public API used by the repository's mock integration example. It runs without credentials and makes no network request.
+
+## What the example proves
+
+1. The application selects an account reference that belongs to the configured backend instance.
+2. It creates one publication intent with explicit targets and content.
+3. The backend returns one independent delivery outcome for each target.
+4. The application treats an accepted or processing delivery as pending, not published.
+5. No network request, credential lookup, timer, telemetry event, or background poll happens implicitly.
+
+## Failure exercise
+
+Configure one target to publish and another to fail. Keep the successful delivery and display the failed target's structured error. A retry must select only the failed or uncertain target and reuse an idempotency key according to the operation's documented policy.
+
+The [agent integration checklist](/agents/integration-checklist) turns this mock flow into a repeatable implementation and verification sequence.
+
+## Cleanup
+
+Mock state is process-local unless the test explicitly supplies a store. Reset that store and fake clock between tests so outcomes do not depend on test order.

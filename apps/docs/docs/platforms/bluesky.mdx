@@ -1,0 +1,62 @@
+---
+title: Bluesky
+description: Publish Bluesky records with existing session authorization, bounded media inputs, native thread references, and explicit reconciliation.
+---
+
+The direct Bluesky adapter accepts an existing access JWT or a restored OAuth session, together with a DID and HTTPS service URL. It intentionally leaves user-facing OAuth to the maintained `@atproto/oauth-client-node` library. That client implements the AT Protocol requirements for PKCE, PAR, DPoP, issuer checks, token refresh and identity verification; do not replace it with a generic code exchange.
+
+```ts
+import { createSocial, connectedAccountRef } from "@opencoredev/social-sdk";
+import { bluesky } from "@opencoredev/social-sdk/bluesky";
+
+const social = createSocial({
+  backend: bluesky({
+    auth: {
+      service: process.env.BLUESKY_SERVICE!,
+      did: process.env.BLUESKY_DID!,
+      accessJwt: process.env.BLUESKY_ACCESS_JWT!,
+    },
+  }),
+});
+const account = connectedAccountRef({
+  backend: "default",
+  platform: "bluesky",
+  accountId: process.env.BLUESKY_DID!,
+});
+const result = await social.posts.publish({
+  targets: [{ account }],
+  content: { text: "A Bluesky post" },
+});
+```
+
+Text and image posts are supported. The adapter validates grapheme length, creates rich-text URL facets, and enforces a 10 MiB image limit and four-image maximum. HTTPS remote image hosts must pass the configured `allowMediaHost` policy. A stream is bounded while read, but the adapter needs a replayable source for retries.
+
+Bluesky replies preserve the native AT URI and CID through the adapter's native post metadata. Native reads and thread reads are available through `social.native('default', { acknowledgeUnsafe: true })`; this path bypasses normalized middleware and must be wrapped by your tenant policy.
+
+The adapter returns the record URI/CID as the platform reference when creation succeeds. Network failures after submission are ambiguous; reconcile before retrying. OAuth session refresh remains owned by the official session transport. App-password policy and application account membership remain application responsibilities. No live account verification is recorded in this repository.
+
+For a server flow, install `@atproto/oauth-client-node@0.5.7` as an application runtime dependency and use `examples/snippets/bluesky-oauth.ts`. Host the client metadata and JWKS at the URLs named by `clientMetadata`, keep the private signing key server-side, and inject durable state/session stores. The recipe delegates `authorize`, `callback`, and `restore` to `NodeOAuthClient`; its fixture tests cover callback parsing and session restoration without a live provider. Never put access JWTs in browser code or public references. Read the [AT Protocol OAuth specification](https://atproto.com/specs/oauth) before registering metadata or callbacks.
+
+Use `examples/snippets/bluesky-sdk-session.ts` to construct the SDK adapter from the restored session. The adapter sends relative XRPC paths to `session.fetchHandler`, so the official client selects the verified token audience and attaches DPoP authentication. Do not extract an OAuth token into `accessJwt`.
+
+Bind the application state supplied to `authorize` to the authenticated tenant and principal in durable storage. Validate that binding when the callback returns, before granting the session to an account. The recipe returns state for that application check; parsing a valid OAuth callback alone does not establish tenant ownership.
+
+## Languages and mentions
+
+Set `options.languages` to at most three BCP 47 language tags. The adapter validates and canonicalizes them, then writes the native `langs` field. For a linked mention, supply an already-resolved DID and UTF-8 byte offsets in `options.mentions`. It performs no automatic handle lookup:
+
+```ts
+const content = { text: "🙂 @alice.example https://example.com" };
+const options = {
+  languages: ["en-US"],
+  mentions: [{ byteStart: 5, byteEnd: 19, did: "did:plc:alice" }],
+};
+```
+
+The emoji occupies four UTF-8 bytes, so the mention begins at byte five after the space. The DID must come from a trusted identity lookup; plain `@handle` text alone is not resolved into a mention. Preparation rejects split character boundaries, overlapping mention/link spans and malformed language tags. The managed adapters reject these options because they have no verified mapping for them.
+
+## Reactions
+
+`adapter.native.likePost` accepts an acting account and the target post’s native `{ uri, cid }`. The target may belong to another author. It creates an `app.bsky.feed.like` record in the acting account’s repository and returns that record’s URI/CID. Persist the returned URI if you need to call `adapter.native.unlikePost` later; unlike accepts only a like-record URI belonging to the configured DID, not the target post URI.
+
+Native calls bypass the client’s tenant authorization and concurrency middleware. Authorize the acting account before invoking them. Mutations use bounded transport and do not retry a lost response; reconcile uncertain acceptance before submitting again. These are fixture-tested protocol operations, not evidence of live authorization or publication.

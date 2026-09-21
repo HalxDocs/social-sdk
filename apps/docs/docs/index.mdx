@@ -1,0 +1,45 @@
+---
+title: Overview
+description: Add typed social platform features to a TypeScript application through direct integrations or optional managed backends.
+---
+
+Social SDK gives an application one typed model for connected accounts, content, media, publications, and destination outcomes. The selected account determines the integration route. A failed request never moves to a different platform or account automatically.
+
+Choose a direct integration when you want to call a platform with credentials you control. Choose a managed backend when its account connection and operation coverage fit your application. Both routes keep credentials on the server and require the application to authorize every selected account for the current tenant.
+
+Start with [authentication and tenant authorization](/authentication), review [operations and diagnostics](/operations), and see [contributing an adapter](/contributing) when extending the SDK.
+
+Use the [publishing guide](/publishing) and [public reference](/reference) when implementing a production operation.
+
+:::note
+Support is specific to a backend, platform, operation, content format, runtime, and evidence level. A provider's upstream feature is not treated as implemented or live-verified until Social SDK has matching code and evidence.
+:::
+
+## Start here
+
+<CardGroup cols={2}>
+  <Card title="Install Social SDK" href="/getting-started/installation" icon="package">
+    Add the package and choose an integration route.
+  </Card>
+  <Card
+    title="Run the mock quickstart"
+    href="/getting-started/mock-quickstart"
+    icon="flask-conical"
+  >
+    Exercise the integration without credentials or network requests.
+  </Card>
+  <Card title="Understand the model" href="/concepts/integration-model" icon="waypoints">
+    Separate platforms, backends, formats, and capabilities.
+  </Card>
+  <Card title="Choose a backend" href="/backends" icon="route">
+    Compare direct integrations with optional managed providers.
+  </Card>
+</CardGroup>
+
+## What the SDK covers
+
+The public operation families are accounts, media and publishing, content reads, analytics, comments, supported messages, webhooks, and capability discovery. Individual integrations expose only the operations they implement. Platform-specific and provider-specific access remains available through typed extension surfaces when the shared model cannot represent a richer feature faithfully.
+
+The SDK does not provide a hosted social service, database, queue, credential proxy, scheduler worker, or billing layer. Applications supply platform or managed-provider credentials and choose the storage and job infrastructure they need.
+
+Read the [integration model](/concepts/integration-model), [architecture diagrams](/concepts/architecture), and [agent integration checklist](/agents/integration-checklist) before selecting an adapter.

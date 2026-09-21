@@ -1,0 +1,27 @@
+---
+title: Integrate the Social SDK
+description: A mock-first integration path for authorized account connections, durable publishing, per-target outcomes, and verified webhook processing.
+---
+
+This guide turns the Social SDK's core contracts into an application integration. Keep account ownership in your application, use a real provider callback exchange, and treat each delivery outcome independently.
+
+## Build in this order
+
+1. Start with `packages/social-sdk/src/testing` and an in-memory idempotency store. Exercise success, partial, processing, unknown, and failed outcomes.
+2. Add `ConnectionManager` from `@opencoredev/social-sdk/server`. Configure an exact HTTPS callback allowlist, bind attempts to the authenticated tenant and principal, and require explicit account selection before storing grants.
+3. Implement `ConnectionProvider.complete` with the provider's documented callback and token APIs. The SDK does not pretend to complete OAuth for a provider it cannot call.
+4. Pass `{ authorization: { tenantId, principalId } }` to publish and facade calls. Reject account refs that are not members of the requesting tenant before dispatch.
+5. Verify webhook signatures over the untouched request bytes. Decode the event, resolve account IDs to tenant IDs, and call `acceptWebhook` into an application-owned inbox. Unknown mappings are quarantined; duplicates are acknowledged without reprocessing.
+6. Replace in-memory stores with durable transactions for connection attempts, grants, credentials, idempotency, and inbox state before production.
+
+## Recipes
+
+The repository skill includes executable TypeScript shapes for `skills/integrate-social-sdk/references/mock-server.ts`, `skills/integrate-social-sdk/references/connection-callback.ts`, `skills/integrate-social-sdk/references/render-outcomes.ts`, `skills/integrate-social-sdk/references/webhook-handler.ts`, and `skills/integrate-social-sdk/references/integration.test.ts`.
+
+## Review checklist
+
+- Provider secrets stay on the server.
+- Every publish result is rendered per target, including `unknown` and `not-submitted`.
+- Callback state, redirect URI, tenant, principal, expiry, and replay are checked.
+- Webhooks are verified before parsing and accepted into a deduplicated inbox before processing.
+- Tests cover unauthorized selection, callback replay, duplicate events, partial results, and quarantine.

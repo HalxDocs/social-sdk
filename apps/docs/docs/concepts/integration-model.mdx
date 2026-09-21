@@ -1,0 +1,21 @@
+---
+title: Integration model
+description: Understand the four independent concepts that define Social SDK behavior and keep platform routing explicit for every call.
+---
+
+Social SDK keeps four concepts separate because combining them produces unsafe routing and misleading capability claims.
+
+| Concept        | Meaning                                           | Examples                                                                  |
+| -------------- | ------------------------------------------------- | ------------------------------------------------------------------------- |
+| Platform       | The network where activity occurs.                | X, Threads, Bluesky, YouTube, TikTok, Instagram, LinkedIn                 |
+| Backend        | The configured route that executes an operation.  | A direct integration, Zernio, Post for Me                                 |
+| Content format | The structure submitted to an operation.          | Text, image, video, carousel, ordered sequence                            |
+| Capability     | An operation an integration can actually perform. | Publish, read, analytics, comment reply, message send, event verification |
+
+An account reference records its backend instance and platform. Selecting the account therefore selects the route. The client does not scan for another backend that might accept the request.
+
+Formats overlap. A platform can support photos and video, and one publication can contain text plus ordered media. Documentation groups integrations by useful filters without creating separate text and video SDKs.
+
+Capabilities are evidence-based. Static discovery is local and side-effect free. An explicit account-aware check may contact a backend and reports its provenance and freshness; it does not run before every operation by default.
+
+See the [architecture diagrams](/concepts/architecture) for the routing, grant, delivery, and webhook flows.

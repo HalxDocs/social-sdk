@@ -1,0 +1,28 @@
+---
+title: Installation
+description: Install Social SDK, keep credentials server-side, and select only the integration modules your application uses.
+---
+
+Social SDK targets server-side TypeScript applications. Keep platform access tokens, managed-provider keys, OAuth client secrets, and webhook secrets out of browser bundles.
+
+## Install the package
+
+```package-install
+@opencoredev/social-sdk
+```
+
+Import the core client from the package root. Import each direct integration or managed backend from its documented subpath so unrelated adapters do not enter the application bundle.
+
+## Choose the first route
+
+- Start with the deterministic testing backend when you are building the application flow or running CI.
+- Use a direct integration when the application already has suitable platform credentials or will own the platform authorization flow.
+- Use Zernio or Post for Me when the application will use that provider's connection and execution service.
+
+Managed services are optional. A direct integration does not require a Zernio, Post for Me, or Social SDK account. A managed integration uses the developer's own provider account and may create provider charges.
+
+## Runtime boundary
+
+Create clients inside trusted server code. A browser may send an authenticated application request that names content and an application-owned account selection, but it must not receive backend credentials or an unrestricted connected-account reference.
+
+Next, use the [quickstart](/getting-started/mock-quickstart) to verify your application without external side effects, then [choose an integration](/getting-started/choose-an-integration).

@@ -1,0 +1,23 @@
+---
+title: References and outcomes
+description: Keep account, publication, delivery, native post, schedule, and media identifiers distinct in application code.
+---
+
+A public reference is a JSON-safe locator, not a secret and not an authorization decision. It contains enough backend and platform context to reject a mismatched operation. The application still checks that the current tenant may use the referenced account.
+
+## Resource boundaries
+
+- A connected account identifies an authorized social identity through one backend instance.
+- A publication records the application's intent and can contain several target deliveries.
+- A delivery records one target's attempt and outcome.
+- A platform post identifies content on the destination network, including content that Social SDK did not create.
+- A scheduled job belongs to a backend or application worker and is not a platform post.
+- Media, comments, and conversations have their own reference types.
+
+These identifiers are not interchangeable. Removing a provider record, cancelling a pending schedule, and deleting content from a platform are separate operations with different permissions and side effects.
+
+## Outcome boundaries
+
+Each target reports its own lifecycle. `accepted` or `processing` means the backend took responsibility for more work. Only a destination-specific published state with a native post reference proves publication. A timeout can leave the result unknown; retrying that write blindly can duplicate public content.
+
+Applications retain successful targets, reconcile uncertain targets, and retry only targets whose documented idempotency and failure state make a retry safe.
