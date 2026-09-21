@@ -1,0 +1,3132 @@
+ 
+
+		
+
+			
+		
+
+			
+Comments API - LinkedIn | Microsoft Learn
+
+			
+
+			
+
+			
+
+
+			
+
+			
+ 
+
+			
+
+			
+
+			
+
+			
+
+			
+
+			
+
+			
+
+			
+
+			
+
+			
+
+			
+ 
+
+			
+
+			 
+			
+
+
+			
+
+
+			
+
+			
+
+			
+
+			
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	 
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+
+			
+
+			
+
+				(function () {
+			try {
+				var stored = localStorage.getItem('theme');
+				var theme = /^(light|dark|high-contrast)$/.test(stored)
+					? stored
+					: matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+				document.documentElement.classList.add('theme-' + theme);
+			} catch (e) {}
+		})();;
+			
+
+
+			
+
+				(function () {
+			try {
+				var state = JSON.parse(localStorage.getItem('atlas-layout-preferences') || '{}');
+				var view = state["docs-layout-persistence"] || {};
+				var excludesKey = "";
+				var blocked = {};
+				if (excludesKey) {
+					var exclusions = JSON.parse(localStorage.getItem('atlas-layout-exclusions') || '{}');
+					if (Object.prototype.hasOwnProperty.call(exclusions, excludesKey)) {
+						var scoped = exclusions[excludesKey];
+						if (scoped) {
+							if (typeof scoped === 'object') blocked = scoped;
+						}
+					}
+				}
+				var html = document.documentElement;
+				for (var c in view) {
+					if (Object.prototype.hasOwnProperty.call(blocked, c)) continue;
+					if (view[c]) html.classList.add(c);
+					else html.classList.remove(c);
+				}
+			} catch (e) {}
+		})();;
+			
+
+
+			
+
+			
+			
+
+			
+			
+
+			
+
+			
+
+			
+
+			
+
+			
+
+		var msDocs = {
+  "environment": {
+    "accessLevel": "online",
+    "azurePortalHostname": "portal.azure.com",
+    "reviewFeatures": false,
+    "supportLevel": "production",
+    "systemContent": true,
+    "siteName": "learn",
+    "legacyHosting": false
+  },
+  "data": {
+    "contentLocale": "en-us",
+    "contentDir": "ltr",
+    "userLocale": "en-us",
+    "userDir": "ltr",
+    "pageTemplate": "Conceptual",
+    "layoutStateStorageKey": "docs-layout-persistence",
+    "brand": "",
+    "context": {},
+    "standardFeedback": true,
+    "showFeedbackReport": false,
+    "feedbackHelpLinkType": "",
+    "feedbackHelpLinkUrl": "",
+    "feedbackSystem": "Standard",
+    "feedbackGitHubRepo": "",
+    "feedbackProductUrl": "https://www.linkedin.com/help/linkedin/ask/dsapi",
+    "extendBreadcrumb": true,
+    "isEditDisplayable": false,
+    "isPrivateUnauthorized": false,
+    "hideViewSource": false,
+    "isPermissioned": false,
+    "hasRecommendations": true
+  },
+  "functions": {}
+};;
+	
+
+
+			
+
+			
+
+			
+
+			
+
+			
+		
+
+	
+			
+
+				
+
+		
+
+			
+		
+
+			Skip to main content
+		
+
+	
+		
+
+			Skip to Ask Learn chat experience
+		
+
+	
+
+			
+
+			
+
+			
+
+				
+
+					
+This browser is no longer supported.
+
+					
+
+						Upgrade to Microsoft Edge to take advantage of the latest features, security updates, and technical support.
+					
+
+					
+
+						
+
+							Download Microsoft Edge
+						
+
+						
+
+							More info about Internet Explorer and Microsoft Edge
+						
+
+					
+
+				
+
+			
+
+			
+
+			
+
+				
+
+				
+
+				
+
+			
+
+			
+		
+
+		
+
+			
+
+			
+		
+
+		
+
+	
+		
+
+	
+
+				 
+
+					
+		
+
+			
+
+				
+
+					
+
+						
+
+							
+
+								
+
+								
+
+							
+
+						
+
+						
+
+					
+
+				
+
+			
+
+		
+
+	
+			  
+
+
+				
+
+					
+			
+
+		
+
+			
+
+				
+
+				
+ Table of contents 
+
+			
+
+			
+
+				
+
+				
+Exit editor mode
+
+			
+
+		
+
+	
+ 
+		
+
+	
+			
+
+				
+
+					
+		
+
+			
+
+				
+		
+
+			
+
+				
+
+					
+
+				
+
+			
+
+			
+
+		
+
+
+		
+
+	 
+		
+
+			
+		
+
+			
+
+				
+
+			
+
+		
+
+		
+
+			
+
+				
+
+			
+
+			
+Ask Learn
+
+		
+
+		
+
+			
+
+				
+
+			
+
+			
+Ask Learn
+
+		
+
+	 
+
+			
+
+				
+
+					
+
+						
+
+					
+
+				
+
+				
+
+					
+		
+
+			
+
+				
+
+			
+
+			
+Reading mode
+
+		
+
+	 
+		
+
+			
+
+			
+Table of contents
+
+		
+
+	 
+		
+
+			
+
+				
+
+			
+
+			
+Read in English
+
+		
+
+	
+					
+		
+
+			
+
+				
+
+			
+
+			
+Add
+
+		
+
+	 
+		
+
+			
+
+				
+
+			
+
+			
+Add to Plans
+
+		
+
+	 
+					
+		
+
+			
+
+				
+
+			
+
+			
+Edit
+
+		
+
+	  
+		
+
+		
+				
+
+					
+
+						
+
+						
+
+						
+
+					
+
+					
+Copy Markdown
+
+				
+
+		   
+				
+
+					
+
+						
+
+					
+
+					
+Print
+
+				
+
+		  
+	
+				
+
+			
+
+		
+
+	
+			
+
+		
+
+	  
+		
+
+		
+
+			
+
+			
+
+				
+
+					
+
+						
+
+						
+Note
+
+					
+
+					
+
+						Access to this page requires authorization. You can try 
+signing in
+ or 
+changing directories
+.
+					
+
+					
+
+						Access to this page requires authorization. You can try 
+changing directories
+.
+					
+
+				
+
+			
+
+		
+
+	
+					
+Comments API
+
+					
+		
+
+			 
+				
+
+					
+		
+
+			
+
+				
+
+			
+
+			
+Feedback
+
+		
+
+	
+				
+
+		  
+		
+
+	 
+		
+
+			
+
+				
+
+					
+
+				
+
+				
+
+					
+
+						Summarize this article for me
+					
+
+				
+
+			
+
+			
+
+			
+
+		
+
+	 
+		
+
+			
+
+				In this article
+			
+
+		
+
+	 
+
+
+Warning
+
+
+Deprecation Notice:
+
+The Marketing Version 202510 (Marketing October 2025) will be sunset on October 15, 2026. We recommend that you migrate to the latest 
+versioned APIs
+ to avoid disruptions. For information on all the supported versions, refer to the 
+migrations
+ documentation.
+If you haven’t yet migrated and have questions, submit a request on the 
+LinkedIn Developer Support Portal
+.
+
+
+
+
+Some shares may have comments attached to them. The 
+socialActions/comments
+ API enables you to write and read comments on shares.
+
+
+The service currently provides the following methods:
+
+
+
+
+Get a Comment
+
+
+Batch Get a Collection of Comments
+
+
+Get Comments on Shares
+
+
+Get Comments on Comments
+
+
+Create a Comment
+
+
+Edit a Comment
+
+
+Delete a Comment
+
+
+
+
+For reactions and social metadata on social actions on a post, please see 
+Reactions
+ and 
+Social Metadata
+.
+
+
+Permissions
+
+
+
+
+
+
+
+
+Permission
+
+
+Description
+
+
+
+
+
+
+
+
+
+
+w_organization_social_feed
+
+
+Post, comment, and react on posts on behalf of an organization. Restricted to organizations in which the authenticated member has one of the following company page roles: 
+ADMINISTRATOR
+DIRECT_SPONSORED_CONTENT_POSTER
+RECRUITING_POSTER
+
+
+
+
+
+
+r_organization_social_feed
+
+
+Retrieve organizations' posts, comments, and reactions. Restricted to organizations in which the authenticated member has one of the following company page roles. 
+ADMINISTRATOR
+DIRECT_SPONSORED_CONTENT_POSTER
+
+
+
+
+
+
+w_member_social_feed
+
+
+Post, comment, and react on posts on behalf of an authenticated member.
+
+
+
+
+
+
+r_member_social_feed
+
+
+Restricted
+ Retrieve posts, reactions, and likes on behalf of an authenticated member. This permission is granted to select developers only.
+
+
+
+
+
+
+
+
+For more information about company page roles, refer to 
+Organization Access Control by role
+.
+
+
+Social Actions Comments
+
+
+The 
+socialActions
+ endpoint provides 
+comments
+ API that allows access to both personal and organization comments. The type of URN specified in the 
+actor
+ field of a comment indicates the type:
+
+
+
+
+
+
+
+
+URN Type
+
+
+Comment Type
+
+
+Description
+
+
+
+
+
+
+
+
+
+
+urn:li:person
+
+
+Personal
+
+
+Comment was created by a member. The member is displayed as the publisher.
+
+
+
+
+
+
+urn:li:organization
+ 
+urn:li:organizationBrand
+
+
+Organization
+
+
+Comment was created by a member on behalf of an organizational entity. The organization or brand is displayed as the publisher.
+
+
+
+
+
+
+
+
+Comment Urns
+
+
+A comment URN is a composite URN constructed using the ID of the comment and the URN of the thread the comment is on. For example, a comment with an ID of 
+6636062862760562688
+ on thread URN 
+urn:li:activity:6631349431612559360
+ would look like - 
+urn:li:comment:(urn:li:activity:6631349431612559360,6636062862760562688)
+.
+
+
+Get a Comment
+
+
+
+
+
+
+
+
+http
+
+
+
+
+
+
+curl
+
+
+
+
+
+
+
+
+
+GET https://api.linkedin.com/rest/socialActions/{shareUrn|ugcPostUrn|commentUrn}/comments/{commentId}
+
+
+
+
+
+
+
+
+curl -X GET 'https://api.linkedin.com/rest/socialActions/{shareUrn|ugcPostUrn|commentUrn}/comments/{commentId}' \
+-H 'Authorization: Bearer {INSERT_TOKEN}'\
+-H 'Linkedin-Version: {version number in the format YYYYMM}' \
+-H 'X-Restli-Protocol-Version: 2.0.0' 
+
+
+
+
+
+
+
+Sample Response
+
+
+    {
+     "actor":"urn:li:person:f49f2kf0",
+     "commentUrn":"urn:li:comment:(urn:li:activity:6631349431612559360,6636062862760562688)",
+     "created":{
+        "actor":"urn:li:person:f49f2kf0",
+        "time":1582160678569
+     },
+     "id":"6636062862760562688",
+     "lastModified":{
+        "actor":"urn:li:person:f49f2kf0",
+        "time":1582160678569
+     },
+     "likesSummary": {
+        "aggregatedTotalLikes": 1,
+        "selectedLikes": [
+           "urn:li:like:(urn:li:person:A8xe03Qt10,urn:li:comment:(urn:li:activity:6631349431612559360,6636062862760562688))"
+        ],
+        "likedByCurrentUser": true,
+        "totalLikes": 1
+     },
+     "parentComment": "urn:li:comment:(urn:li:activity:6631349431612559360,6850752781414875136)",
+     "message":{
+        "attributes":[],
+        "text":"Comment with comment-image media"
+     },
+     "content":[
+        {
+           "type":"IMAGE",
+           "entity":{
+              "image":"urn:li:image:C552CAQGu16obsGZENQ"
+           },
+            }
+     ],
+     "object":"urn:li:activity:6631349431612559360"
+    }
+
+
+
+Batch Get a Collection of Comments
+
+
+
+
+
+
+
+
+http
+
+
+
+
+
+
+curl
+
+
+
+
+
+
+
+
+
+GET https://api.linkedin.com/rest/socialActions/{shareUrn|ugcPostUrn|commentUrn}/comments/ids=List({commentId})
+
+
+
+
+
+
+
+
+curl -X GET 'https://api.linkedin.com/rest/socialActions/{shareUrn|ugcPostUrn|commentUrn}/comments?ids=List({commentId})' \
+-H 'Authorization: Bearer {INSERT_TOKEN}' \
+-H 'Linkedin-Version: {version number in the format YYYYMM}' \
+-H 'X-Restli-Protocol-Version: 2.0.0' 
+ 
+
+
+
+
+
+
+
+Sample Response
+
+
+{
+    "statuses": {},
+    "results": {
+        "6636062862760562688": {
+            "actor":"urn:li:person:f49f2kf0",
+            "commentUrn":"urn:li:comment:(urn:li:activity:6631349431612559360,6636062862760562688)",
+            "created":{
+                "actor":"urn:li:person:f49f2kf0",
+                "time":1582160678569
+            },
+            "id":"6636062862760562688",
+            "lastModified":{
+                "actor":"urn:li:person:f49f2kf0",
+                "time":1582160678569
+            },
+            "likesSummary": {
+               "aggregatedTotalLikes": 1,
+               "selectedLikes": [
+                  "urn:li:like:(urn:li:person:A8xe03Qt10,urn:li:comment:(urn:li:activity:6631349431612559360,6636062862760562688))"
+               ],
+               "likedByCurrentUser": true,
+               "totalLikes": 1
+            },
+            "parentComment": "urn:li:comment:(urn:li:activity:6631349431612559360,6636062862760562688)",
+            "message":{
+                "attributes":[],
+                "text":"Comment with comment-image media"
+            },
+            "content":[
+                {
+                   "type":"IMAGE",
+                   "entity":{
+                      "image":"urn:li:image:C552CAQGu16obsGZENQ"
+                   },
+                }
+            ],
+            "object":"urn:li:activity:6631349431612559360"
+       },
+       "6643206422739898368": {
+            "actor": "urn:li:organization:5637409",
+            "agent": "urn:li:person:CnpTkB7V70",
+            "commentUrn": "urn:li:comment:(urn:li:activity:6641861161010679808,6643206422739898368)",
+            "created": {
+                "actor": "urn:li:organization:5637409",
+                "impersonator": "urn:li:person:CnpTkB7V70",
+                "time": 1583863835990
+            },
+            "id": "6643206422739898368",
+            "lastModified": {
+                "actor": "urn:li:organization:5637409",
+                "impersonator": "urn:li:person:CnpTkB7V70",
+                "time": 1583863835990
+            },
+            "likesSummary": {
+               "aggregatedTotalLikes": 2,
+               "selectedLikes": [
+                  "urn:li:like:(urn:li:person:CnpTkB7V70,urn:li:comment:(urn:li:activity:6631349431612559360,6636062862760562688))",
+                  "urn:li:like:(urn:li:person:f49f2kf0,urn:li:comment:(urn:li:activity:6631349431612559360,6636062862760562688))"
+               ],
+               "likedByCurrentUser": false,
+               "totalLikes": 2
+            },
+            "message": {
+                "attributes": [],
+                "text": "A sample text comment"
+            },
+            "object": "urn:li:activity:6641861161010679808"
+        }
+    },
+    "errors": {}
+}
+
+
+
+Get Comments on Shares
+
+
+Sample Request
+
+
+
+
+
+
+
+
+http
+
+
+
+
+
+
+curl
+
+
+
+
+
+
+
+
+
+GET https://api.linkedin.com/rest/socialActions/{shareUrn|ugcPostUrn|commentUrn}/comments
+
+
+
+
+
+
+
+
+curl -X GET 'https://api.linkedin.com/rest/socialActions/{shareUrn|ugcPostUrn|commentUrn}/comments' \
+-H 'Authorization: Bearer {INSERT_TOKEN}' \
+-H 'Linkedin-Version: {version number in the format YYYYMM}' \
+-H 'X-Restli-Protocol-Version: 2.0.0' 
+
+
+
+
+
+
+
+
+If your request exceeds the 
+maximum length requirement
+, please utilize query tunneling:
+
+
+curl -X POST 'https://api.linkedin.com/rest/socialActions/{shareUrn|ugcPostUrn|commentUrn}/comments \
+-H 'X-HTTP-Method-Override: GET' \
+-H 'Content-Type: application/x-www-form-urlencoded' \
+-H 'Authorization: Bearer redacted' \
+-H 'X-Restli-Protocol-Version: 2.0.0' \
+-H 'Linkedin-Version: {version number in the format YYYYMM}' 
+--data '{...}'
+
+
+
+Sample Response
+
+
+{
+   "elements":[
+      {
+        "actor":"urn:li:person:A8xe03Qt10",
+        "commentUrn":"urn:li:comment:(urn:li:activity:6631349431612559360,6636062862760562688)",
+        "created":{
+          "actor":"urn:li:person:A8xe03Qt10",
+          "time":1582160678569
+        },
+        "id":"6636062862760562688",
+        "lastModified":{
+            "actor":"urn:li:person:A8xe03Qt10",
+            "time":1582160678569
+        },
+        "likesSummary": {
+           "aggregatedTotalLikes": 1,
+           "selectedLikes": [
+              "urn:li:like:(urn:li:person:A8xe03Qt10,urn:li:comment:(urn:li:activity:6631349431612559360,6636062862760562688))"
+           ],
+           "likedByCurrentUser": true,
+           "totalLikes": 1
+        },
+        "message":{
+            "attributes":[],
+            "text":"Comment with comment-image media"
+        },
+        "content":[
+          {
+            "type":"IMAGE",
+            "entity":{
+               "image":"urn:li:image:C552CAQGu16obsGZENQ"
+            },
+}
+        ],
+        "object":"urn:li:activity:6631349431612559360"
+    }
+  ]
+}
+
+
+
+Get Comments on Comments
+
+
+To resolve nested comments for a given parent comment, provide a parent 
+commentUrn
+ as the target in the request URL. A 
+commentUrn
+ is a composite URN constructed using a threadUrn such as an 
+ActivityUrn
+ and a comment ID.
+
+
+Sample Request
+
+
+
+
+
+
+
+
+http
+
+
+
+
+
+
+curl
+
+
+
+
+
+
+
+
+
+GET https://api.linkedin.com/rest/socialActions/urn:li:comment:(urn:li:activity:6273189577469632512,6275822846992351232)/comments
+
+
+
+
+
+
+
+
+curl -X GET 'https://api.linkedin.com/rest/socialActions/urn:li:comment:(urn:li:activity:6273189577469632512,6275822846992351232)/comments' \
+-H 'Authorization: Bearer {INSERT_TOKEN}' \
+-H 'Linkedin-Version: {version number in the format YYYYMM}' \
+-H 'X-Restli-Protocol-Version: 2.0.0' 
+ 
+
+
+
+
+
+
+
+
+If your request exceeds the 
+maximum length requirement
+, please utilize query tunneling:
+
+
+curl -X POST 'https://api.linkedin.com/rest/socialActions/urn:li:comment:(urn:li:activity:6273189577469632512,6275822846992351232)/comments \
+-H 'X-HTTP-Method-Override: GET' \
+-H 'Content-Type: application/x-www-form-urlencoded' \
+-H 'Authorization: Bearer redacted' \
+-H 'X-Restli-Protocol-Version: 2.0.0' \
+-H 'Linkedin-Version: {version number in the format YYYYMM}' 
+--data '{...}'
+
+
+
+Sample Response
+
+
+{
+   "elements":[
+      {
+        "actor":"urn:li:person:f49f2kf0",
+        "commentUrn":"urn:li:comment:(urn:li:activity:6631349431612559360,6636062862760562688)",
+        "created":{
+            "actor":"urn:li:person:f49f2kf0",
+            "time":1582160678569
+        },
+        "id":"6636062862760562688",
+        "lastModified":{
+            "actor":"urn:li:person:f49f2kf0",
+            "time":1582160678569
+        },
+        "likesSummary": {
+           "aggregatedTotalLikes": 1,
+           "selectedLikes": [
+              "urn:li:like:(urn:li:person:f49f2kf0,urn:li:comment:(urn:li:activity:6273189577469632512,6636062862760562688))"
+           ],
+           "likedByCurrentUser": true,
+           "totalLikes": 1
+        },
+        "message":{
+            "attributes":[],
+            "text":"Comment with comment-image media"
+        },
+        "content":[
+            {
+                "type":"IMAGE",
+                "entity":{
+                    "image":"urn:li:imge:C552CAQGu16obsGZENQ"
+                },
+            }
+        ],
+        "object":"urn:li:activity:6631349431612559360", 
+        "parentComment":"urn:li:comment:(urn:li:activity:6631349431612559360,6275822846992351232)"
+    }
+  ]
+}     
+
+
+
+Common Retrieval Errors
+
+
+The table below lists commonly encountered errors retrieving social actions. It is not meant to be a comprehensive list of all possible social action retrieval errors.
+
+
+
+
+
+
+
+
+Code
+
+
+Message
+
+
+Description
+
+
+
+
+
+
+
+
+
+
+400
+
+
+Invalid query parameters passed to request
+
+
+Occurs when using Restli 2.0 and the query parameters are not encoded properly. See 
+Protocol Version
+ for more on Restli 2.0 encoding. Calls with Postman and some other HTTP clients can trigger this error. Try using curl or another client when testing.
+
+
+
+
+
+
+400
+
+
+Syntax exception in path variables
+
+
+Indicates an invalid URN was requested. Try again with a share or ugcPost URN.
+
+
+
+
+
+
+
+
+Create a Comment
+
+
+Request Body Fields
+
+
+
+
+
+
+
+
+Field
+
+
+Description
+
+
+Format
+
+
+Required
+
+
+
+
+
+
+
+
+
+
+actor
+
+
+Entity which authored the comment
+
+
+organization URN or person URN
+
+
+Yes
+
+
+
+
+
+
+message
+
+
+Text of the comment. May contain attributes such as links to people and organizations.
+
+
+Text
+
+
+Yes
+
+
+
+
+
+
+content
+
+
+The content of the comment, such as an image.
+
+
+List of ContentEntity
+
+
+No
+
+
+
+
+
+
+parentComment
+
+
+For nested comments, this is the URN of the parent comment. This is not available for first-level comments.
+
+
+Composite URN
+
+
+No
+
+
+
+
+
+
+
+
+Use the 
+object
+ field in the request body to specify the share or the ugcPost which contains the comment. Specify the share or the ugcPost in the request URL, and represent it as an URN.
+
+
+Use the ID returned in the response header to take further action on the newly created comment. The following response body also contains a comment URN which can be used as parent comment for creating nested comments.
+
+
+Sample Request
+
+
+
+
+
+
+
+
+http
+
+
+
+
+
+
+curl
+
+
+
+
+
+
+
+
+
+POST https://api.linkedin.com/rest/socialActions/{shareUrn|ugcPostUrn|commentUrn}/comments
+
+
+
+{
+   "actor":"urn:li:person:A8xe03Qt10",
+   "object":"urn:li:activity:6631349431612559360",
+   "message":{
+      "text":"commentV2 with image entity"
+   },
+   "content":[
+      {
+         "entity":{
+            "image":"urn:li:image:C552CAQGu16obsGZENQ"
+         }
+      }
+   ]
+}
+
+
+
+
+
+
+
+
+curl -X POST 'https://api.linkedin.com/rest/socialActions/{shareUrn|ugcPostUrn|commentUrn}/comments' \
+-H 'Authorization: Bearer {INSERT_TOKEN}' \
+-H 'Linkedin-Version: {version number in the format YYYYMM}' \
+-H 'Content-Type: application/json' \
+-H 'X-Restli-Protocol-Version: 2.0.0' 
+ 
+--data '{
+   "actor":"urn:li:person:A8xe03Qt10",
+   "object":"urn:li:activity:6631349431612559360",
+   "message":{
+      "text":"commentV2 with image entity"
+   },
+   "content":[
+      {
+         "entity":{
+            "image":"urn:li:image:C552CAQGu16obsGZENQ"
+         }
+      }
+   ]
+}'
+
+
+
+
+
+
+
+Sample Response Header
+
+
+x-restli-id: 6643206422739898368
+
+
+
+Sample Response Body
+
+
+{
+    "actor": "urn:li:organization:5637409",
+    "agent": "urn:li:person:CnpTkB7V70",
+    "commentUrn": "urn:li:comment:(urn:li:activity:6641861161010679808,6643206422739898368)",
+    "created": {
+        "actor": "urn:li:organization:5637409",
+        "impersonator": "urn:li:person:CnpTkB7V70",
+        "time": 1583863835990
+    },
+    "id": "6643206422739898368",
+    "lastModified": {
+        "actor": "urn:li:organization:5637409",
+        "impersonator": "urn:li:person:CnpTkB7V70",
+        "time": 1583863835990
+    },
+    "message": {
+        "attributes": [],
+        "text": "commentV2 with image urn"
+    },
+    "content": [
+        {
+            "type": "IMAGE",
+            
+            "entity": {
+                "image": "urn:li:image:C552CAQGu16obsGZENQ"
+            }
+        }
+    ],
+    "object": "urn:li:activity:6641861161010679808"
+}
+
+
+
+
+
+Note
+
+
+For more information on how to upload an image and obtain the image URN required here, see the 
+Image API documentation
+.
+
+
+
+
+Common Creation Errors
+
+
+The table below lists commonly encountered errors creating comments. It is not meant to be a comprehensive list of all possible comment creation errors.
+
+
+
+
+
+
+
+
+Code
+
+
+Message
+
+
+Description
+
+
+
+
+
+
+
+
+
+
+403
+
+
+Unpermitted fields present in REQUEST_BODY: Data Processing Exception while processing fields [/content]
+
+
+Occurs when attempting to include an image in an inline comment which is not currently not supported by the API.
+
+
+
+
+
+
+429
+
+
+Comment create throttled: creation rate limit exceeded for member
+
+
+Indicates member has hit the short term 1 minute rate limit for common creation.
+
+
+
+
+
+
+
+
+Edit a Comment
+
+
+Request Body Fields
+
+
+
+
+
+
+
+
+Field
+
+
+Description
+
+
+Format
+
+
+Required
+
+
+
+
+
+
+
+
+
+
+actor
+
+
+Entity editing the comment
+
+
+organization URN
+
+
+Only when editing comment as an organization
+
+
+
+
+
+
+
+
+Only the 
+text
+ and 
+attributes
+ field in the comment's 
+message
+ field may be modified.
+
+
+Sample Request
+
+
+
+
+
+
+
+
+http
+
+
+
+
+
+
+curl
+
+
+
+
+
+
+
+
+
+POST https://api.linkedin.com/rest/socialActions/{shareUrn|ugcPostUrn}/comments/{comment ID}?actor={actorURN}
+
+
+
+
+
+
+
+
+curl --location --request POST 'https://api.linkedin.com/rest/socialActions/urn:li:ugcPost:701614862413057/comments/70172482676457473?actor=urn:li:organization:12345' \
+-H 'Authorization: Bearer {INSERT_TOKEN}' \
+-H 'Linkedin-Version: {version number in the format YYYYMM}' \
+-H 'X-Restli-Protocol-Version: 2.0.0' \
+-H 'X-RestLi-Method: PARTIAL_UPDATE' \
+-H 'Content-Type: application/json' 
+--data-raw '{
+    "patch":{
+        "message":{
+            "$set":{
+                "text": "Updated comment message"
+            }
+        }
+    }
+}'
+
+
+
+
+
+
+
+Sample Response Header
+
+
+x-resourceidentity-urn: urn:li:comment:(urn:li:activity:6912417282191147008,6915442672119734272)
+
+
+
+This is a composite URN constructed from the target in the request URL and the comment ID. Therefore, the URN in this header is not a reliable identifier for the comment. An accurate key for a comment can always be constructed from the comment's 
+object
+ field (which may differ from the target in the request URL) and its ID.
+
+
+Sample Response Body
+
+
+{
+    "actor": "urn:li:organization:5515715",
+    "agent": "urn:li:person:rboDhL7Xsf",
+    "created": {
+        "actor": "urn:li:organization:5515715",
+        "impersonator": "urn:li:member:231303601",
+        "time": 1648770015746
+    },
+    "lastModified": {
+        "actor": "urn:li:organization:5515715",
+        "impersonator": "urn:li:member:231303601",
+        "time": 1649797906424
+    },
+    "id": "6915442672119734272",
+    "message": {
+        "attributes": [],
+        "text": "Updated comment message"
+    },
+    "likesSummary": {
+        "selectedLikes": [],
+        "aggregatedTotalLikes": 0,
+        "likedByCurrentUser": false,
+        "totalLikes": 0
+    },
+    "object": "urn:li:activity:6912417282191147008"
+}
+
+
+
+Delete a Comment
+
+
+Query Parameters
+
+
+
+
+
+
+
+
+Field
+
+
+Description
+
+
+Format
+
+
+Required
+
+
+
+
+
+
+
+
+
+
+actor
+
+
+Entity deleting the comment
+
+
+organization URN
+
+
+Only when deleting comment as an organization
+
+
+
+
+
+
+
+
+Sample Request
+
+
+
+
+
+
+
+
+http
+
+
+
+
+
+
+curl
+
+
+
+
+
+
+
+
+
+https://api.linkedin.com/rest/socialActions/{shareUrn|ugcPostUrn}/comments/{comment ID}?actor={actorURN}
+
+
+
+
+
+
+
+
+curl --location --request DELETE 'https://api.linkedin.com/rest/socialActions/urn:li:ugcPost:70161431162413057/comments/70172482676457473?actor=urn:li:organization:12345' \
+-H 'Authorization: Bearer {INSERT_TOKEN}' \
+-H 'Linkedin-Version: {version number in the format YYYYMM}' \
+-H 'X-Restli-Protocol-Version: 2.0.0' 
+ 
+
+
+
+
+
+
+
+Additional Comment Features
+
+
+Create a Comment on a Comment
+
+
+To create a nested comment, add a 
+parentComment
+ field to your request body. The value is a composite URN, which is comprised of the 
+activityUrn
+ and parent comment ID.
+
+
+Sample Request
+
+
+
+
+
+
+
+
+http
+
+
+
+
+
+
+curl
+
+
+
+
+
+
+
+
+
+POST https://api.linkedin.com/rest/socialActions/urn:li:comment:(urn:li:activity:6305471423192264704,6308007194273021952)/comments
+
+
+
+{
+    "actor": "urn:li:organization:2414183",
+    "message": {
+        "text": "Dunder Mifflin's Dundie Award goes to Dwight Schrute!"
+    },
+    "object": "urn:li:share:6305471423242596352",
+    "parentComment": "urn:li:comment:(urn:li:activity:6305471423192264704,6308007194273021952)"
+}
+
+
+
+
+
+
+
+
+curl -X POST 'https://api.linkedin.com/rest/socialActions/urn:li:comment:(urn:li:activity:6305471423192264704,6308007194273021952)/comments' \
+-H 'Authorization: Bearer {INSERT_TOKEN}' \
+-H 'Linkedin-Version: {version number in the format YYYYMM}' \
+-H 'Content-Type: application/json' \
+-H 'X-Restli-Protocol-Version: 2.0.0' 
+--data '{
+    "actor": "urn:li:organization:2414183",
+    "message": {
+        "text": "Dunder Mifflin's Dundie Award goes to Dwight Schrute!"
+    },
+    "object": "urn:li:share:6305471423242596352",
+    "parentComment": "urn:li:comment:(urn:li:activity:6305471423192264704,6308007194273021952)"
+}'
+
+
+
+
+
+
+
+Comment Mentioning
+
+
+Comment text may contain attributes, which are links to other LinkedIn entities such as people or organizations. Mentioning requires knowledge of the URN for the referenced entity. You must also specify the part of the comment text that should be rendered as a link to the entity.
+
+
+Schema
+
+
+
+
+
+
+
+
+Field
+
+
+Description
+
+
+Format
+
+
+Required
+
+
+
+
+
+
+
+
+
+
+length
+
+
+The length of the annotation link
+
+
+integer
+
+
+yes
+
+
+
+
+
+
+start
+
+
+The starting character index beginning the annotation link
+
+
+integer
+
+
+yes
+
+
+
+
+
+
+value
+
+
+An object that includes the URN of the organization or member you want to mention in the comment.
+
+
+URN
+
+
+no
+
+
+
+
+
+
+
+
+Sample Request Body
+
+
+{
+    "actor": "urn:li:organization:2414183",
+    "message": {
+        "attributes": [
+            {
+                "length": 17,
+                "start": 0,
+                "value": {
+                   "organization": {
+                        "organization": "urn:li:organization:2414183"
+                    }
+                }
+            },
+            {
+                "length": 14,
+                "start": 38,
+                "value": {
+                    "person": {
+                        "person": "urn:li:person:uOeeiwWoxO"
+                    }
+                }
+            }
+        ],
+        "text": "Dunder Mifflin's Dundie Award goes to Dwight Schrute!"
+    },
+    "object": "urn:li:share:6305471423242596352"
+}
+
+
+
+Comments with Images
+
+
+An 
+entity
+ field is now part of the 
+content
+ field in a comment, replacing the 
+url
+ field. When creating a comment with an image, specify the image as an 
+image
+ URN within the 
+entity
+ field instead of the URL field. This ImageUrn is obtained when 
+uploading an image to the Vector API
+ (if an Urn like 
+urn:li:digitalMediaAsset:ABC123
+ is returned then use 
+urn:li:image:ABC123
+). 
+Learn more
+.
+
+
+Schema
+
+
+
+
+
+
+
+
+Field
+
+
+Description
+
+
+Format
+
+
+Required
+
+
+
+
+
+
+
+
+
+
+entity
+
+
+The Digitalmedia Asset URN of the image you want to include in the comment.
+
+
+URN
+
+
+yes
+
+
+
+
+
+
+type
+
+
+The type of the content, in this case, use "IMAGE". (This is a read-only field and shouldn't be provided for comment creates.)
+
+
+string
+
+
+yes
+
+
+
+
+
+
+
+
+Sample Request Body
+
+
+{
+   "actor":"urn:li:person:f49f2kf0",
+   "object":"urn:li:activity:6631349431612559360",
+   "message":{
+      "text":"commentV2 with image entity"
+   },
+   "content":[
+      {
+         "entity":{
+            "image":"urn:li:image:C552CAQGu16obsGZENQ"
+         }
+      }
+   ]
+}
+
+
+
+Sample Response
+
+
+{
+    "elements": [
+        {
+            "actor~": {
+                "localizedLastName": "Tester",
+                "lastName": {
+                    "localized": {
+                        "en_US": "Tester"
+                    },
+                    "preferredLocale": {
+                        "country": "US",
+                        "language": "en"
+                    }
+                },
+                "vanityName": "test-person",
+                "localizedHeadline": "Test Profile at Acme Corp",
+                "profilePicture": {
+                    "displayImage": "urn:li:digitalmediaAsset:C5603AQEuebSM6NP8wq",
+                    "displayImage~": {
+                        "paging": {
+                            "count": 10,
+                            "start": 0,
+                            "links": []
+                        },
+                        "elements": [
+                            {
+                                "artifact": "urn:li:digitalmediaMediaArtifact:(urn:li:digitalmediaAsset:C5603AQEuebSM6NP8wq,urn:li:digitalmediaMediaArtifactClass:profile-displayphoto-shrink_800_800)",
+                                "authorizationMethod": "PUBLIC",
+                                "data": {
+                                    "com.linkedin.digitalmedia.mediaartifact.StillImage": {
+                                        "mediaType": "image/jpeg",
+                                        "rawCodecSpec": {
+                                            "name": "jpeg",
+                                            "type": "image"
+                                        },
+                                        "displaySize": {
+                                            "width": 800.0,
+                                            "uom": "PX",
+                                            "height": 800.0
+                                        },
+                                        "storageSize": {
+                                            "width": 800,
+                                            "height": 800
+                                        },
+                                        "storageAspectRatio": {
+                                            "widthAspect": 1.0,
+                                            "heightAspect": 1.0,
+                                            "formatted": "1.00:1.00"
+                                        },
+                                        "displayAspectRatio": {
+                                            "widthAspect": 1.0,
+                                            "heightAspect": 1.0,
+                                            "formatted": "1.00:1.00"
+                                        }
+                                    }
+                                },
+                                "identifiers": [
+                                    {
+                                        "identifier": "https://example.com/image.jpg",
+                                        "index": 0,
+                                        "mediaType": "image/jpeg",
+                                        "file": "urn:li:digitalmediaFile:(urn:li:digitalmediaAsset:C5603AQEuebSM6NP8wq,urn:li:digitalmediaMediaArtifactClass:profile-displayphoto-shrink_800_800,0)",
+                                        "identifierType": "EXTERNAL_URL",
+                                        "identifierExpiresInSeconds": 1609372800
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                },
+                "firstName": {
+                    "localized": {
+                        "en_US": "Tester"
+                    },
+                    "preferredLocale": {
+                        "country": "US",
+                        "language": "en"
+                    }
+                },
+                "id": "j8924gj82",
+                "headline": {
+                    "localized": {
+                        "en_US": "Test Profile at Acme Corp"
+                    },
+                    "preferredLocale": {
+                        "country": "US",
+                        "language": "en"
+                    }
+                },
+                "localizedFirstName": "Tester"
+            },
+            "created": {
+                "actor": "urn:li:person:j8924gj82",
+                "time": 1603870852695
+            },
+            "message": {
+                "attributes": [],
+                "text": "Test Comment!"
+            },
+            "actor": "urn:li:person:j8924gj82",
+            "commentsSummary": {
+                "totalFirstLevelComments": 1,
+                "selectedComments": [
+                    "urn:li:comment:(urn:li:activity:1234,567)"
+                ],
+                "aggregatedTotalComments": 1
+            },
+            "commentUrn": "urn:li:comment:(urn:li:activity:1234,789)",
+            "id": "789",
+            "lastModified": {
+                "actor": "urn:li:person:j8924gj82",
+                "time": 1603870852695
+            },
+            "likesSummary": {
+                "selectedLikes": [
+                    "urn:li:like:(urn:li:person:j8924gj82,urn:li:comment:(urn:li:activity:1234,789))"
+                ],
+                "likedByCurrentUser": false,
+                "aggregatedTotalLikes": 1,
+                "totalLikes": 1
+            },
+            "object": "urn:li:activity:1234"
+        }
+    ]
+}
+
+
+
+
+					
+		
+
+	 
+		
+
+		
+
+	
+					
+		
+
+		
+
+			
+
+			
+Feedback
+
+			
+
+				
+
+					Was this page helpful?
+				
+
+				
+
+					
+
+						
+
+							
+
+						
+
+						
+Yes
+
+					
+
+					
+
+						
+
+							
+
+						
+
+						
+No
+
+					
+
+					
+
+						
+
+							
+
+								
+
+							
+
+							
+No
+
+						
+
+						
+
+							
+
+								Need help with this topic?
+							
+
+							
+
+								Want to try using Ask Learn to clarify or guide you through this topic?
+							
+
+							
+		
+
+			
+
+		
+
+			
+
+				
+
+			
+
+		
+
+		
+
+			
+
+				
+
+			
+
+			
+Ask Learn
+
+		
+
+		
+
+			
+
+				
+
+			
+
+			
+Ask Learn
+
+		
+
+	
+
+			
+
+				
+
+					
+
+				
+
+				
+ Suggest a fix? 
+
+			
+
+		
+
+	
+						
+
+					
+
+				
+
+			
+
+		
+
+		
+
+	
+				
+
+				
+		
+
+			
+
+			
+
+				Additional resources
+			
+
+			
+		
+
+	 
+		
+
+	 
+		
+
+	
+		
+
+	 
+		
+
+			
+
+			
+
+				
+
+			
+
+				
+Last updated on 
+
+		2026-04-30
+	
+
+			
+
+		
+
+			
+
+		
+
+	
+			
+
+		
+				
+
+				
+
+					
+		
+
+			
+
+				
+		
+
+			
+In this article
+
+		
+
+	
+				
+
+				
+		
+
+			
+
+				
+
+					Was this page helpful?
+				
+
+				
+
+					
+
+						
+
+							
+
+						
+
+					
+
+					
+
+						
+
+							
+
+						
+
+					
+
+					
+
+						
+
+							
+
+								
+
+							
+
+						
+
+						
+
+							
+
+								Need help with this topic?
+							
+
+							
+
+								Want to try using Ask Learn to clarify or guide you through this topic?
+							
+
+							
+		
+
+			
+
+		
+
+			
+
+				
+
+			
+
+		
+
+		
+
+			
+
+				
+
+			
+
+			
+Ask Learn
+
+		
+
+		
+
+			
+
+				
+
+			
+
+			
+Ask Learn
+
+		
+
+	
+
+			
+
+				
+
+					
+
+				
+
+				
+ Suggest a fix? 
+
+			
+
+		
+
+	
+						
+
+					
+
+				
+
+			
+
+		
+
+	
+			
+
+		
+
+	
+			  
+ 
+
+					 
+
+			  
+ 
+
+		
+
+			
+
+				
+		
+en-us
+
+	 
+
+		
+		
+
+		
+
+			
+
+			
+
+			
+
+			
+
+		
+
+	
+			
+Your Privacy Choices
+
+	
+	
+
+				
+
+		
+
+			
+
+				
+
+				
+Theme
+
+				
+
+					
+
+				
+
+			
+
+			
+
+				
+
+					
+
+						
+
+							
+
+								
+
+									
+
+										
+
+										
+
+										
+
+										
+
+										
+
+										
+
+										
+
+										
+
+									
+
+								
+
+							
+
+							
+ Light 
+
+						
+
+					
+
+					
+
+						
+
+							
+
+								
+
+									
+
+										
+
+										
+
+										
+
+										
+
+										
+
+										
+
+										
+
+										
+
+									
+
+								
+
+							
+
+							
+ Dark 
+
+						
+
+					
+
+					
+
+						
+
+							
+
+								
+
+									
+
+										
+
+										
+
+										
+
+										
+
+										
+
+										
+
+										
+
+										
+
+									
+
+								
+
+							
+
+							
+ High contrast 
+
+						
+
+					
+
+				
+
+			
+
+		
+
+	
+
+			
+
+			
+
+				
+
+				
+
+		
+		
+AI Disclaimer
+
+	
+	
+
+		
+		
+Previous Versions
+
+	
+	
+ 
+
+		
+		
+Blog
+
+	
+	
+ 
+
+		
+		
+Contribute
+
+	
+	
+
+		
+		
+Privacy
+
+	
+	
+
+		
+		
+Consumer Health Privacy
+
+	
+	
+
+		
+		
+Terms of Use
+
+	
+	
+
+		
+		
+Trademarks
+
+	
+	
+
+				
+© Microsoft 2026
+
+			
+
+		
+
+	
+
+			
+
+		

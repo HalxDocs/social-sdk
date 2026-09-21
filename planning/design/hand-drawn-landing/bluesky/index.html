@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Bluesky API for TypeScript | Social SDK</title>
+<meta name="description" content="Publish text and image posts to Bluesky from a TypeScript server: session-based auth, native AT URIs, replies, metrics, and honest per-post outcomes." />
+<link rel="canonical" href="https://social-sdk.example/bluesky/" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,380;9..144,430;9..144,560;9..144,640&family=Caveat:wght@500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root { --ink:#1c1a17; --ink-soft:#57534c; --marker:#e8542f; --hand:"Caveat",cursive; --serif:"Fraunces",Georgia,serif; --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:#fff; color:var(--ink); font-family:var(--serif); font-weight:380; font-size:18px; line-height:1.6; -webkit-font-smoothing:antialiased; }
+  .wrap { max-width:960px; margin:0 auto; padding:0 24px; }
+  nav { display:flex; align-items:center; justify-content:space-between; padding:28px 0 0; }
+  .logo { display:flex; align-items:center; gap:10px; text-decoration:none; color:var(--ink); }
+  .logo b { font-weight:560; font-size:21px; white-space:nowrap; }
+  .nav-links { display:flex; gap:24px; }
+  .nav-links a { color:var(--ink); text-decoration:none; font-size:17px; }
+  .nav-links a:hover { color:var(--marker); }
+  header { padding:72px 0 8px; }
+  .kicker { font-family:var(--hand); font-size:24px; color:var(--marker); transform:rotate(-1.4deg); display:inline-block; margin-bottom:14px; }
+  h1 { font-weight:430; font-size:clamp(34px,5vw,56px); line-height:1.1; letter-spacing:-0.018em; max-width:20ch; }
+  .sub { margin-top:20px; max-width:52ch; font-size:19px; color:var(--ink-soft); }
+  .cta-row { margin-top:34px; display:flex; align-items:center; gap:26px; flex-wrap:wrap; }
+  .brush-btn { position:relative; display:inline-block; text-decoration:none; padding:14px 30px; color:#fff; font-weight:560; font-size:18px; transform:rotate(-0.8deg); transition:transform .15s ease; }
+  .brush-btn:hover { transform:rotate(0.6deg) scale(1.03); }
+  .brush-btn svg { position:absolute; inset:-8px -12px; width:calc(100% + 24px); height:calc(100% + 16px); z-index:-1; }
+  .cta-note { font-family:var(--hand); font-size:21px; color:var(--ink-soft); }
+  .cta-note code { font-family:var(--mono); font-size:14px; color:var(--ink); }
+  .stage { padding:26px 0 0; }
+  .stage svg { width:100%; height:auto; display:block; }
+  text.hand { font-family:var(--hand); }
+  text.mono { font-family:var(--mono); }
+  .wire { fill:none; stroke:#8a857c; stroke-width:1.8; stroke-dasharray:5 8; stroke-linecap:round; }
+  .status { opacity:0; transition:opacity .4s ease, transform .4s cubic-bezier(.2,1.6,.4,1); transform:translateY(6px) scale(.9); transform-box:fill-box; transform-origin:center; }
+  .status.on { opacity:1; transform:translateY(0) scale(1); }
+  .ring.deliver { animation:thud .5s ease; transform-box:fill-box; transform-origin:center; }
+  @keyframes thud { 0%{transform:scale(1)} 35%{transform:scale(1.08) rotate(-2deg)} 100%{transform:scale(1)} }
+  .caps { padding:64px 0 0; }
+  .caps h2 { font-weight:430; font-size:clamp(24px,3vw,34px); letter-spacing:-0.01em; }
+  .caps ul { list-style:none; margin-top:26px; display:grid; grid-template-columns:1fr 1fr; gap:14px 40px; }
+  .caps li { display:flex; gap:12px; align-items:baseline; font-size:17.5px; color:var(--ink-soft); }
+  .caps li svg { flex:none; transform:translateY(3px); }
+  .honesty { margin-top:30px; font-family:var(--hand); font-size:22px; color:var(--ink-soft); transform:rotate(-0.8deg); }
+  .code-section { padding:64px 0 0; }
+  .paper-note { position:relative; transform:rotate(0.8deg); max-width:760px; margin:0 auto; }
+  .paper-note .tape { position:absolute; top:-14px; left:50%; width:110px; height:30px; transform:translateX(-50%) rotate(-2deg); background:rgba(232,84,47,.16); border-left:1px dashed rgba(232,84,47,.35); border-right:1px dashed rgba(232,84,47,.35); }
+  .paper-note pre { padding:24px 26px; font-family:var(--mono); font-size:14px; line-height:1.75; background:#fff; overflow-x:auto; color:var(--ink); }
+  .paper-note .note-border { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; overflow:visible; }
+  .paper-note .note-border rect { x:2px; y:2px; width:calc(100% - 4px); height:calc(100% - 4px); rx:4px; fill:none; stroke:var(--ink); stroke-width:2.2; filter:url(#roughen); }
+  pre b.k { color:var(--marker); font-weight:400; font-style:normal; }
+  pre i.s { color:#2f6f4f; font-style:normal; }
+  pre i.c { color:#9b968d; font-style:normal; }
+  footer { padding:80px 0 46px; }
+  .rule { width:100%; height:14px; overflow:visible; }
+  .foot-platforms { margin-top:24px; font-size:15px; color:var(--ink-soft); }
+  .foot-platforms a { color:var(--ink-soft); text-decoration:none; margin-right:16px; }
+  .foot-platforms a:hover { color:var(--ink); }
+  .foot-row { margin-top:16px; display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:14px; }
+  .foot-row small { color:var(--ink-soft); font-size:15px; }
+  @media (max-width:700px) { .caps ul { grid-template-columns:1fr; } }
+  @media (prefers-reduced-motion:reduce) { .brush-btn { transition:none; } }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <filter id="roughen" x="-5%" y="-5%" width="110%" height="110%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="11" result="n"/>
+    <feDisplacementMap in="SourceGraphic" in2="n" scale="2.6" xChannelSelector="R" yChannelSelector="G"/>
+  </filter>
+  <filter id="roughen2" x="-8%" y="-8%" width="116%" height="116%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.022" numOctaves="2" seed="4" result="n"/>
+    <feDisplacementMap in="SourceGraphic" in2="n" scale="4" xChannelSelector="R" yChannelSelector="G"/>
+  </filter>
+</defs></svg>
+
+<div class="wrap">
+  <nav>
+    <a class="logo" href="../">
+      <svg width="34" height="34" viewBox="0 0 34 34" fill="none" filter="url(#roughen)">
+        <path d="M5 15 L19 8 L19 25 L5 19 Z" stroke="#1c1a17" stroke-width="2.2" stroke-linejoin="round"/>
+        <path d="M5 15 L5 19" stroke="#1c1a17" stroke-width="2.2"/>
+        <path d="M8 20.5 L9.5 27 L13 26" stroke="#1c1a17" stroke-width="2.2" stroke-linecap="round"/>
+        <path d="M23 12 Q26 16.5 23 21" stroke="#e8542f" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+        <path d="M26.5 9.5 Q31 16.5 26.5 23.5" stroke="#e8542f" stroke-width="2.2" stroke-linecap="round" fill="none"/>
+      </svg>
+      <b>Social SDK</b>
+    </a>
+    <div class="nav-links">
+      <a href="../">Home</a>
+      <a href="/docs/platforms/bluesky">Docs</a>
+    </div>
+  </nav>
+
+  <header>
+    <span class="kicker">social SDK &#215; Bluesky</span>
+    <h1>Post to Bluesky from your server.</h1>
+    <p class="sub">Bring an existing session from the official AT Protocol OAuth client. The adapter handles records, facets, and image limits.</p>
+    <div class="cta-row">
+      <a class="brush-btn" href="/docs/platforms/bluesky">
+        <svg viewBox="0 0 300 72" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M14 22 C60 8, 240 4, 288 18 C298 34, 292 52, 270 60 C200 72, 60 70, 16 58 C4 46, 6 32, 14 22 Z" fill="#1c1a17" filter="url(#roughen2)"/>
+        </svg>
+        Read the Bluesky docs
+      </a>
+      <span class="cta-note">or just <code>bun add @opencoredev/social-sdk</code></span>
+    </div>
+  </header>
+
+  <section class="stage" aria-label="Diagram: a post travelling from your app to Bluesky">
+    <svg viewBox="0 0 960 300" fill="none">
+      <g>
+        <rect x="46" y="80" width="290" height="150" rx="6" stroke="#1c1a17" stroke-width="2.6" fill="#fff" filter="url(#roughen2)"/>
+        <text class="hand" x="64" y="68" font-size="26" fill="#1c1a17">your app</text>
+        <text class="mono" x="70" y="126" font-size="13.5" fill="#1c1a17"><tspan fill="#e8542f">await</tspan> social.posts.publish({</text>
+        <text class="mono" x="84" y="152" font-size="13.5" fill="#1c1a17">targets: [bluesky],</text>
+        <text class="mono" x="84" y="178" font-size="13.5" fill="#1c1a17">content,</text>
+        <text class="mono" x="70" y="204" font-size="13.5" fill="#1c1a17">})</text>
+      </g>
+      <path class="wire" id="wire" d="M340 155 C460 150, 570 150, 688 152" filter="url(#roughen)"/>
+      <g id="plane" opacity="0">
+        <path d="M-13 -4 L13 0 L-9 8 L-5 0 Z M-9 8 L-8 13 L-4 5" stroke="#1c1a17" stroke-width="1.8" fill="#fff" stroke-linejoin="round"/>
+      </g>
+      <text class="hand" x="365" y="272" font-size="22" fill="#57534c" transform="rotate(-1.5 365 272)">records, facets, and CIDs, handled</text>
+      <g class="ring" id="ring">
+        <circle cx="790" cy="152" r="60" stroke="#1c1a17" stroke-width="2.6" fill="#fff" filter="url(#roughen2)"/>
+        <g transform="translate(766,128) scale(2)"><path fill="#1185fe" d="M5.202 2.857C7.954 4.922 10.913 9.11 12 11.358c1.087-2.247 4.046-6.436 6.798-8.501C20.783 1.366 24 .213 24 3.883c0 .732-.42 6.156-.667 7.037-.856 3.061-3.978 3.842-6.755 3.37 4.854.826 6.089 3.562 3.422 6.299-5.065 5.196-7.28-1.304-7.847-2.97-.104-.305-.152-.448-.153-.327 0-.121-.05.022-.153.327-.568 1.666-2.782 8.166-7.847 2.97-2.667-2.737-1.432-5.473 3.422-6.3-2.777.473-5.899-.308-6.755-3.369C.42 10.04 0 4.615 0 3.883c0-3.67 3.217-2.517 5.202-1.026"/></g>
+        <text class="hand status" x="790" y="248" font-size="24" fill="#2f6f4f" text-anchor="middle">posted &#10003;</text>
+      </g>
+    </svg>
+  </section>
+
+  <section class="caps">
+    <h2>What works today</h2>
+    <ul>
+      <li><svg width="18" height="18" viewBox="0 0 18 18" fill="none" filter="url(#roughen)"><path d="M3 10 L7 14 L15 4" stroke="#2f6f4f" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg> <span>text posts, with Bluesky's grapheme-aware length rules</span></li>
+      <li><svg width="18" height="18" viewBox="0 0 18 18" fill="none" filter="url(#roughen)"><path d="M3 10 L7 14 L15 4" stroke="#2f6f4f" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg> <span>images and video upload, with provider processing states</span></li>
+      <li><svg width="18" height="18" viewBox="0 0 18 18" fill="none" filter="url(#roughen)"><path d="M3 10 L7 14 L15 4" stroke="#2f6f4f" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg> <span>replies, reposts, quote posts, and deletion</span></li>
+      <li><svg width="18" height="18" viewBox="0 0 18 18" fill="none" filter="url(#roughen)"><path d="M3 10 L7 14 L15 4" stroke="#2f6f4f" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg> <span>follows, blocks, mutes, and notification reads</span></li>
+      <li><svg width="18" height="18" viewBox="0 0 18 18" fill="none" filter="url(#roughen)"><path d="M3 10 L7 14 L15 4" stroke="#2f6f4f" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg> <span>chat conversations and messages</span></li>
+      <li><svg width="18" height="18" viewBox="0 0 18 18" fill="none" filter="url(#roughen)"><path d="M3 10 L7 14 L15 4" stroke="#2f6f4f" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg> <span>post and account metrics, likes included</span></li>
+    </ul>
+    <p class="honesty">contract-tested against mocked transports. no live Bluesky account verified yet.</p>
+  </section>
+
+  <section class="code-section">
+    <div class="paper-note">
+      <span class="tape"></span>
+      <svg class="note-border" aria-hidden="true"><rect/></svg>
+      <pre><b class="k">import</b> { createSocial, connectedAccountRef } <b class="k">from</b> <i class="s">"@opencoredev/social-sdk"</i>;
+<b class="k">import</b> { bluesky } <b class="k">from</b> <i class="s">"@opencoredev/social-sdk/bluesky"</i>;
+
+<b class="k">const</b> social = createSocial({
+  backend: bluesky({ auth: { service, did, accessJwt } }),
+});
+
+<b class="k">const</b> result = <b class="k">await</b> social.posts.publish({
+  targets: [{ account }],
+  content: { text: <i class="s">"A Bluesky post"</i> },
+});
+<i class="c">// success returns the record's AT URI and CID</i></pre>
+    </div>
+  </section>
+
+  <footer>
+    <svg class="rule" viewBox="0 0 960 14" preserveAspectRatio="none">
+      <path d="M4 8 Q120 3 240 8 T480 7 T720 9 T956 6" stroke="#1c1a17" stroke-width="2" fill="none" stroke-linecap="round" filter="url(#roughen)"/>
+    </svg>
+    <p class="foot-platforms"><a href="../">Home</a> <a href="../x/">X</a> <a href="../threads/">Threads</a> <a href="../youtube/">YouTube</a> <a href="../tiktok/">TikTok</a> <a href="../instagram/">Instagram</a> <a href="../linkedin/">LinkedIn</a></p>
+    <div class="foot-row">
+      <small>&#169; 2026 Social SDK. Open source. Platforms may charge for the accounts and operations you use.</small>
+    </div>
+  </footer>
+</div>
+
+<script>
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const plane = document.getElementById("plane");
+  const wire = document.getElementById("wire");
+  const ring = document.getElementById("ring");
+  const status = document.querySelector(".status");
+  if (reduced) { plane.remove(); status.classList.add("on"); }
+  else {
+    const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+    const ease = (t) => (t < 0.5 ? 2*t*t : 1 - Math.pow(-2*t + 2, 2) / 2);
+    const tick = (cb) => {
+      let done = false;
+      const id = requestAnimationFrame((ts) => { done = true; cb(ts); });
+      setTimeout(() => { if (!done) { cancelAnimationFrame(id); cb(performance.now()); } }, 40);
+    };
+    function fly() {
+      return new Promise((doneFly) => {
+        const len = wire.getTotalLength();
+        const from = 6, to = len - 48, dur = 1600;
+        let t0;
+        function frame(now) {
+          if (t0 === undefined) t0 = now;
+          const t = Math.min((now - t0) / dur, 1);
+          const d = from + (to - from) * ease(t);
+          const p = wire.getPointAtLength(d);
+          const q = wire.getPointAtLength(Math.min(d + 2, len));
+          const a = Math.atan2(q.y - p.y, q.x - p.x) * 180 / Math.PI;
+          plane.setAttribute("transform", `translate(${p.x} ${p.y}) rotate(${a})`);
+          plane.setAttribute("opacity", t < 0.08 ? t/0.08 : t > 0.94 ? (1 - t)/0.06 : 1);
+          if (t < 1) tick(frame);
+          else {
+            plane.setAttribute("opacity", 0);
+            ring.classList.add("deliver");
+            status.classList.add("on");
+            setTimeout(() => ring.classList.remove("deliver"), 550);
+            doneFly();
+          }
+        }
+        tick(frame);
+      });
+    }
+    (async () => {
+      await sleep(700);
+      while (true) {
+        status.classList.remove("on");
+        await sleep(700);
+        await fly();
+        await sleep(4200);
+      }
+    })();
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,214 @@
+Real-Time Updates with Webhooks - Resources API Integration Guide
+Solutions
+ 
+Integrations
+Pricing
+Resources
+ 
+Blog
+Developers
+Get Started
+API Docs
+Troubleshooting
+Getting Help: How to Reach Support
+Account Connections
+Understanding Metric Variance
+Getting Started
+AI Integration using the MCP Server
+Customizing Video Thumbnails
+Understanding API Rate Limits
+Removing Accounts: Disconnect vs. Delete
+Exploring the Enterprise Plan
+Understanding The Subscription Upgrade Process
+Monitoring System Health with the Status Page
+Handling API Errors and Retries
+Handling Account Connection Redirects and Webhooks
+Understanding LinkedIn Connection Types
+Posting Instagram and Facebook Stories
+Setting Up Multiple Environments
+Linking Data with External IDs
+Your First Post
+Posting Reels and Stories
+Creating Carousels and Multi-Media Posts
+Working with TikTok Drafts
+Scheduling and Managing the Post Lifecycle
+Intercepting the OAuth Flow
+Posting Large Video Files
+Pagination & Account Feeds
+Handling Account Disconnections
+Let AI Post For You
+Real-Time Updates with Webhooks
+Getting Post Results
+TikTok vs. TikTok Business API
+Multi-User Applications
+Posting Media
+Advanced Post Configurations
+Getting Post Analytics
+Quickstart vs. White Label Project
+Social Media Platforms
+YouTube API
+X (Twitter) API
+Instagram API
+Threads API
+LinkedIn API
+Bluesky API
+Pinterest API
+Facebook API
+TikTok API
+Toggle Sidebar
+Real-Time Updates with Webhooks
+Use webhooks to get notified immediately when a post is published.
+Webhooks
+ allow your application to receive real-time updates about your posts and accounts without the need to constantly poll the API.
+Here is a breakdown of how to configure your webhook integrations and handle events efficiently.
+Creating a Webhook
+Currently, 
+Webhooks
+ can only be created and managed programmatically through the 
+API
+. There is no UI for creating webhooks in the dashboard at this time.
+How it works
+ 
+You make a 
+POST
+ request to the 
+/v1/webhooks
+ endpoint with your public URL and the specific 
+event_types
+ you wish to subscribe to.
+Note
+: You can not create two webhooks with the same URL
+The Events
+ 
+You can subscribe to the following events:
+Post Events:
+ 
+social.post.created
+, 
+social.post.updated
+, 
+social.post.deleted
+, 
+social.post.result.created
+Account Events:
+ 
+social.account.created
+, 
+social.account.updated
+Handling Requests & Timeouts
+To ensure the reliability of our delivery system, your server must acknowledge receipts quickly.
+The Constraint
+ 
+We expect a success response (status code 
+2XX
+) within 
+1 second
+ of sending the webhook.
+If your server takes longer than 
+1 second
+ to respond, we consider the request failed and will schedule a retry.
+Best Practice
+If your application needs to perform long-running tasks upon receiving a webhook (like database writes or sending emails), you should handle these 
+asynchronously
+. Return a 
+200 OK
+ immediately to acknowledge receipt, then process the data in the background.
+Idempotency & Retries
+Because webhooks are distributed systems, it is possible for your server to receive the same event multiple times.
+How it works
+ 
+If a delivery fails (or times out), we utilize an 
+exponential backoff
+ strategy, retrying the request approximately 
+8 times
+ over the course of 24 hours.
+The Requirement
+ 
+Your server logic should be 
+idempotent
+. This means your code should be able to handle receiving the same unique event ID multiple times without creating duplicate records or unintended side effects.
+Security
+To verify that the data hitting your server is genuinely from 
+Post for Me
+, we include a security header in every request.
+How it works
+ 
+When you create a webhook, the API returns a unique 
+secret
+. Every payload sent to your URL includes the header 
+Post-For-Me-Webhook-Secret
+. Your application should always verify that this header matches your secret before processing the data.
+Start coding today
+Sign up for an account and start integrating social media posting, feeds, and metrics into your product.
+🚀 Get Started
+© 
+2026
+ 
+Day Moon Development
+. 
+All rights reserved.
+Product
+Overview
+About
+Day Moon Development
+Pricing
+Frequently Asked Questions
+API Documentation
+Open Source
+Integrations
+TikTok
+Facebook
+Instagram
+X (Twitter)
+LinkedIn
+Pinterest
+Bluesky
+Threads
+YouTube
+Solutions
+Social Media Scheduler
+AI Content Generation
+Multi-Account Management
+Games
+SaaS Products
+E-Commerce Platforms
+Influencer Management
+CRM Systems
+DAM Tools
+News & Media Publishers
+Event Management
+Resources
+Getting Help: How to Reach Support
+AI Integration using the MCP Server
+Customizing Video Thumbnails
+Understanding API Rate Limits
+Removing Accounts: Disconnect vs. Delete
+Exploring the Enterprise Plan
+Understanding The Subscription Upgrade Process
+Monitoring System Health with the Status Page
+Handling API Errors and Retries
+Handling Account Connection Redirects and Webhooks
+Comparisons
+vs. Buffer
+vs. Hootsuite
+vs. Ayrshare
+vs. Zernio
+vs. Upload-Post
+vs. Outstand
+vs. Postplanify
+All Comparisons
+Connect
+X (Twitter)
+GitHub
+Discord
+Legal
+Terms
+Privacy
+Contact
+Product
+Integrations
+Solutions
+Resources
+Comparisons
+Connect
+Legal

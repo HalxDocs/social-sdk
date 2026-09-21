@@ -1,5 +1,2 @@
 [install]
 linker = "isolated"
-
-[test]
-preload = ["./packages/email-sdk/test-preload.ts"]

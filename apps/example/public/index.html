@@ -1,0 +1,412 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Social SDK · Publishing example</title>
+    <style>
+      :root {
+        font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+        color: #23323a;
+        background: #f5f6f4;
+        font-synthesis: none;
+        color-scheme: light;
+        line-height: 1.55;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+      }
+      header {
+        border-bottom: 1px solid #d7ded9;
+        background: #fff;
+      }
+      header > div,
+      main {
+        max-width: 1140px;
+        margin: auto;
+        padding: 24px 32px;
+      }
+      header > div {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .brand {
+        font-weight: 750;
+        font-size: 19px;
+        letter-spacing: -0.6px;
+      }
+      .brand span {
+        font-weight: 400;
+        color: #5d6d64;
+        margin-left: 18px;
+        font-size: 14px;
+        letter-spacing: 0;
+      }
+      .tag {
+        font-size: 12px;
+        background: #eaf2ed;
+        color: #305f49;
+        padding: 4px 10px;
+        border-radius: 4px;
+      }
+      main {
+        padding-top: 44px;
+      }
+      h1 {
+        font-size: 32px;
+        letter-spacing: -1px;
+        font-weight: 650;
+        margin: 0 0 8px;
+      }
+      h2 {
+        font-size: 17px;
+        margin: 0 0 18px;
+      }
+      h3 {
+        font-size: 15px;
+        margin: 0;
+      }
+      p {
+        margin: 0 0 20px;
+        color: #5d6d64;
+      }
+      .layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+        gap: 36px;
+        margin-top: 32px;
+        align-items: start;
+      }
+      section {
+        background: white;
+        border: 1px solid #d7ded9;
+        border-radius: 8px;
+        padding: 26px;
+      }
+      .field {
+        margin-bottom: 22px;
+      }
+      label,
+      legend {
+        font-size: 13px;
+        font-weight: 600;
+        display: block;
+        margin-bottom: 8px;
+      }
+      fieldset {
+        padding: 0;
+        border: 0;
+        margin: 0 0 24px;
+      }
+      textarea,
+      input[type="text"],
+      input[type="url"],
+      select {
+        font: inherit;
+        font-size: 14px;
+        width: 100%;
+        border: 1px solid #b9c7bf;
+        border-radius: 5px;
+        padding: 10px 12px;
+        color: inherit;
+        background: #fff;
+      }
+      textarea {
+        resize: vertical;
+        min-height: 130px;
+      }
+      input:focus-visible,
+      textarea:focus-visible,
+      select:focus-visible,
+      button:focus-visible {
+        outline: 3px solid #a3cdb7;
+        outline-offset: 3px;
+      }
+      button {
+        font: inherit;
+        font-size: 14px;
+        cursor: pointer;
+        border: 1px solid #b9c7bf;
+        background: white;
+        color: #294d3b;
+        padding: 9px 14px;
+        border-radius: 5px;
+        font-weight: 550;
+      }
+      button.primary {
+        background: #245d43;
+        color: #fff;
+        border-color: #245d43;
+      }
+      button:disabled {
+        cursor: default;
+        opacity: 0.45;
+      }
+      .actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .account {
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        padding: 10px 0;
+        border-bottom: 1px solid #edf0ed;
+        font-weight: 400;
+        margin: 0;
+      }
+      .account input {
+        accent-color: #245d43;
+        width: 16px;
+        height: 16px;
+      }
+      .account small {
+        color: #718078;
+      }
+      .empty {
+        padding: 35px 0;
+        color: #56695d;
+        border-top: 1px solid #e4e9e5;
+        font-size: 14px;
+      }
+      .result {
+        padding: 18px 0;
+        border-top: 1px solid #e0e7e1;
+      }
+      .result p {
+        font-size: 13px;
+        margin: 6px 0 12px;
+        overflow-wrap: anywhere;
+      }
+      .state {
+        font-size: 12px;
+        color: #365543;
+        background: #edf4ef;
+        padding: 3px 7px;
+        border-radius: 3px;
+        margin-left: 8px;
+      }
+      .state.failed,
+      .state.unknown {
+        color: #784224;
+        background: #fff1e3;
+      }
+      .hint {
+        font-size: 12px;
+        color: #56695d;
+        margin-top: 7px;
+      }
+      #notice {
+        min-height: 25px;
+        font-size: 14px;
+        color: #6c492c;
+        margin: 18px 0 0;
+      }
+      #preview {
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        padding: 18px 0;
+        border-top: 1px solid #e0e7e1;
+      }
+      .secondary-section {
+        margin-top: 24px;
+      }
+      details {
+        margin-top: 20px;
+      }
+      summary {
+        cursor: pointer;
+        color: #566e5e;
+        font-size: 13px;
+      }
+      details .field {
+        margin-top: 14px;
+      }
+      #mock-controls {
+        margin-top: 18px;
+        padding: 15px;
+        background: #edf2ee;
+        border-radius: 5px;
+      }
+      #metrics {
+        font-size: 14px;
+        white-space: pre-wrap;
+        margin-top: 15px;
+      }
+      a {
+        color: #245d43;
+      }
+      footer {
+        max-width: 1140px;
+        padding: 24px 32px;
+        margin: auto;
+        color: #56695d;
+        font-size: 12px;
+      }
+      [hidden] {
+        display: none !important;
+      }
+      @media (max-width: 760px) {
+        header > div,
+        main {
+          padding: 20px;
+        }
+        .layout {
+          grid-template-columns: 1fr;
+          gap: 20px;
+        }
+        main {
+          padding-top: 30px;
+        }
+        section {
+          padding: 20px;
+        }
+        h1 {
+          font-size: 28px;
+        }
+        .brand span {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div>
+        <div class="brand">Social SDK <span>Publishing example</span></div>
+        <span class="tag" id="mode">Loading accounts</span>
+      </div>
+    </header>
+    <main>
+      <h1>Publish to your accounts</h1>
+      <p>Select accounts, check your content, and follow each result independently.</p>
+      <div class="layout">
+        <section aria-labelledby="composer-title">
+          <h2 id="composer-title">Compose</h2>
+          <form id="composer">
+            <fieldset>
+              <legend>Publish to</legend>
+              <div id="accounts">Loading authorized accounts…</div>
+            </fieldset>
+            <div class="field">
+              <label for="text">Post text</label
+              ><textarea id="text" required placeholder="What would you like to share?">
+A small update, shared in the right places.</textarea
+              >
+            </div>
+            <div class="field">
+              <label for="format">Format</label
+              ><select id="format">
+                <option value="text">Text</option>
+                <option value="video">Video from a public URL</option>
+              </select>
+            </div>
+            <div id="video-fields" hidden>
+              <div class="field">
+                <label for="media-url">Video URL</label
+                ><input
+                  type="url"
+                  id="media-url"
+                  placeholder="https://your-media.example/video.mp4"
+                />
+              </div>
+              <div class="field">
+                <label for="media-mime">Video MIME type</label
+                ><input type="text" id="media-mime" value="video/mp4" />
+              </div>
+            </div>
+            <details>
+              <summary>Per-account platform options</summary>
+              <div class="field">
+                <label for="platform-options">Options keyed by account ID</label
+                ><textarea
+                  id="platform-options"
+                  spellcheck="false"
+                  placeholder='{"account-id":{"title":"Video title","visibility":"private","madeForKids":false}}'
+                ></textarea>
+                <p class="hint">
+                  Required fields depend on the selected platform. Preparation reports missing
+                  choices.
+                </p>
+              </div>
+            </details>
+            <div id="mock-controls" hidden>
+              <label for="scenario">Simulated outcome</label
+              ><select id="scenario">
+                <option value="mixed-success-failure">One success, one failure</option>
+                <option value="immediate-text-success">All published</option>
+                <option value="media-processing-then-success">Media processing</option>
+                <option value="accepted-response-lost">Response lost</option>
+              </select>
+              <p class="hint">No social account is contacted in simulated mode.</p>
+            </div>
+            <div class="actions" style="margin-top: 24px">
+              <button type="button" id="prepare">Check &amp; preview</button
+              ><button class="primary" type="submit" id="publish" disabled>Publish</button>
+            </div>
+          </form>
+          <p id="notice" role="status" aria-live="polite"></p>
+        </section>
+        <div>
+          <section aria-labelledby="results-title">
+            <h2 id="results-title">Preview &amp; outcomes</h2>
+            <div id="preview" hidden></div>
+            <div id="results">
+              <p class="empty">Your destinations and their results will appear here.</p>
+            </div>
+            <div class="actions">
+              <button id="reconcile" hidden>Check delivery status</button
+              ><button id="advance" hidden>Advance simulated processing</button>
+            </div>
+            <div id="metrics" aria-live="polite"></div>
+          </section>
+          <section
+            class="secondary-section"
+            aria-labelledby="events-title"
+            id="events-panel"
+            hidden
+          >
+            <h2 id="events-title">Webhook replay</h2>
+            <p class="hint">
+              Accept the same simulated event twice, then apply pending work. Duplicate delivery
+              should apply once.
+            </p>
+            <div class="actions">
+              <button id="replay" disabled>Replay event twice</button
+              ><button id="process">Process pending events</button>
+            </div>
+            <p class="hint" id="events-status" role="status"></p>
+          </section>
+          <section class="secondary-section" aria-labelledby="comment-title">
+            <h2 id="comment-title">Reply to a comment</h2>
+            <p class="hint">
+              Select a published result to read metrics. Comment replies require a backend that
+              supports them.
+            </p>
+            <form id="comment-form">
+              <div class="field">
+                <label for="comment-id">Parent comment ID</label
+                ><input type="text" id="comment-id" required />
+              </div>
+              <div class="field">
+                <label for="reply-text">Reply text</label
+                ><input type="text" id="reply-text" required />
+              </div>
+              <button type="submit" id="reply" disabled>Send reply</button>
+            </form>
+            <p id="comment-status" class="hint" role="status"></p>
+          </section>
+        </div>
+      </div>
+    </main>
+    <footer>
+      Application-owned accounts and storage. No Social SDK proxy or background polling.
+    </footer>
+    <script src="/example.js" type="module"></script>
+  </body>
+</html>

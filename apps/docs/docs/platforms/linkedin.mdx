@@ -9,10 +9,13 @@ The direct LinkedIn adapter supports text and one registered image, native post 
 
 <Steps>
   <Step title="Check product approvals and scopes">
-    Member publishing needs `w_member_social`; organization publishing needs `w_organization_social` and an eligible page role. Community Management comments and social actions use separate feed permissions. A token that publishes successfully may still lack read permission.
+    Member publishing needs `w_member_social`; organization publishing needs `w_organization_social`
+    and an eligible page role. Community Management comments and social actions use separate feed
+    permissions. A token that publishes successfully may still lack read permission.
   </Step>
   <Step title="Pick the author URN and API version">
-    Configure a member or organization author URN and an explicit monthly API version such as `202609`.
+    Configure a member or organization author URN and an explicit monthly API version such as
+    `202609`.
   </Step>
   <Step title="Configure the adapter">
     Construct the backend and select the author through a connected-account reference.

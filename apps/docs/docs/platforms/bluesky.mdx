@@ -9,13 +9,21 @@ The direct Bluesky adapter accepts an existing access JWT or a restored OAuth se
 
 <Steps>
   <Step title="Choose a session source">
-    For a server flow, install `@atproto/oauth-client-node@0.5.7` as an application runtime dependency and use `examples/snippets/bluesky-oauth.ts`. Host the client metadata and JWKS at the URLs named by `clientMetadata`, keep the private signing key server-side, and inject durable state/session stores. Read the [AT Protocol OAuth specification](https://atproto.com/specs/oauth) before registering metadata or callbacks.
+    For a server flow, install `@atproto/oauth-client-node@0.5.7` as an application runtime
+    dependency and use `examples/snippets/bluesky-oauth.ts`. Host the client metadata and JWKS at
+    the URLs named by `clientMetadata`, keep the private signing key server-side, and inject durable
+    state/session stores. Read the [AT Protocol OAuth
+    specification](https://atproto.com/specs/oauth) before registering metadata or callbacks.
   </Step>
   <Step title="Bind state to the tenant">
-    Bind the application state supplied to `authorize` to the authenticated tenant and principal in durable storage, and validate that binding when the callback returns, before granting the session to an account. Parsing a valid OAuth callback alone does not establish tenant ownership.
+    Bind the application state supplied to `authorize` to the authenticated tenant and principal in
+    durable storage, and validate that binding when the callback returns, before granting the
+    session to an account. Parsing a valid OAuth callback alone does not establish tenant ownership.
   </Step>
   <Step title="Configure the adapter">
-    Use `examples/snippets/bluesky-sdk-session.ts` to construct the SDK adapter from the restored session, or supply an access JWT directly. Never put access JWTs in browser code or public references.
+    Use `examples/snippets/bluesky-sdk-session.ts` to construct the SDK adapter from the restored
+    session, or supply an access JWT directly. Never put access JWTs in browser code or public
+    references.
   </Step>
 </Steps>
 

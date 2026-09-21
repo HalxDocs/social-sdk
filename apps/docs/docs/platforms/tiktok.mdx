@@ -9,10 +9,14 @@ The direct TikTok adapter accepts an existing access token and creator `openId`.
 
 <Steps>
   <Step title="Connect the creator">
-    Use `ConnectionManager` with `tiktokOAuth` to bind the callback to the authenticated tenant, show the discovered creator, and persist credentials through an encrypted `credentialSink`. Its default scopes are `user.info.basic` and `video.publish`, sent comma-delimited; refresh with `refreshOAuthToken("tiktok", ...)` and persist any rotated refresh token.
+    Use `ConnectionManager` with `tiktokOAuth` to bind the callback to the authenticated tenant,
+    show the discovered creator, and persist credentials through an encrypted `credentialSink`. Its
+    default scopes are `user.info.basic` and `video.publish`, sent comma-delimited; refresh with
+    `refreshOAuthToken("tiktok", ...)` and persist any rotated refresh token.
   </Step>
   <Step title="Verify media origins">
-    The adapter uses verified `PULL_FROM_URL` media origins. List every host you will publish from in `verifiedMediaOrigins` and verify them with TikTok.
+    The adapter uses verified `PULL_FROM_URL` media origins. List every host you will publish from
+    in `verifiedMediaOrigins` and verify them with TikTok.
   </Step>
   <Step title="Configure the adapter">
     Construct the backend with the token, `openId`, and verified origins.

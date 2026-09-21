@@ -1,0 +1,43 @@
+name: Social SDK issue
+description: Report an SDK, adapter, documentation, or tooling problem.
+title: "[Issue]: "
+labels: ["needs-triage"]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: Describe what happened and what you expected.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Core client
+        - Direct platform adapter
+        - Managed backend adapter
+        - Account connection
+        - Media
+        - Events
+        - CLI
+        - Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction
+      description: Include the runtime, package version, and smallest safe example that shows the problem.
+
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Safety check
+      options:
+        - label: I removed tokens, authorization codes, signed URLs, and private account or message data.
+          required: true

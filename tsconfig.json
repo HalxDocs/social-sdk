@@ -1,3 +1,4 @@
 {
-  "extends": "@email-sdk/config/tsconfig.base.json"
+  "extends": "@social-sdk/config/tsconfig.base.json",
+  "files": []
 }

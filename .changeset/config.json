@@ -1,16 +1,16 @@
 {
   "$schema": "https://unpkg.com/@changesets/config@3.1.4/schema.json",
-  "changelog": ["@changesets/changelog-git", null],
+  "changelog": false,
   "commit": false,
   "fixed": [],
   "linked": [],
-  "access": "public",
+  "access": "restricted",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": ["@email-sdk/config", "fumadocs"],
+  "ignore": ["@social-sdk/config", "@social-sdk/docs"],
   "privatePackages": {
     "version": false,
     "tag": false
   },
-  "createGithubReleases": true
+  "createGithubReleases": false
 }

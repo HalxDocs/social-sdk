@@ -5,15 +5,15 @@ description: Compare the social operations, content formats, permissions, and ev
 
 Use this page to choose a platform adapter before you read its setup guide. The matrix describes the normalized surface currently implemented in Social SDK; it does not certify credentials, app review, account eligibility, or a successful live request.
 
-| Platform                                                                | Publish                        | Read             | Comments    | Analytics                 |
-| ----------------------------------------------------------------------- | ------------------------------ | ---------------- | ----------- | ------------------------- |
-| [![](/integrations/x.svg) X](/platforms/x)                               | Text, images                   | Posts, feeds     | Write       | Post metrics              |
-| [![](/integrations/threads.svg) Threads](/platforms/threads)             | Text, images, video, carousels | Posts, feeds     | —           | Post and lifetime metrics |
-| [![](/integrations/bluesky.svg) Bluesky](/platforms/bluesky)             | Text, images                   | Posts, feeds     | Read, write | Post and account          |
-| [![](/integrations/youtube.svg) YouTube](/platforms/youtube)             | Video                          | Videos, channels | Read, write | Post and account          |
-| [![](/integrations/tiktok.svg) TikTok](/platforms/tiktok)                | Images, video, carousels       | Posts, feeds     | —           | Account                   |
-| [![](/integrations/instagram.svg) Instagram](/platforms/instagram)       | Images, video, carousels       | Posts, feeds     | Read, write | Post and account          |
-| [![](/integrations/linkedin.svg) LinkedIn](/platforms/linkedin)          | Text, images                   | Posts, feeds     | Read, write | Post and account          |
+| Platform                                                           | Publish                        | Read             | Comments    | Analytics                 |
+| ------------------------------------------------------------------ | ------------------------------ | ---------------- | ----------- | ------------------------- |
+| [![](/integrations/x.svg) X](/platforms/x)                         | Text, images                   | Posts, feeds     | Write       | Post metrics              |
+| [![](/integrations/threads.svg) Threads](/platforms/threads)       | Text, images, video, carousels | Posts, feeds     | —           | Post and lifetime metrics |
+| [![](/integrations/bluesky.svg) Bluesky](/platforms/bluesky)       | Text, images                   | Posts, feeds     | Read, write | Post and account          |
+| [![](/integrations/youtube.svg) YouTube](/platforms/youtube)       | Video                          | Videos, channels | Read, write | Post and account          |
+| [![](/integrations/tiktok.svg) TikTok](/platforms/tiktok)          | Images, video, carousels       | Posts, feeds     | —           | Account                   |
+| [![](/integrations/instagram.svg) Instagram](/platforms/instagram) | Images, video, carousels       | Posts, feeds     | Read, write | Post and account          |
+| [![](/integrations/linkedin.svg) LinkedIn](/platforms/linkedin)    | Text, images                   | Posts, feeds     | Read, write | Post and account          |
 
 A dash means the normalized direct adapter does not expose that operation. Content limits, permissions, account rules, upload behavior, API versions, and processing states remain platform-specific; open the platform guide for those details. Managed backends may expose additional operations for the same platform through their own route.
 
@@ -21,7 +21,8 @@ A dash means the normalized direct adapter does not expose that operation. Conte
 
 <CardGroup cols={2}>
   <Card title="X" href="/platforms/x">
-    Publish and read posts with bearer-token authorization, typed reactions, and uncertain-write reconciliation.
+    Publish and read posts with bearer-token authorization, typed reactions, and uncertain-write
+    reconciliation.
   </Card>
   <Card title="Threads" href="/platforms/threads">
     Publish containers, carousels, and media with explicit processing outcomes.

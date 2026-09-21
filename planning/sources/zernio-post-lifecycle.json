@@ -1,0 +1,173 @@
+{
+  "info": {
+    "title": "Zernio API",
+    "version": "1.25.1",
+    "description": "API reference for Zernio. Authenticate with a Bearer API key.\nBase URL: https://zernio.com/api\n\nVersioning and deprecation: all endpoints are versioned in the URL path\n(current version: /v1). Breaking changes only ship in a new path version;\nexisting versions keep working. Deprecated operations are marked\n'deprecated: true' in this spec and announced in the changelog\n(https://zernio.com/changelog) before removal.\n\nErrors: every 4xx/5xx response is application/json with a machine-readable\n'code' and a human-readable 'error' message (see the ErrorResponse schema).\n",
+    "termsOfService": "https://zernio.com/tos",
+    "contact": {
+      "name": "Zernio Support",
+      "url": "https://zernio.com",
+      "email": "support@zernio.com"
+    },
+    "x-logo": {
+      "url": "https://zernio.com/icon.png?v=3"
+    },
+    "x-long-description": "Zernio is the social media API that replaces 16 integrations. Schedule posts, retrieve analytics,\nmanage DMs, comments, and reviews across X, Instagram, WhatsApp, TikTok, LinkedIn,\nFacebook, YouTube, Threads, Reddit, Pinterest, Bluesky, Telegram, Google Business Profile, Snapchat,\nDiscord, and Slack, all from a single REST API. Run paid ads on Meta (Facebook + Instagram), Google,\nTikTok, LinkedIn, Pinterest, X, and OpenAI from the same account.\n\nConnect Shopify and WordPress as blog accounts to list sites and manage\narticles, drafts, featured images, tags, authors, and native scheduling.\n\nKey features: Unified posting to 16 platforms, ads management on 7 ad networks (via /v1/ads), aggregated analytics, unified inbox (DMs, comments, reviews), webhooks, OAuth connect, queue scheduling, and white-label support for agencies managing unlimited accounts.\n\nSupported posting platforms: X, Instagram, WhatsApp, Facebook, LinkedIn, TikTok, YouTube, Pinterest, Reddit, Bluesky, Threads, Google Business Profile, Telegram, Snapchat, Discord, Slack. Supported ad platforms: Meta Ads, Google Ads, TikTok Ads, LinkedIn Ads, Pinterest Ads, X Ads, OpenAI Ads. Snapchat is a closed beta with no public release date: connections are gated behind approval and return 403 `PLATFORM_BETA_RESTRICTED` until then.\n",
+    "x-category": "Social",
+    "x-website": "https://zernio.com",
+    "x-thumbnail": "https://rapidapi-prod-apis.s3.amazonaws.com/b24d3df5-563c-4a50-9e1e-1ad3eb1fce69.png",
+    "x-version-lifecycle": "ACTIVE",
+    "x-badges": [
+      {
+        "name": "social media",
+        "value": "social media"
+      },
+      {
+        "name": "scheduling",
+        "value": "scheduling"
+      },
+      {
+        "name": "instagram",
+        "value": "instagram"
+      },
+      {
+        "name": "tiktok",
+        "value": "tiktok"
+      },
+      {
+        "name": "twitter",
+        "value": "twitter"
+      },
+      {
+        "name": "linkedin",
+        "value": "linkedin"
+      },
+      {
+        "name": "facebook",
+        "value": "facebook"
+      },
+      {
+        "name": "youtube",
+        "value": "youtube"
+      },
+      {
+        "name": "social media api",
+        "value": "social media api"
+      },
+      {
+        "name": "posting",
+        "value": "posting"
+      }
+    ]
+  },
+  "paths": {
+    "/v1/posts/{postId}/unpublish": {
+      "post": {
+        "x-resource-group": "publishing",
+        "operationId": "unpublishPost",
+        "tags": [
+          "Posts"
+        ],
+        "summary": "Unpublish post",
+        "description": "Deletes a published post from the specified platform. The post record in Zernio is kept but its status is updated to cancelled.\nNot supported on Instagram, TikTok, or Snapchat. Threaded posts delete all items. YouTube deletion is permanent.\n",
+        "parameters": [
+          {
+            "name": "postId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "platform"
+                ],
+                "properties": {
+                  "platform": {
+                    "type": "string",
+                    "description": "The platform to delete the post from",
+                    "enum": [
+                      "threads",
+                      "facebook",
+                      "twitter",
+                      "linkedin",
+                      "youtube",
+                      "pinterest",
+                      "reddit",
+                      "bluesky",
+                      "googlebusiness",
+                      "telegram"
+                    ]
+                  }
+                }
+              },
+              "example": {
+                "platform": "threads"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Post deleted from platform",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "example": {
+                  "success": true,
+                  "message": "Post deleted from threads successfully"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request: platform not supported for deletion, post not on that platform, not published, no platform post ID, or no access token.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "500": {
+            "description": "Platform API deletion failed"
+          }
+        }
+      }
+    }
+  }
+}

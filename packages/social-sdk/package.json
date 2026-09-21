@@ -1,0 +1,85 @@
+{
+  "name": "@opencoredev/social-sdk",
+  "version": "0.1.0-alpha.0",
+  "private": true,
+  "description": "Social platform integrations for TypeScript applications.",
+  "license": "MIT",
+  "bin": {
+    "social-sdk": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./testing": {
+      "types": "./dist/testing/index.d.ts",
+      "import": "./dist/testing/index.js"
+    },
+    "./cloud/zernio": {
+      "types": "./dist/cloud/zernio.d.ts",
+      "import": "./dist/cloud/zernio.js"
+    },
+    "./cloud/post-for-me": {
+      "types": "./dist/cloud/post-for-me.d.ts",
+      "import": "./dist/cloud/post-for-me.js"
+    },
+    "./server": {
+      "types": "./dist/server/index.d.ts",
+      "import": "./dist/server/index.js"
+    },
+    "./package.json": "./package.json",
+    "./bluesky": {
+      "types": "./dist/platforms/bluesky.d.ts",
+      "import": "./dist/platforms/bluesky.js"
+    },
+    "./youtube": {
+      "types": "./dist/platforms/youtube.d.ts",
+      "import": "./dist/platforms/youtube.js"
+    },
+    "./tiktok": {
+      "types": "./dist/platforms/tiktok.d.ts",
+      "import": "./dist/platforms/tiktok.js"
+    },
+    "./linkedin": {
+      "types": "./dist/platforms/linkedin.d.ts",
+      "import": "./dist/platforms/linkedin.js"
+    },
+    "./x": {
+      "types": "./dist/platforms/x.d.ts",
+      "import": "./dist/platforms/x.js"
+    },
+    "./threads": {
+      "types": "./dist/platforms/threads.d.ts",
+      "import": "./dist/platforms/threads.js"
+    },
+    "./instagram": {
+      "types": "./dist/platforms/instagram.d.ts",
+      "import": "./dist/platforms/instagram.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json --noEmitOnError",
+    "check-types": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.type-tests.json",
+    "lint": "oxlint src tests type-tests",
+    "test": "bun test tests"
+  },
+  "dependencies": {
+    "twitter-text": "3.1.0"
+  },
+  "devDependencies": {
+    "@types/twitter-text": "^3.1.10"
+  },
+  "engines": {
+    "node": ">=22.12"
+  }
+}

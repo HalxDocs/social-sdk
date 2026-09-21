@@ -9,10 +9,12 @@ The direct Threads adapter uses an existing user access token and Threads user I
 
 <Steps>
   <Step title="Complete Meta app setup">
-    Create a Meta app with Threads API access and complete the app review your use case requires. Token, user ID, scopes, and account eligibility remain server-owned setup.
+    Create a Meta app with Threads API access and complete the app review your use case requires.
+    Token, user ID, scopes, and account eligibility remain server-owned setup.
   </Step>
   <Step title="Store credentials server-side">
-    Set `THREADS_USER_ID` and `THREADS_ACCESS_TOKEN` in server configuration, and `THREADS_GRAPH_VERSION` only when you need a non-default version.
+    Set `THREADS_USER_ID` and `THREADS_ACCESS_TOKEN` in server configuration, and
+    `THREADS_GRAPH_VERSION` only when you need a non-default version.
   </Step>
   <Step title="Configure the adapter">
     Construct the backend and select the account through a connected-account reference.

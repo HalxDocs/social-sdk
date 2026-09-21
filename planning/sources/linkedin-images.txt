@@ -1,0 +1,2730 @@
+ 
+
+		
+
+			
+		
+
+			
+Image API - LinkedIn | Microsoft Learn
+
+			
+
+			
+
+			
+
+
+			
+
+			
+ 
+
+			
+
+			
+
+			
+
+			
+
+			
+
+			
+
+			
+
+			
+
+			
+
+			
+
+			
+ 
+
+			
+
+			 
+			
+
+
+			
+
+
+			
+
+			
+
+			
+
+			
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	
+		
+
+	 
+
+			
+
+			
+
+
+			
+
+
+			
+
+			
+			
+
+			
+			
+
+			
+
+			
+
+			
+
+			
+
+			
+
+
+			
+
+			
+
+			
+
+			
+
+			
+		
+
+	
+			
+
+				
+
+		
+
+			
+		
+
+			Skip to main content
+		
+
+	
+		
+
+			Skip to Ask Learn chat experience
+		
+
+	
+
+			
+
+			
+
+			
+
+				
+
+					
+This browser is no longer supported.
+
+					
+
+						Upgrade to Microsoft Edge to take advantage of the latest features, security updates, and technical support.
+					
+
+					
+
+						
+
+							Download Microsoft Edge
+						
+
+						
+
+							More info about Internet Explorer and Microsoft Edge
+						
+
+					
+
+				
+
+			
+
+			
+
+			
+
+				
+
+				
+
+				
+
+			
+
+			
+		
+
+		
+
+			
+
+			
+		
+
+		
+
+	
+		
+
+	
+
+				 
+
+					
+		
+
+			
+
+				
+
+					
+
+						
+
+							
+
+								
+
+								
+
+							
+
+						
+
+						
+
+					
+
+				
+
+			
+
+		
+
+	
+			  
+
+
+				
+
+					
+			
+
+		
+
+			
+
+				
+
+				
+ Table of contents 
+
+			
+
+			
+
+				
+
+				
+Exit editor mode
+
+			
+
+		
+
+	
+ 
+		
+
+	
+			
+
+				
+
+					
+		
+
+			
+
+				
+		
+
+			
+
+				
+
+					
+
+				
+
+			
+
+			
+
+		
+
+
+		
+
+	 
+		
+
+			
+		
+
+			
+
+				
+
+			
+
+		
+
+		
+
+			
+
+				
+
+			
+
+			
+Ask Learn
+
+		
+
+		
+
+			
+
+				
+
+			
+
+			
+Ask Learn
+
+		
+
+	 
+
+			
+
+				
+
+					
+
+						
+
+					
+
+				
+
+				
+
+					
+		
+
+			
+
+				
+
+			
+
+			
+Reading mode
+
+		
+
+	 
+		
+
+			
+
+			
+Table of contents
+
+		
+
+	 
+		
+
+			
+
+				
+
+			
+
+			
+Read in English
+
+		
+
+	
+					
+		
+
+			
+
+				
+
+			
+
+			
+Add
+
+		
+
+	 
+		
+
+			
+
+				
+
+			
+
+			
+Add to Plans
+
+		
+
+	 
+					
+		
+
+			
+
+				
+
+			
+
+			
+Edit
+
+		
+
+	  
+		
+
+		
+				
+
+					
+
+						
+
+						
+
+						
+
+					
+
+					
+Copy Markdown
+
+				
+
+		   
+				
+
+					
+
+						
+
+					
+
+					
+Print
+
+				
+
+		  
+	
+				
+
+			
+
+		
+
+	
+			
+
+		
+
+	  
+		
+
+		
+
+			
+
+			
+
+				
+
+					
+
+						
+
+						
+Note
+
+					
+
+					
+
+						Access to this page requires authorization. You can try 
+signing in
+ or 
+changing directories
+.
+					
+
+					
+
+						Access to this page requires authorization. You can try 
+changing directories
+.
+					
+
+				
+
+			
+
+		
+
+	
+					
+Images API
+
+					
+		
+
+			 
+				
+
+					
+		
+
+			
+
+				
+
+			
+
+			
+Feedback
+
+		
+
+	
+				
+
+		  
+		
+
+	 
+		
+
+			
+
+				
+
+					
+
+				
+
+				
+
+					
+
+						Summarize this article for me
+					
+
+				
+
+			
+
+			
+
+			
+
+		
+
+	 
+		
+
+			
+
+				In this article
+			
+
+		
+
+	 
+
+
+Warning
+
+
+Deprecation Notice:
+
+The Marketing Version 202510 (Marketing October 2025) will be sunset on October 15, 2026. We recommend that you migrate to the latest 
+versioned APIs
+ to avoid disruptions. For information on all the supported versions, refer to the 
+migrations
+ documentation.
+If you haven’t yet migrated and have questions, submit a request on the 
+LinkedIn Developer Support Portal
+.
+
+
+
+
+Image API makes it easier for you to manage image assets and create image ads.
+
+
+
+
+Note
+
+
+The Images API replaces the 
+Assets API
+. See 
+Migration Guide
+ for more details.
+
+
+
+
+Schema
+
+
+
+
+Note
+
+
+All APIs require the request headers 
+Linkedin-Version: {Version in YYYYMM format}
+
+and 
+X-Restli-Protocol-Version: 2.0.0
+. Refer to the 
+Protocol Versions
+ page to learn more about Rest.li Protocol 2.0.0.
+
+
+
+
+
+
+
+
+
+
+Field Name
+
+
+Type
+
+
+Description
+
+
+Required
+
+
+
+
+
+
+
+
+
+
+aspectRatioHeight
+
+
+float
+
+
+The aspect ratio height of the media. For a 16:9 media, this will be 9. There might be decimal values for high density displays for a greater degree of precision. aspectRatioHeight and aspectRatioWidth would either both be present or both be null. Empty if the media asset isn't available, failed processing, etc.
+
+
+No
+
+
+
+
+
+
+aspectRatioWidth
+
+
+float
+
+
+The aspect ratio width of the media. For a 16:9 media, this will be 16. There might be decimal values for high density displays for a greater degree of precision. aspectRatioHeight and aspectRatioWidth would either both be present or both be null. Empty if the media asset isn't available, failed processing, etc.
+
+
+No
+
+
+
+
+
+
+downloadUrl
+
+
+URL
+
+
+Public URL to download/view the media asset. Is empty if the media asset isn't available, failed processing, etc.
+
+
+No
+
+
+
+
+
+
+downloadUrlExpiresAt
+
+
+Time
+
+
+Milliseconds since the epoch (1970-01-01 00:00 UTC) when the identifier expires. If not present, it might never expire but there's no guarantee. Unless the use case has a security+legal exception, all URLs have an expiration time. If they don't, they can still expire because URLs are signed, and the sign keys might be rotated. If a non expiring URL was signed with a key that gets invalidated, it essentially expires.
+
+
+No
+
+
+
+
+
+
+id
+
+
+Imageurn
+
+
+Unique URN for an Image. Synthetic key that shouldn't be allowed during the creation of an Image. The field is read only and derived to be populated internally.
+
+
+Yes
+
+
+
+
+
+
+mediaLibraryMetadata
+
+
+MediaLibraryMetadata
+
+
+Metadata for assets stored in the media library. Metadata is tied to a specific account which must be specified in queries / requests.
+
+
+No
+
+
+
+
+
+
+mediaLibraryMetadata.associatedAccount
+
+
+URN
+
+
+The associated account that owns the media library (e.g. urn:li:sponsoredAccount:123). The media library specific metadata fields will be filled with the data from this account's library.
+
+
+Yes
+
+
+
+
+
+
+mediaLibraryMetadata.assetName
+
+
+String
+
+
+The name of the asset in the associatedAccount's library.
+
+
+Yes
+
+
+
+
+
+
+mediaLibraryMetadata.mediaLibraryStatus
+
+
+MediaLibraryStatus
+
+
+Status of the asset's entry in the media library. Defaults to "ACTIVE" on creation.
+ACTIVE Owner considers asset available and usable. 
+ARCHIVED Owner considers asset archived.
+
+
+No
+
+
+
+
+
+
+owner
+
+
+URN
+
+
+The URN of the entity that owns this asset. It can be a person(urn:li:person:123), organization(urn:li:organization:123) or sponsoredAccount(urn:li:sponsoredAccount:123) URN
+
+
+Yes
+
+
+
+
+
+
+status
+
+
+MediaStatus
+
+
+PROCESSING Asset is processing to generate missing artifacts. PROCESSING_FAILED - Processing failed due to client error such as file size too large, unsupported file format, internal error (e.g., performance issue, database error, network failure), or other issue. AVAILABLE - All of the recipe's required artifacts are ready. The asset is available to be served. WAITING_UPLOAD Waiting for client to upload source file or uploading process to be completed.
+
+
+No
+
+
+
+
+
+
+altText
+
+
+String
+
+
+The alternate text of this thumbnail. Used for screen reader accessibility. Maximum length is 4,086 characters, recommended length is less than 120 characters.
+
+
+No
+
+
+
+
+
+
+initializeUploadRequest.mediaLibraryMetadata
+
+
+MediaLibraryMetadata
+
+
+Metadata for assets stored in the media library. Metadata is tied to a specific account which must be specified in queries / requests. When this field is present, the uploaded asset will also be registered in the account's media library.
+
+
+No
+
+
+
+
+
+
+initializeUploadRequest.owner
+
+
+URN
+
+
+URN of the entity that owns this asset. Can be a person(urn:li:person:123), or organization(urn:li:organization:123) URN
+
+
+Yes
+
+
+
+
+
+
+
+
+The Images API supports the following image pixel count and formats:
+
+
+
+
+Images with less than 36,152,320 pixels.
+
+
+JPG, GIF, and PNG formats
+
+
+GIF format supports up to 250 frames
+
+
+
+
+Permissions
+
+
+The following permission checks are performed when uploading an image:
+
+
+
+
+For images with company URN owners, the caller must have ADMIN or DSC permissions for the company page.
+
+
+For images with SponsoredContentAccount URN owners, all GET's and UPDATE's are permitted.
+
+
+For images with member URN owners, the caller must match the image owner.
+
+
+
+
+The permissions required for rest/images access are: 
+rw_ads
+, 
+w_member_social
+, 
+w_organization_social
+, and 
+w_power_creators
+. However, 
+w_member_social
+ permission are write-only and tokens with only 
+w_member_social
+ permissions would be unable to perform a GET call for rest/images.
+
+
+
+
+Note
+
+
+This only applies to versioned gateway calls. 
+w_member_social
+ permissions are sufficient to make legacy GET calls to rest/images.
+
+
+
+
+Invalid permissions results in the following API response:
+
+
+{
+    "message": "Accessing this image resource is forbidden. Please check your permissions for this resource",
+    "status": 403
+}
+
+
+
+Managing Image asset
+
+
+Uploading an Image
+
+
+Initialize Image Upload
+
+
+Use the 
+initializeUpload
+ action to register the upload. When you initialize, you declare the upcoming upload. Use the upload URL to upload the image.
+
+
+
+
+Note
+
+
+SYNCHRONOUS_UPLOAD
+ is not supported in Images API.
+
+
+
+
+Sample Request
+
+
+
+
+
+
+
+
+http
+
+
+
+
+
+
+curl
+
+
+
+
+
+
+
+
+
+POST https://api.linkedin.com/rest/images?action=initializeUpload
+
+
+
+{
+  "initializeUploadRequest": {
+        "owner": "urn:li:organization:5583111"
+  }
+}
+
+
+
+
+
+
+
+
+curl -X POST 'https://api.linkedin.com/rest/images?action=initializeUpload'  
+-H 'Authorization: Bearer {INSERT_TOKEN}' \
+-H 'Linkedin-Version: {version number in the format YYYYMM}' \
+-H 'X-Restli-Protocol-Version: 2.0.0' \
+--data '{
+    "initializeUploadRequest": {
+        "owner": "urn:li:organization:5583111"
+    }
+}'
+
+
+
+
+
+
+
+Sample Response
+
+
+{
+   "value": {
+       "uploadUrlExpiresAt": 1650567510704,
+       "uploadUrl": "https://www.linkedin.com/dms-uploads/C4E10AQFoyyAjHPMQuQ/uploaded-image/0?ca=vector_ads&cn=uploads&sync=0&v=beta&ut=08zHQjMjAOLqc1",
+       "image": "urn:li:image:C4E10AQFoyyAjHPMQuQ"
+   }
+}
+
+
+
+Sample Request
+
+
+Image with MediaLibraryMetadata for media library registration
+
+
+
+
+Note
+
+
+mediaLibraryMetadata.mediaLibraryStatus
+ defaults to 
+ACTIVE
+ on creation.
+
+
+
+
+
+
+
+
+
+
+http
+
+
+
+
+
+
+curl
+
+
+
+
+
+
+
+
+
+POST 'https://api.linkedin.com/rest/images?action=initializeUpload'
+
+
+
+{ "initializeUploadRequest": {
+       "owner": "urn:li:organization:2414183",
+       "mediaLibraryMetadata": {
+            "associatedAccount": "urn:li:sponsoredAccount:123456789",
+            "assetName": "My media library asset"
+      }
+    }
+}
+
+
+
+
+
+
+
+
+curl --location --request POST 'https://api.linkedin.com/rest/images?action=initializeUpload'
+--header 'Linkedin-Version: {version number in the format YYYYMM}' \
+--header 'X-Restli-Protocol-Version: 2.0.0' \
+-H 'Authorization: Bearer {INSERT_TOKEN}' \
+--header 'Content-Type: application/json' \
+--data-raw '{ "initializeUploadRequest": {
+       "owner": "urn:li:organization:2414183",
+        "mediaLibraryMetadata": {
+            "associatedAccount": "urn:li:sponsoredAccount:123456789",
+            "assetName": "My media library asset"
+        }
+    }
+}'
+
+
+
+
+
+
+
+Sample Response
+
+
+A successful response returns a 200 OK status code with the uploadUrl to upload the image.
+
+
+{
+   "value": {
+       "uploadUrlExpiresAt": 1650567510704,
+       "uploadUrl": "https://www.linkedin.com/dms-uploads/C4E10AQFoyyAjHPMQuQ/uploaded-image/0?ca=vector_ads&cn=uploads&sync=0&v=beta&ut=08zHQjMjAOLqc1",
+       "image": "urn:li:image:C4E10AQFoyyAjHPMQuQ"
+   }
+}
+
+
+
+Upload the Image
+
+
+Using the uploadUrl returned from the previous step, upload the image. For more information, see 
+Upload the Image
+.
+
+
+
+
+Note
+
+
+Images uploaded with the Images API can now be reused across different image and image ad formats. For example, an image can be used in a single image ad, a carousel ad and a spotlight ad and doesn't require separate image uploads.
+
+
+
+
+GET a single image
+
+
+
+
+
+
+
+
+http
+
+
+
+
+
+
+curl
+
+
+
+
+
+
+
+
+
+GET https://api.linkedin.com/rest/images/urn:li:image:C4E10AQFn10iWtKexVA
+
+
+
+
+
+
+
+
+curl -X GET 'https://api.linkedin.com/rest/images/urn:li:image:C4E10AQFn10iWtKexVA'  \
+-H 'Authorization: Bearer {INSERT_TOKEN}' \
+-H 'Linkedin-Version: {version number in the format YYYYMM}'
+
+
+
+
+
+
+
+Sample Response
+
+
+{
+    "owner": "urn:li:organization:5583111",
+    "downloadUrlExpiresAt": 1676584800000,
+    "downloadUrl": "https://media.licdn-ei.com/dms/image/C4E10AQFn10iWtKexVA/image-shrink_1280/0/1675963270302/imagecreatedfirst?e=1676584800&v=beta&t=zuE2bQG5S-pY2R1v-FNJu15Pbs2K_Z02Q4naeM2kh00",
+    "id": "urn:li:image:C4E10AQFn10iWtKexVA",
+    "downloadUrlExpiresAt": 1679083200000,
+    "status": "AVAILABLE"
+}
+
+
+
+Batch get images
+
+
+
+
+
+
+
+
+http
+
+
+
+
+
+
+curl
+
+
+
+
+
+
+
+
+
+GET https://api.linkedin.com/rest/images?ids=List(urn%3Ali%3Aimage%3AC4E10AQFn10iWtKexVA,urn%3Ali%3Aimage%3AC4E10AQFgOYeVoHFeBw)
+
+
+
+
+
+
+
+
+curl -X GET 'https://api.linkedin.com/rest/images?ids=List(urn%3Ali%3Aimage%3AC4E10AQFn10iWtKexVA,urn%3Ali%3Aimage%3AC4E10AQFgOYeVoHFeBw)' \
+-H 'Authorization: Bearer {INSERT_TOKEN}' \
+-H 'Linkedin-Version: {version number in the format YYYYMM}' \
+-H 'X-Restli-Protocol-Version: 2.0.0' 
+
+
+
+
+
+
+
+Sample Response
+
+
+{
+    "results": {
+        "urn:li:image:C4E10AQFn10iWtKexVA": {
+            "owner": "urn:li:organization:5583111",
+            "downloadUrlExpiresAt": 1676584800000,
+            "downloadUrl": "https://media.licdn-ei.com/dms/image/C4E10AQFn10iWtKexVA/image-shrink_1280/0/1675963270302/imagecreatedfirst?e=1676584800&v=beta&t=zuE2bQG5S-pY2R1v-FNJu15Pbs2K_Z02Q4naeM2kh00",
+            "id": "urn:li:image:C4E10AQFn10iWtKexVA",
+            "downloadUrlExpiresAt": 1679083200000,
+            "status": "AVAILABLE"
+        },
+        "urn:li:image:C4E10AQFgOYeVoHFeBw":
+        {
+            "owner": "urn:li:organization:5583111",
+            "downloadUrlExpiresAt": 1676584800000,
+            "downloadUrl": "https://media.licdn-ei.com/dms/image/C4E10AQFgOYeVoHFeBw/image-shrink_1280/0/1675963270302/imagecreatedfirst?e=1676584800&v=beta&t=zuE2bQG5S-pY2R1v-FNJu15Pbs2K_Z02Q4naeM2kh00",
+            "id": "urn:li:image:C4E10AQFgOYeVoHFeBw",
+            "status": "WAITING_UPLOAD"
+        }
+    },
+    "statuses":
+    {
+        "urn:li:image:C4E10AQFn10iWtKexVA": 200,
+        "urn:li:image:C4E10AQFgOYeVoHFeBw": 200
+    },
+    "errors":
+    {}
+}
+
+
+
+Partial Update on an Image
+
+
+Only supports updates on the media library metadata and only for the specified account. As such, the 
+associatedAccount
+ parameter is mandatory. Silently ignores any other patch data.
+
+
+When updating the 
+mediaLibraryMetadata.mediaLibraryStatus
+ field, an asset can go from ACTIVE to ARCHIVED only if it's not currently in processing (i.e. is done processing or processing failed). An asset can only go from ARCHIVED to ACTIVE if it succeeded processing. Updating the 
+mediaLibraryMetadata.mediaLibraryStatus
+ field won't update the last modified time of the asset.
+
+
+
+
+
+
+
+
+http
+
+
+
+
+
+
+curl
+
+
+
+
+
+
+
+
+
+POST https://api.linkedin.com/rest/images/urn%3Ali%3Aimage%3AC5510AQEB1AGuxQ1NEA?associatedAccount=urn%3Ali%3AsponsoredAccount%3A123456789
+
+
+
+{
+   "patch":{
+      "mediaLibraryMetadata":{
+         "$set":{
+            "assetName":"updated name",
+            "mediaLibraryStatus":"ARCHIVED"
+         }
+      }
+   }
+}
+
+
+
+
+
+
+
+
+curl --location --request POST 'https://api.linkedin.com/rest/images/urn%3Ali%3Aimage%3AC5510AQEB1AGuxQ1NEA?associatedAccount=urn%3Ali%3AsponsoredAccount%3A123456789'
+--header 'Linkedin-Version: {version number in the format YYYYMM}' \
+--header 'X-Restli-Protocol-Version: 2.0.0' \
+--header 'X-Restli-Method:PARTIAL_UPDATE' \
+-H 'Authorization: Bearer {INSERT_TOKEN}' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+  "patch": {
+    "mediaLibraryMetadata": {
+      "\$set": {
+        "assetName": "updated name",
+        "mediaLibraryStatus": "ARCHIVED"
+      }
+    }
+  }
+}'
+
+
+
+
+
+
+
+Sample Response
+
+
+A successful response returns a 204 status code.
+
+
+Find by associated account
+
+
+Get the Images associated with the specified account, by descending order of last modified time.
+
+
+Parameters
+
+
+
+
+
+
+
+
+Parameter
+
+
+Required
+
+
+Possible Values
+
+
+
+
+
+
+
+
+
+
+q
+
+
+Yes
+
+
+Must be 
+associatedAccount
+
+
+
+
+
+
+mediaLibraryStatus
+
+
+No
+
+
+Optional filter on the media library status. When omitted, all images will be returned.
+
+
+
+
+
+
+start
+
+
+No
+
+
+The index at which the returned elements should begin. Defaults to 0.
+
+
+
+
+
+
+count
+
+
+No
+
+
+The number of elements to return, up to 1,000. Defaults to 10.
+
+
+
+
+
+
+
+
+Sample Request
+
+
+
+
+
+
+
+
+http
+
+
+
+
+
+
+curl
+
+
+
+
+
+
+
+
+
+GET https://api.linkedin.com/rest/images?start=0&count=1&associatedAccount=urn%3Ali%3AsponsoredAccount%3A123456789&mediaLibraryStatus=(value:ACTIVE)&q=associatedAccount \
+
+
+
+
+
+
+
+
+curl --location --request GET https://api.linkedin.com/rest/images?start=0&count=1&associatedAccount=urn%3Ali%3AsponsoredAccount%3A123456789&mediaLibraryStatus=(value:ACTIVE)&q=associatedAccount \
+--header 'Linkedin-Version: {version number in the format YYYYMM}' \
+--header 'X-Restli-Protocol-Version: 2.0.0' \
+-H 'Authorization: Bearer {INSERT_TOKEN}' \
+--header 'Content-Type: application/json'
+
+
+
+
+
+
+
+Sample Response
+
+
+{
+    "elements": [
+        {
+            "owner": "urn:li:company:5791012",
+            "downloadUrlExpiresAt": 1676584800000,
+            "downloadUrl": "https://media.licdn-ei.com/dms/image/C5510AQGbefUcYjBtaA/image-shrink_1280/0/1675963270302/imagecreatedfirst?e=1676584800&v=beta&t=zuE2bQG5S-pY2R1v-FNJu15Pbs2K_Z02Q4naeM2kh00",
+            "id": "urn:li:image:C5510AQGbefUcYjBtaA",
+            "mediaLibraryMetadata": {
+                "associatedAccount": "urn:li:sponsoredAccount:521498108",
+                "mediaLibraryStatus": "ACTIVE",
+                "assetName": "image created first"
+            },
+            "status": "AVAILABLE"
+        }
+    ],
+    "paging": {
+        "count": 1,
+        "start": 0,
+        "links": [
+            {
+                "rel": "next",
+                "type": "application/json",
+                "href": "https://api.linkedin.com/rest/images?associatedAccount=urn%3Ali%3AsponsoredAccount%3A521498108&q=associatedAccount&start=1&count=1"
+            }
+        ]
+    }
+}
+
+
+
+Permissions
+
+
+The following permission checks are performed when retrieving or uploading an image
+
+
+
+
+For images with company URN owners, the caller needs to have ADMIN or DSC permissions for the company page.
+
+
+For images with SponsoredContentAccount URN owners, all the GET and UPDATE methods are permitted.
+
+
+For images with member URN owners, the caller needs to match the image owner.
+
+
+
+
+Invalid permissions results in the following API response:
+
+
+{
+    "message": "Accessing this image resource is forbidden. Please check your permissions for this resource",
+    "status": 403
+}
+
+
+
+Managing Image content
+
+
+Create Image content
+
+
+
+
+
+
+
+
+http
+
+
+
+
+
+
+curl
+
+
+
+
+
+
+
+
+
+POST https://api.linkedin.com/rest/posts
+
+
+
+{
+    "author": "urn:li:organization:5515715",
+    "commentary": "test strings!",
+    "visibility": "PUBLIC",
+    "distribution": {
+        "feedDistribution": "MAIN_FEED",
+        "targetEntities": [],
+        "thirdPartyDistributionChannels": []
+    },
+    "content": {
+        "media": {
+            "altText": "testing for alt tags",
+            "id": "urn:li:image:C5610AQFj6TdYowm17w"
+        }
+    },
+    "lifecycleState": "PUBLISHED",
+    "isReshareDisabledByAuthor": false
+}
+
+
+
+
+
+
+
+
+curl --location --request POST 'https://api.linkedin.com/rest/posts' \
+--header 'Linkedin-Version: {version number in the format YYYYMM}' \
+--header 'Authorization: Bearer {INSERT_TOKEN}' \
+--header 'Content-Type: application/json' \
+--data-raw '{
+    "author": "urn:li:organization:5515715",
+    "commentary": "test strings!",
+    "visibility": "PUBLIC",
+    "distribution": {
+        "feedDistribution": "MAIN_FEED",
+        "targetEntities": [],
+        "thirdPartyDistributionChannels": []
+    },
+    "content": {
+        "media": {
+            "altText": "testing for alt tags",
+            "id": "urn:li:image:C5610AQFj6TdYowm17w"
+        }
+    },
+    "lifecycleState": "PUBLISHED",
+    "isReshareDisabledByAuthor": false
+}'
+
+
+
+
+
+
+
+Sample Response
+
+
+A successful response returns a 
+201 Created
+ HTTP status code and the ID in the 
+x-restli-id
+ response header.
+
+
+Get Image content
+
+
+Retrieve image content associated with a Post performing GET call to the Posts API on a post that was created with image content. Example post ID: 
+urn:li:share:6876614985750310912
+
+
+
+
+
+
+
+
+http
+
+
+
+
+
+
+curl
+
+
+
+
+
+
+
+
+
+GET https://api.linkedin.com/rest/posts/{postId}
+
+
+
+
+
+
+
+
+curl --location --request GET 'https://api.linkedin.com/rest/posts/urn:li:share:6876614985750310912 \
+--header 'Linkedin-Version: {version number in the format YYYYMM}' \
+--header 'Authorization: Bearer {INSERT_TOKEN}'
+
+
+
+
+
+
+
+Sample Response
+
+
+{
+    "lifecycleState": "PUBLISHED",
+    "publishedBy": "urn:li:member:231303601",
+    "lastModifiedAt": 1639512853791,
+    "visibility": "PUBLIC",
+    "publishedAt": 1639512774391,
+    "author": "urn:li:company:5515715",
+    "lastModifiedBy": "urn:li:csUser:2",
+    "distribution": {
+        "feedDistribution": "MAIN_FEED",
+        "thirdPartyDistributionChannels": []
+    },
+    "content": {
+        "media": {
+            "taggedEntities": [],
+            "id": "urn:li:image:C5F22AQEYStbwuCM12w"
+        }
+    },
+    "lifecycleStateInfo": {
+        "isEditedByAuthor": false
+    },
+    "isReshareDisabledByAuthor": false,
+    "createdAt": 1639512774185,
+    "createdBy": "urn:li:member:231303601",
+    "id": "urn:li:share:6876614985750310912",
+    "commentary": "test strings"
+}
+
+
+
+Batch Get Image Content
+
+
+Fetch multiple posts with image content by providing multiple post IDs.
+
+
+
+
+
+
+
+
+http
+
+
+
+
+
+
+curl
+
+
+
+
+
+
+
+
+
+POST https://api.linkedin.com/rest/posts?ids=List({encoded postId},{encoded postId})
+
+
+
+
+
+
+
+
+curl --location --request GET 'https://api.linkedin.com/rest/posts?ids=List(urn%3Ali%3Ashare%3A6914373086788128769,urn%3Ali%3Ashare%3A6914374851449270272)' \
+--header 'X-RestLi-Method: batch_get' \
+--header 'X-Restli-Protocol-version: 2.0.0' \
+--header 'Linkedin-Version: {version number in the format YYYYMM}' \
+--header 'Authorization: Bearer {INSERT_TOKEN}'
+
+
+
+
+
+
+
+Sample Response
+
+
+{
+   "results": {
+       "urn:li:share:6927408039457087488": {
+           "isReshareDisabledByAuthor": false,
+           "createdAt": 1651622781932,
+           "lifecycleState": "PUBLISHED",
+           "lastModifiedAt": 1651622781932,
+           "visibility": "PUBLIC",
+           "publishedAt": 1651622781932,
+           "author": "urn:li:organization:5515715",
+           "id": "urn:li:share:6927408039457087488",
+           "distribution": {
+               "feedDistribution": "MAIN_FEED",
+               "thirdPartyDistributionChannels": []
+           },
+           "content": {
+               "media": {
+                   "id": "urn:li:image:C5F22AQFIMShx0jJbQw"
+               }
+           },
+           "commentary": "test strings",
+           "lifecycleStateInfo": {
+               "isEditedByAuthor": false
+           }
+       },
+       "urn:li:share:6927408326569783296": {
+           "isReshareDisabledByAuthor": false,
+           "createdAt": 1651622850346,
+           "lifecycleState": "PUBLISHED",
+           "lastModifiedAt": 1651622850346,
+           "visibility": "PUBLIC",
+           "publishedAt": 1651622850346,
+           "author": "urn:li:organization:5515715",
+           "id": "urn:li:share:6927408326569783296",
+           "distribution": {
+               "feedDistribution": "MAIN_FEED",
+               "thirdPartyDistributionChannels": []
+           },
+           "content": {
+               "media": {
+                   "id": "urn:li:image:C5F22AQFIMShx0jJbQw"
+               }
+           },
+           "commentary": "test strings1",
+           "lifecycleStateInfo": {
+               "isEditedByAuthor": false
+           }
+       }
+   },
+   "statuses": {
+       "urn:li:share:6927408039457087488": 200,
+       "urn:li:share:6927408326569783296": 200
+   },
+   "errors": {}
+}
+
+
+
+API Error Details
+
+
+
+
+
+
+
+
+HTTP STATUS CODE
+
+
+ERROR MESSAGE
+
+
+ERROR DESCRIPTION
+
+
+
+
+
+
+
+
+
+
+400
+
+
+INVALID_IMAGE_ID
+
+
+This Image ID is invalid
+
+
+
+
+
+
+400
+
+
+INVALID_URN_ID
+
+
+This URN ID is invalid
+
+
+
+
+
+
+400
+
+
+INVALID_URN_TYPE
+
+
+{field} value {value} must be a {urnType} URN
+
+
+
+
+
+
+400
+
+
+NOT_FOUND
+
+
+Could not find entity
+
+
+
+
+
+
+
+
+
+					
+		
+
+	 
+		
+
+		
+
+	
+					
+		
+
+		
+
+			
+
+			
+Feedback
+
+			
+
+				
+
+					Was this page helpful?
+				
+
+				
+
+					
+
+						
+
+							
+
+						
+
+						
+Yes
+
+					
+
+					
+
+						
+
+							
+
+						
+
+						
+No
+
+					
+
+					
+
+						
+
+							
+
+								
+
+							
+
+							
+No
+
+						
+
+						
+
+							
+
+								Need help with this topic?
+							
+
+							
+
+								Want to try using Ask Learn to clarify or guide you through this topic?
+							
+
+							
+		
+
+			
+
+		
+
+			
+
+				
+
+			
+
+		
+
+		
+
+			
+
+				
+
+			
+
+			
+Ask Learn
+
+		
+
+		
+
+			
+
+				
+
+			
+
+			
+Ask Learn
+
+		
+
+	
+
+			
+
+				
+
+					
+
+				
+
+				
+ Suggest a fix? 
+
+			
+
+		
+
+	
+						
+
+					
+
+				
+
+			
+
+		
+
+		
+
+	
+				
+
+				
+		
+
+			
+
+			
+
+				Additional resources
+			
+
+			
+		
+
+	 
+		
+
+	 
+		
+
+	
+		
+
+	 
+		
+
+			
+
+			
+
+				
+
+			
+
+				
+Last updated on 
+
+		2026-06-24
+	
+
+			
+
+		
+
+			
+
+		
+
+	
+			
+
+		
+				
+
+				
+
+					
+		
+
+			
+
+				
+		
+
+			
+In this article
+
+		
+
+	
+				
+
+				
+		
+
+			
+
+				
+
+					Was this page helpful?
+				
+
+				
+
+					
+
+						
+
+							
+
+						
+
+					
+
+					
+
+						
+
+							
+
+						
+
+					
+
+					
+
+						
+
+							
+
+								
+
+							
+
+						
+
+						
+
+							
+
+								Need help with this topic?
+							
+
+							
+
+								Want to try using Ask Learn to clarify or guide you through this topic?
+							
+
+							
+		
+
+			
+
+		
+
+			
+
+				
+
+			
+
+		
+
+		
+
+			
+
+				
+
+			
+
+			
+Ask Learn
+
+		
+
+		
+
+			
+
+				
+
+			
+
+			
+Ask Learn
+
+		
+
+	
+
+			
+
+				
+
+					
+
+				
+
+				
+ Suggest a fix? 
+
+			
+
+		
+
+	
+						
+
+					
+
+				
+
+			
+
+		
+
+	
+			
+
+		
+
+	
+			  
+ 
+
+					 
+
+			  
+ 
+
+		
+
+			
+
+				
+		
+en-us
+
+	 
+
+		
+		
+
+		
+
+			
+
+			
+
+			
+
+			
+
+		
+
+	
+			
+Your Privacy Choices
+
+	
+	
+
+				
+
+		
+
+			
+
+				
+
+				
+Theme
+
+				
+
+					
+
+				
+
+			
+
+			
+
+				
+
+					
+
+						
+
+							
+
+								
+
+									
+
+										
+
+										
+
+										
+
+										
+
+										
+
+										
+
+										
+
+										
+
+									
+
+								
+
+							
+
+							
+ Light 
+
+						
+
+					
+
+					
+
+						
+
+							
+
+								
+
+									
+
+										
+
+										
+
+										
+
+										
+
+										
+
+										
+
+										
+
+										
+
+									
+
+								
+
+							
+
+							
+ Dark 
+
+						
+
+					
+
+					
+
+						
+
+							
+
+								
+
+									
+
+										
+
+										
+
+										
+
+										
+
+										
+
+										
+
+										
+
+										
+
+									
+
+								
+
+							
+
+							
+ High contrast 
+
+						
+
+					
+
+				
+
+			
+
+		
+
+	
+
+			
+
+			
+
+				
+
+				
+
+		
+		
+AI Disclaimer
+
+	
+	
+
+		
+		
+Previous Versions
+
+	
+	
+ 
+
+		
+		
+Blog
+
+	
+	
+ 
+
+		
+		
+Contribute
+
+	
+	
+
+		
+		
+Privacy
+
+	
+	
+
+		
+		
+Consumer Health Privacy
+
+	
+	
+
+		
+		
+Terms of Use
+
+	
+	
+
+		
+		
+Trademarks
+
+	
+	
+
+				
+© Microsoft 2026
+
+			
+
+		
+
+	
+
+			
+
+		

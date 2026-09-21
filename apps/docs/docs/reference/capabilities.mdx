@@ -220,19 +220,52 @@ An omitted operation is unsupported through the normalized API. Some operations 
 | bluesky | bluesky | analytics.read | available | text, image | See adapter setup |
 | bluesky | bluesky | analytics.account.read | available | None declared | See adapter setup |
 | bluesky | bluesky | comments.write | available | text | repo |
-| bluesky | bluesky | posts.publish.video | not-implemented-by-adapter | video | See adapter setup |
-| x | x | posts.publish | available | text, image | tweet.read, tweet.write, users.read, media.write |
+| bluesky | bluesky | posts.publish.video | available | video | repo |
+| bluesky | bluesky | posts.repost | available | None declared | See adapter setup |
+| bluesky | bluesky | posts.quote | available | None declared | See adapter setup |
+| bluesky | bluesky | posts.delete | available | None declared | See adapter setup |
+| bluesky | bluesky | graph.follow | available | None declared | See adapter setup |
+| bluesky | bluesky | graph.block | available | None declared | See adapter setup |
+| bluesky | bluesky | graph.mute | available | None declared | See adapter setup |
+| bluesky | bluesky | notifications.read | available | None declared | See adapter setup |
+| bluesky | bluesky | notifications.seen | available | None declared | See adapter setup |
+| bluesky | bluesky | profile.read | available | None declared | See adapter setup |
+| bluesky | bluesky | profile.update | available | None declared | See adapter setup |
+| bluesky | bluesky | feeds.read | available | None declared | See adapter setup |
+| bluesky | bluesky | chat.read | available | None declared | See adapter setup |
+| bluesky | bluesky | chat.write | available | None declared | See adapter setup |
+| x | x | posts.publish | available | text, image, video | tweet.read, tweet.write, users.read, media.write |
 | x | x | accounts.read | available | None declared | See adapter setup |
 | x | x | posts.list | available | None declared | See adapter setup |
 | x | x | posts.read | available | None declared | See adapter setup |
 | x | x | analytics.read | available | None declared | See adapter setup |
 | x | x | comments.write | available | None declared | See adapter setup |
+| x | x | posts.repost | available | None declared | See adapter setup |
+| x | x | posts.quote | available | None declared | See adapter setup |
+| x | x | posts.delete | available | None declared | See adapter setup |
+| x | x | polls.create | available | None declared | See adapter setup |
+| x | x | bookmarks.read | available | None declared | See adapter setup |
+| x | x | bookmarks.write | available | None declared | See adapter setup |
+| x | x | follows.write | available | None declared | See adapter setup |
+| x | x | media.video | available | video | See adapter setup |
+| x | x | media.gif | available | None declared | See adapter setup |
+| x | x | messages.read | permission-required | None declared | dm.read |
+| x | x | streams.read | approval-dependent | None declared | See adapter setup |
 | threads | threads | accounts.read | available | None declared | See adapter setup |
 | threads | threads | posts.publish | available | text, image, video, carousel | See adapter setup |
 | threads | threads | posts.read | available | None declared | See adapter setup |
 | threads | threads | posts.list | available | None declared | See adapter setup |
 | threads | threads | posts.status | available | None declared | See adapter setup |
 | threads | threads | analytics.read | available | None declared | See adapter setup |
+| threads | threads | comments.read | available | None declared | See adapter setup |
+| threads | threads | comments.write | available | None declared | See adapter setup |
+| threads | threads | posts.quote | available | None declared | See adapter setup |
+| threads | threads | posts.repost | available | None declared | See adapter setup |
+| threads | threads | posts.delete | available | None declared | See adapter setup |
+| threads | threads | profile.read | available | None declared | See adapter setup |
+| threads | threads | search.keyword | available | None declared | See adapter setup |
+| threads | threads | mentions.read | available | None declared | See adapter setup |
+| threads | threads | messages.read | unsupported-by-platform | None declared | See adapter setup |
 | youtube | youtube | accounts.read | available | None declared | See adapter setup |
 | youtube | youtube | posts.read | available | None declared | See adapter setup |
 | youtube | youtube | posts.list | available | None declared | See adapter setup |
@@ -242,10 +275,24 @@ An omitted operation is unsupported through the normalized API. Some operations 
 | youtube | youtube | comments.read | available | None declared | See adapter setup |
 | youtube | youtube | comments.write | available | None declared | See adapter setup |
 | youtube | youtube | posts.publish | available | video | https://www.googleapis.com/auth/youtube.upload |
+| youtube | youtube | posts.schedule | available | None declared | https://www.googleapis.com/auth/youtube.upload |
+| youtube | youtube | thumbnails.write | available | None declared | https://www.googleapis.com/auth/youtube |
+| youtube | youtube | captions.read | available | None declared | https://www.googleapis.com/auth/youtube.force-ssl |
+| youtube | youtube | captions.write | available | None declared | https://www.googleapis.com/auth/youtube.force-ssl |
+| youtube | youtube | playlists.read | available | None declared | See adapter setup |
+| youtube | youtube | playlists.write | available | None declared | See adapter setup |
+| youtube | youtube | posts.update | available | None declared | See adapter setup |
+| youtube | youtube | posts.delete | available | None declared | See adapter setup |
+| youtube | youtube | analytics.youtube.read | available | None declared | https://www.googleapis.com/auth/yt-analytics.readonly |
+| youtube | youtube | live.broadcasts | approval-dependent | None declared | See adapter setup |
 | tiktok | tiktok | posts.publish | available | image, video, carousel | video.publish |
 | tiktok | tiktok | posts.status | available | None declared | See adapter setup |
 | tiktok | tiktok | posts.read | available | None declared | See adapter setup |
 | tiktok | tiktok | posts.list | available | None declared | See adapter setup |
+| tiktok | tiktok | posts.draft | available | None declared | video.upload |
+| tiktok | tiktok | posts.status.poll | available | None declared | See adapter setup |
+| tiktok | tiktok | comments.read | unsupported-by-platform | None declared | See adapter setup |
+| tiktok | tiktok | messages.read | unsupported-by-platform | None declared | See adapter setup |
 | tiktok | tiktok | accounts.read | available | None declared | user.info.basic |
 | tiktok | tiktok | analytics.account.read | available | None declared | user.info.stats |
 | instagram | instagram | posts.publish | available | image, video, carousel | instagram_business_basic, instagram_business_content_publish |
@@ -256,8 +303,27 @@ An omitted operation is unsupported through the normalized API. Some operations 
 | instagram | instagram | comments.read | available | None declared | See adapter setup |
 | instagram | instagram | comments.write | available | None declared | See adapter setup |
 | instagram | instagram | analytics.read | available | None declared | See adapter setup |
+| instagram | instagram | reels.publish | available | video | See adapter setup |
+| instagram | instagram | stories.publish | available | None declared | See adapter setup |
+| instagram | instagram | posts.delete | available | None declared | See adapter setup |
+| instagram | instagram | hashtags.search | available | None declared | See adapter setup |
+| instagram | instagram | publishing.limit.read | available | None declared | See adapter setup |
+| instagram | instagram | mentions.read | available | None declared | See adapter setup |
+| instagram | instagram | product.tagging | approval-dependent | None declared | See adapter setup |
+| instagram | instagram | messages.read | approval-dependent | None declared | See adapter setup |
 | linkedin | linkedin | posts.publish | available | text, image | w_member_social |
 | linkedin | linkedin | posts.read | available | None declared | r_member_social |
+| linkedin | linkedin | posts.multi-image | available | carousel | See adapter setup |
+| linkedin | linkedin | posts.video | available | video | See adapter setup |
+| linkedin | linkedin | posts.document | available | None declared | See adapter setup |
+| linkedin | linkedin | polls.create | available | None declared | See adapter setup |
+| linkedin | linkedin | reactions.write | available | None declared | See adapter setup |
+| linkedin | linkedin | reshares.write | available | None declared | See adapter setup |
+| linkedin | linkedin | posts.update | available | None declared | See adapter setup |
+| linkedin | linkedin | posts.delete | available | None declared | See adapter setup |
+| linkedin | linkedin | analytics.organization.read | permission-required | None declared | See adapter setup |
+| linkedin | linkedin | articles.create | approval-dependent | None declared | See adapter setup |
+| linkedin | linkedin | messages.write | unsupported-by-platform | None declared | See adapter setup |
 | linkedin | linkedin | analytics.account.read | account-ineligible | None declared | rw_organization_admin |
 | linkedin | linkedin | posts.list | available | None declared | r_member_social |
 | linkedin | linkedin | media.upload | available | image | See adapter setup |

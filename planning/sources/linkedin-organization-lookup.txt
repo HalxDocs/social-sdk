@@ -1,0 +1,1605 @@
+
+					
+			
+		
+			
+				
+				 Table of contents 
+			
+			
+				
+				Exit editor mode
+			
+		
+	 
+		
+	
+			
+				
+					
+		
+			
+				
+		
+			
+				
+					
+				
+			
+			
+		
+
+		
+	 
+		
+			
+		
+			
+				
+			
+		
+		
+			
+				
+			
+			Ask Learn
+		
+		
+			
+				
+			
+			Ask Learn
+		
+	 
+
+			
+				
+					
+						
+					
+				
+				
+					
+		
+			
+				
+			
+			Reading mode
+		
+	 
+		
+			
+			Table of contents
+		
+	 
+		
+			
+				
+			
+			Read in English
+		
+	
+					
+		
+			
+				
+			
+			Add
+		
+	 
+		
+			
+				
+			
+			Add to Plans
+		
+	 
+					
+		
+			
+				
+			
+			Edit
+		
+	  
+		
+		
+				
+					
+						
+						
+						
+					
+					Copy Markdown
+				
+		   
+				
+					
+						
+					
+					Print
+				
+		  
+	
+				
+			
+		
+	
+			
+		
+	  
+		
+		
+			
+			
+				
+					
+						
+						Note
+					
+					
+						Access to this page requires authorization. You can try signing in or changing directories.
+					
+					
+						Access to this page requires authorization. You can try changing directories.
+					
+				
+			
+		
+	
+					Organization Lookup
+					
+		
+			 
+				
+					
+		
+			
+				
+			
+			Feedback
+		
+	
+				
+		  
+		
+	 
+		
+			
+				
+					
+				
+				
+					
+						Summarize this article for me
+					
+				
+			
+			
+			
+		
+	 
+		
+			
+				In this article
+			
+		
+	 
+Warning
+Deprecation Notice:
+The Marketing Version 202510 (Marketing October 2025) will be sunset on October 15, 2026. We recommend that you migrate to the latest versioned APIs to avoid disruptions. For information on all the supported versions, refer to the migrations documentation.
+If you haven’t yet migrated and have questions, submit a request on the LinkedIn Developer Support Portal.
+
+
+The Organization Lookup API searches organizations and their profiles.
+Unless otherwise noted, the following rules apply when specifying input parameters:
+
+All strings are case-insensitive.
+Multiple words should be joined with a space. The input is URL encoded where spaces are translated to "%20". For example, Apple Inc. is encoded to Apple%20Inc.
+If a search includes multiple words, the complete string is searched.
+Wildcards and boolean logic are not supported:
+*, ?, AND, and OR
+
+For information on finding organizations with partial or incomplete information, see the Company Search documentation.
+Permissions
+
+
+
+Permission
+Description
+
+
+
+
+rw_organization_admin
+Manage organization pages and retrieve reporting data.
+
+
+r_compliance
+Retrieve posts, comments, and likes on behalf of an authenticated member for compliance monitoring and archiving. This is a private permission and access is granted to select developers.
+
+
+
+
+Note
+Organization lookup API is protected by 3-legged OAuth token. For more information, Authorization Code Flow (3-legged OAuth).
+
+Admin and Non-Admin Access
+
+Important
+Some of these API calls require that the authenticated member has the role type ADMINISTRATOR for the requested organization. For information on how to retrieve roles through the API, see Organization Access Control.
+
+APIs that don't require administrative access will only return the following fields:
+
+id
+name
+localizedName
+localizedWebsite
+vanityName
+logoV2
+locations
+primaryOrganizationType
+
+APIs that require administrative access will return all available Organization.
+Schema
+Find detailed schema information, see Schema Information.
+Retrieve Organizations
+Use the Organization Lookup API to find organizations using an organization id, vanity name, or email domain.
+Organization URNs are in the format urn:li:organization:{organization id} and represent a LinkedIn Company Page.
+Retrieve an Administered Organization
+Use the organization ID to look up organization information on behalf of authenticated members with role type ADMINISTRATOR for that organization. API calls with insufficient permissions return 403 Forbidden.
+Sample Request
+
+
+
+http
+
+
+curl
+
+
+
+
+GET https://api.linkedin.com/rest/organizations/{organization ID}
+
+
+
+
+curl -X GET 'https://api.linkedin.com/rest/organizations/{organization ID}' \
+-H 'Authorization: Bearer {INSERT_TOKEN}' \
+-H 'X-Restli-Protocol-Version: 2.0.0' \
+-H 'Linkedin-Version: {version number in the format YYYYMM}' \
+-H 'Content-Type: application/json'
+
+
+
+
+Sample Request Example
+
+
+
+http
+
+
+curl
+
+
+
+
+GET https://api.linkedin.com/rest/organizations/79988552
+
+
+
+
+curl --location 'https://api.linkedin.com/rest/organizations/79988552' \
+-H 'X-Restli-Protocol-Version: 2.0.0' \
+-H 'Authorization: Bearer {INSERT_TOKEN}' \
+-H 'Linkedin-Version: {version number in the format YYYYMM}' \
+-H 'Content-Type: application/json' 
+
+
+
+Sample Response
+{
+"vanityName": "firstdemocompany",
+"localizedName": "FirstDemoCompany",
+"groups": [],
+"versionTag": "111146657",
+"coverPhotoV2": {
+"cropped": "urn:li:digitalmediaAsset:C561BAQHqQYsCLYiAnA",
+"original": "urn:li:digitalmediaAsset:C561BAQHqQYsCLYiAnA",
+"cropInfo": {
+"x": 0,
+"width": 800,
+"y": 108,
+"height": 135
+}
+},
+"organizationType": "SELF_EMPLOYED",
+"defaultLocale": {
+"country": "US",
+"language": "en"
+},
+"alternativeNames": [],
+"specialties": [],
+"staffCountRange": "SIZE_1",
+"localizedSpecialties": [],
+"industries": [
+"urn:li:industry:4"
+],
+"name": {
+"localized": {
+"en_US": "FirstDemoCompany"
+},
+"preferredLocale": {
+"country": "US",
+"language": "en"
+}
+},
+"primaryOrganizationType": "NONE",
+"locations": [],
+"id": 79988552,
+"$URN": "urn:li:organization:79988552"
+}
+
+Batch Get Administered Organizations
+Fetch a list of organizations with the associated IDs on behalf of authenticated members with role type ADMINISTRATOR for those organizations. API calls with insufficient permissions receive a 403 Forbidden response.
+
+Note
+The request must include a header for Restli Protocol 2.0.0 as X-Restli-Protocol-Version: 2.0.0.
+
+Sample Request
+
+
+
+http
+
+
+curl
+
+
+
+
+GET https://api.linkedin.com/rest/organizations?ids=List({organization ID1, organization ID2..})
+
+
+
+
+curl -X GET 'https://api.linkedin.com/rest/organizations?ids=List({organization ID1, organization ID2..})' \
+-H 'X-Restli-Protocol-Version: 2.0.0' \
+-H 'Authorization: Bearer {INSERT_TOKEN}' \
+-H 'Linkedin-Version: {version number in the format YYYYMM}' \
+-H 'Content-Type: application/json'
+
+
+
+
+Sample Request Example
+
+
+
+http
+
+
+curl
+
+
+
+
+GET https://api.linkedin.com/rest/organizations?ids=List(79988552,27056405)
+
+
+
+
+curl --location 'https://api.linkedin.com/rest/organizations?ids=List(79988552,27056405)' \
+-H 'Linkedin-Version: {version number in the format YYYYMM}' \
+-H 'X-Restli-Protocol-Version: 2.0.0' \
+-H 'Authorization: Bearer {INSERT_TOKEN}' \
+-H 'Content-Type: application/json'
+
+
+
+Sample Response
+{
+"results": {
+"79988552": {
+"vanityName": "firstdemocompany",
+"localizedName": "FirstDemoCompany",
+"groups": [],
+"versionTag": "111146657",
+"coverPhotoV2": {
+"cropped": "urn:li:digitalmediaAsset:C561BAQHqQYsCLYiAnA",
+"original": "urn:li:digitalmediaAsset:C561BAQHqQYsCLYiAnA",
+"cropInfo": {
+"x": 0,
+"width": 800,
+"y": 108,
+"height": 135
+}
+},
+"organizationType": "SELF_EMPLOYED",
+"defaultLocale": {
+"country": "US",
+"language": "en"
+},
+"alternativeNames": [],
+"specialties": [],
+"localizedSpecialties": [],
+"industries": [
+"urn:li:industry:4"
+],
+"name": {
+"localized": {
+"en_US": "FirstDemoCompany"
+},
+"preferredLocale": {
+"country": "US",
+"language": "en"
+}
+},
+"primaryOrganizationType": "NONE",
+"locations": [],
+"id": 79988552
+}
+},
+"statuses": {
+"79988552": 200,
+"27056405": 403
+},
+"errors": {
+"27056405": {
+"message": "Viewer don't have permission to the ADMIN_ONLY VisibilityReduction for urn:li:organization:27056405",
+"status": 403
+}
+}
+}
+
+Batch Get Non-Administered Organizations
+Fetch a list of organizations the authenticated member doesn't administer using the following API. The returned fields are more limited than the equivalent endpoint for administered organizations.
+The request must include a header for Restli Protocol 2.0.0 as X-Restli-Protocol-Version: 2.0.0.
+
+Note
+organizationsLookup usage doesn't require administrator access.
+
+Sample Request
+
+
+
+http
+
+
+curl
+
+
+
+
+GET https://api.linkedin.com/rest/organizationsLookup?ids=List(id1,id2, ...)
+
+
+
+
+curl -X GET 'https://api.linkedin.com/rest/organizationsLookup?ids=List(id1,id2, ...)' \
+-H 'X-Restli-Protocol-Version: 2.0.0' \
+-H 'Authorization: Bearer {INSERT_TOKEN}' \
+-H 'Linkedin-Version: {version number in the format YYYYMM}' \
+-H 'Content-Type: application/json'
+
+
+
+
+Sample Request Example
+
+
+
+http
+
+
+curl
+
+
+
+
+GET https://api.linkedin.com/rest/organizationsLookup?ids=List(90966477,79988552)
+
+
+
+
+curl --location 'https://api.linkedin.com/rest/organizationsLookup?ids=List(90966477,79988552)' \
+-H 'Linkedin-Version: {version number in the format YYYYMM}' \
+-H 'X-Restli-Protocol-Version: 2.0.0' \
+-H 'Authorization: Bearer {INSERT_TOKEN}' \
+-H 'Content-Type: application/json'
+
+
+
+Sample Response
+{
+"results": {
+"79988552": {
+"name": {
+"localized": {
+"en_US": "FirstDemoCompany"
+},
+"preferredLocale": {
+"country": "US",
+"language": "en"
+}
+},
+"primaryOrganizationType": "NONE",
+"vanityName": "firstdemocompany",
+"locations": [],
+"localizedName": "FirstDemoCompany",
+"id": 79988552
+},
+"90966477": {
+"vanityName": "devtestcocompany",
+"localizedName": "Devtestco",
+"name": {
+"localized": {
+"en_US": "Devtestco"
+},
+"preferredLocale": {
+"country": "US",
+"language": "en"
+}
+},
+"primaryOrganizationType": "NONE",
+"locations": [],
+"id": 90966477,
+"localizedWebsite": "LinkedIn.com"
+}
+},
+"statuses": {
+"79988552": 200,
+"90966477": 200
+},
+"errors": {}
+}
+
+Sample Request
+Find Organization by Vanity Name
+Look up organizations using vanityName to retrieve Non-Admin Fields.
+The API can return schools (such as Universities),organizations (companies). To differentiate between entities, primaryOrganizationType field returns one of the following possible organizational entity values:
+
+SCHOOL
+BRAND
+NONE - no primary type
+
+Sample API Calls to Lookup
+Find an Organization - LinkedIn
+​​GET https://api.linkedin.com/rest/organizations?q=vanityName&vanityName=LinkedIn
+
+Find a School - Boise State University
+GET https://api.linkedin.com/rest/organizations?q=vanityName&vanityName=boisestate
+
+Sample Response - For Boise State University Lookup
+{
+   "paging": {
+       "start": 0,
+       "count": 10,
+       "links": [],
+       "total": 1
+   },
+   "elements": [{
+       "vanityName": "boisestate",
+       "localizedName": "Boise State University",
+       "schoolAttributes": {
+           "hierarchyClassification": "UNIVERSITY",
+           "type": "PUBLIC",
+           "yearLevel": "FOUR_YEAR",
+           "legacySchool": "urn:li:school:18235"
+       },
+       "name": {
+           "localized": {
+               "en_US": "Boise State University"
+           },
+           "preferredLocale": {
+               "country": "US",
+               "language": "en"
+           }
+       },
+       "primaryOrganizationType": "SCHOOL",
+       "locations": [{
+           "address": {
+               "geographicArea": "Idaho",
+               "country": "US",
+               "city": "Boise",
+               "line1": "301 S. CAPITOL BLVD.",
+               "postalCode": "83702"
+           },
+           "staffCountRange": "SIZE_11_TO_50",
+           "geoLocation": "urn:li:geo:100754108",
+           "phoneNumber1": {
+               "number": "2084263335"
+           },
+           "locationType": "OTHER",
+           "description": {
+               "localized": {
+                   "en_US": "Boise State Downtown"
+               },
+               "preferredLocale": {
+                   "country": "US",
+                   "language": "en"
+               }
+           },
+           "localizedDescription": "Boise State Downtown",
+           "streetAddressFieldState": "UNSET_OPT_OUT"
+       }, {
+           "address": {
+               "geographicArea": "Idaho",
+               "country": "US",
+               "city": "Nampa",
+               "line2": "Nampa Campus Aspen Classroom Bldg.",
+               "line1": "6002 Birch Lane",
+               "postalCode": "83687"
+           },
+           "staffCountRange": "SIZE_1",
+           "geoLocation": "urn:li:geo:105011711",
+           "streetAddressFieldState": "UNSET_OPT_OUT"
+       }],
+       "id": 11832,
+       "localizedWebsite": "https://boisestate.edu",
+       "logoV2": {
+           "cropped": "urn:li:digitalmediaAsset:C4D0BAQE6V6rj_w1yVQ",
+           "original": "urn:li:digitalmediaAsset:C4D0BAQE6V6rj_w1yVQ",
+           "cropInfo": {
+               "x": 0,
+               "width": 0,
+               "y": 0,
+               "height": 0
+           }
+       }
+   }]
+}
+
+How to Use the API Response for Finding School Organization URN
+The API returns an id field, which is the organization URN (urn:li:organization:11832) for Boise State:
+
+
+Caution
+Use id field as shown above for school organization. The legacySchool field has a school URN that has near term plans for deprecation, e.g. "legacySchool": "urn:li:school:18235"
+
+
+Warning
+Deprecation Notice
+We have discontinued Find Organization by Email Domain API Finder starting with version 202408 and above.
+
+Retrieve Organization Follower Count
+The Organization Network Size API provides the ability to retrieve the number of first-degree connections (followers) for any organization.
+Sample Request
+
+
+
+http
+
+
+curl
+
+
+
+
+GET https://api.linkedin.com/rest/networkSizes/urn:li:organization:1234567?edgeType=COMPANY_FOLLOWED_BY_MEMBER
+
+
+
+
+curl -X GET 'https://api.linkedin.com/rest/networkSizes/urn:li:organization:1234567?edgeType=COMPANY_FOLLOWED_BY_MEMBER' \
+-H 'Authorization: Bearer {INSERT_TOKEN}' \
+-H 'X-Restli-Protocol-Version: 2.0.0' \
+-H 'Linkedin-Version: {version number in the format YYYYMM}' \
+-H 'Content-Type: application/json'
+
+
+
+
+
+
+http
+
+
+curl
+
+
+
+
+GET https://api.linkedin.com/rest/networkSizes/urn:li:organization:1234567?edgeType=CompanyFollowedByMember
+
+
+
+
+curl -X GET 'https://api.linkedin.com/rest/networkSizes/urn:li:organization:1234567?edgeType=CompanyFollowedByMember' \
+-H 'Authorization: Bearer {INSERT_TOKEN}' \
+-H 'X-Restli-Protocol-Version: 2.0.0' \
+-H 'Linkedin-Version: {version number in the format YYYYMM}' \
+-H 'Content-Type: application/json'
+
+
+
+Sample Response
+{
+  "firstDegreeSize": 219145
+}
+
+
+Note
+The ?edgeType= parameter options for CompanyFollowedByMember for the /networkSizes endpoint changes to COMPANY_FOLLOWED_BY_MEMBER starting in v202305. Prior versions (≤ v202304) still utilize CompanyFollowedByMember but the two options are not retrocompatible.
+
+Retrieve Organization
+Use the Organization Lookup API to find organizations using an organization ID, parent organization ID, or a vanity name.
+Organization URNs are in the format urn:li:organization:{id} and represent LinkedIn Company Pages or LinkedIn Showcase Pages.
+
+Note
+urn:li:organizationBrand:XXX" is mapped to urn:li:organization:XXX" as Organization Brand API has been deprecated since Jan 2024 onwards.
+
+Retrieve an Administered Organization
+Use the organization ID to lookup Organization information on behalf of authenticated members with role type ADMINISTRATOR for that brand. API calls with insufficient permissions receive a 403 Forbidden response.
+Sample Request
+
+
+
+http
+
+
+curl
+
+
+
+
+GET https://api.linkedin.com/rest/organization/{organization ID}
+
+
+
+
+curl -X GET 'https://api.linkedin.com/rest/organization/{organization ID}' \
+-H 'Authorization: Bearer {INSERT_TOKEN}' \
+-H 'X-Restli-Protocol-Version: 2.0.0' \
+-H 'Linkedin-Version: {version number in the format YYYYMM}' \
+-H 'Content-Type: application/json'
+
+
+
+
+Sample Request Example
+
+
+
+http
+
+
+curl
+
+
+
+
+GET https://api.linkedin.com/rest/organization/89758488
+
+
+
+
+curl --location 'https://api.linkedin.com/rest/organization/89758488' \
+-H 'Linkedin-Version: {version number in the format YYYYMM}' \
+-H 'X-Restli-Protocol-Version: 2.0.0' \
+-H 'Authorization: Bearer {INSERT_TOKEN}' \
+-H 'Content-Type: application/json'
+
+
+
+Sample Response
+{
+"vanityName": "internal-ei-demo",
+"localizedName": "Internal_EI_Demo",
+"website": {
+"localized": {
+"en_US": "https://internal-ei-test-company.com"
+},
+"preferredLocale": {
+"country": "US",
+"language": "en"
+}
+},
+"groups": [],
+"versionTag": "3061199585",
+"defaultLocale": {
+"country": "US",
+"language": "en"
+},
+"alternativeNames": [],
+"specialties": [],
+"parentRelationship": {
+"relationshipStatus": "ACTIVE",
+"parent": "urn:li:organization:79988552"
+},
+"localizedSpecialties": [],
+"industries": [
+"urn:li:industry:84"
+],
+"name": {
+"localized": {
+"en_US": "Internal_EI_Demo"
+},
+"preferredLocale": {
+"country": "US",
+"language": "en"
+}
+},
+"primaryOrganizationType": "BRAND",
+"id": 89758488,
+"$URN": "urn:li:organization:89758488",
+"autoCreated": false,
+"localizedWebsite": "https://internal-ei-test-company.com"
+}
+
+Find Administered Organization by Parent Organization
+Use this API to look up information about Organization using the parent organization URN on behalf of authenticated members with role type ADMINISTRATOR. This returns an array of brands that belong to the specified parent organization and only brands that are administered by the authenticated member are returned.
+Sample Request
+
+
+
+http
+
+
+curl
+
+
+
+
+GET https://api.linkedin.com/rest/organizations?q=parentOrganization&parent={organization URN}
+
+
+
+
+curl -X GET 'https://api.linkedin.com/rest/organizations?q=parentOrganization&parent={organization URN}' \
+-H 'Authorization: Bearer {INSERT_TOKEN}' \
+-H 'X-Restli-Protocol-Version: 2.0.0' \
+-H 'Linkedin-Version: {version number in the format YYYYMM}' \
+-H 'Content-Type: application/json'
+
+
+
+
+Sample Request Example
+
+
+
+http
+
+
+curl
+
+
+
+
+GET https://api.linkedin.com/rest/organizations?q=parentOrganization&parent=urn%3Ali%3Aorganization%3A79988552
+
+
+
+
+curl --location 'https://api.linkedin.com/rest/organizations?q=parentOrganization&parent=urn%3Ali%3Aorganization%3A79988552' \
+-H 'Linkedin-Version: {version number in the format YYYYMM}' \
+-H 'X-Restli-Protocol-Version: 2.0.0' \
+-H 'Authorization: Bearer {INSERT_TOKEN}' \
+-H 'Content-Type: application/json'
+
+
+
+Sample Response
+{
+"paging": {
+"start": 0,
+"count": 10,
+"links": [],
+"total": 2
+},
+"elements": [
+{
+"name": {
+"localized": {
+"en_US": "Internal_EI_Demo"
+},
+"preferredLocale": {
+"country": "US",
+"language": "en"
+}
+},
+"primaryOrganizationType": "BRAND",
+"vanityName": "internal-ei-demo",
+"locations": [],
+"localizedName": "Internal_EI_Demo",
+"id": 89758488
+},
+{
+"name": {
+"localized": {
+"en_US": "Internal_EI_TestCompany"
+},
+"preferredLocale": {
+"country": "US",
+"language": "en"
+}
+},
+"primaryOrganizationType": "BRAND",
+"vanityName": "internal-ei-testcompany",
+"locations": [],
+"localizedName": "Internal_EI_TestCompany",
+"id": 89757515
+}
+]
+}
+
+Find Organization by Vanity Name
+Look up organization using vanityName to retrieve Non-Admin Fields.
+Sample Request
+
+
+
+http
+
+
+curl
+
+
+
+
+GET https://api.linkedin.com/rest/organization?q=vanityName&vanityName=Linkedin
+
+
+
+
+curl -X GET 'https://api.linkedin.com/rest/organization?q=vanityName&vanityName=Linkedin' \
+-H 'Authorization: Bearer {INSERT_TOKEN}' \
+-H 'X-Restli-Protocol-Version: 2.0.0' \
+-H 'Linkedin-Version: {version number in the format YYYYMM}' \
+-H 'Content-Type: application/json'
+
+
+
+
+Sample Request Example
+
+
+
+http
+
+
+curl
+
+
+
+
+GET https://api.linkedin.com/rest/organization?q=vanityName&vanityName=company-lgf-showcase
+
+
+
+
+curl --location 'https://api.linkedin.com/rest/organization?q=vanityName&vanityName=company-lgf-showcase' \
+-H 'Linkedin-Version: {version number in the format YYYYMM}' \
+-H 'X-Restli-Protocol-Version: 2.0.0' \
+-H 'Authorization: Bearer {INSERT_TOKEN}' \
+-H 'Content-Type: application/json'
+
+
+
+API Error Details
+
+
+
+HTTP STATUS CODE
+ERROR MESSAGE
+ERROR DESCRIPTION
+RESOLUTION
+
+
+
+
+403
+Viewer don't have permission to the ADMIN_ONLY VisibilityReduction for urn:li:organization:xxxxx
+Viewing Member is not an Admin of the respective Organization.
+Lookup for the list of Organization IDs for which the viewing member is an Admin.
+
+
+404
+Organization xxxx is inactive
+Requested Organization/Organization is either inactive or not available.
+Provide the correct Organization ID.
+
+
+
+Schema Information
+Organization
+
+
+
+Field Name
+Type
+Description
+Admin Only
+
+
+
+
+alternativeNames
+LocaleString []
+Alternative names of the entity. There can be multiple names per locale.
+True
+
+
+coverPhotoV2
+CroppedImage
+The entity's background cover image. The sizes may vary, so clients should handle the given height and width accordingly.
+True
+
+
+defaultLocale
+Locale
+Default locale of the entity.
+True
+
+
+deleted.time
+long
+Deleted timestamp
+True
+
+
+description
+MultiLocaleString
+Description for the entity.
+True
+
+
+foundedOn
+Date
+Date when the entity was founded.
+True
+
+
+groups
+GroupUrn[]
+Groups featured by the organizational entity. Default to empty array.
+True
+
+
+id
+long
+Unique identifier for the entity.
+False
+
+
+industries
+IndustryURN[]
+The industries associated with the entity.
+True
+
+
+localizedDescription
+string
+The locale-specific description of the entity.
+True
+
+
+localizedName
+string
+The locale-specific name of the entity.
+False
+
+
+localizedSpecialties
+string[]
+The locale-specific, admin-defined specialty tags of the entity.
+True
+
+
+localizedWebsite
+string
+The locale-specific website of the entity.
+False
+
+
+locations
+LocationInfo[]
+List of locations for the entity.
+False
+
+
+name
+MultiLocaleString
+Entity's name.
+False
+
+
+parentRelationship. parent
+string
+URN of the parent organization.
+True
+
+
+parentRelationship. organizationRelationshipType
+string
+Type of relationship from child to parent organizations. Possible values: SUBSIDIARY: This organization is a subsidiary of the parent. ACQUISITION: This organization was acquired by the parent. SCHOOL: An associated school of the parent organization. For example, a University's School of Law or a remote campus, or a company-owned university.
+True
+
+
+parentRelationship. relationshipStatus
+string
+The status of a relationship between organizations. Possible values: ACTIVE: The relationship is active. INACTIVE: The relationship is inactive.
+True
+
+
+specialties.tags[]
+string []
+Admin-defined specialty tags of the entity.
+True
+
+
+vanityName
+string
+Entity's unique name used in URLs.
+False
+
+
+versionTag
+string
+Tag indicating version.
+True
+
+
+website
+MultiLocaleString
+Entity's website.
+True
+
+
+staffCountRange
+string
+Range of the number of staff associated with this entity. Possible values: SIZE_1  SIZE_2_TO_10 SIZE_11_TO_50 SIZE_51_TO_200  SIZE_201_TO_500 SIZE_501_TO_1000 SIZE_1001_TO_5000 SIZE_5001_TO_10000 SIZE_10001_OR_MORE
+True
+
+
+schoolAttributes
+SchoolAttributes
+School-specific attributes of the organization. If this field exists, then this entity is a school.
+True
+
+
+overviewPhotoV2
+CroppedImage
+The image used in the Overview tab on the organization's page.
+True
+
+
+logoV2
+CroppedImage
+The entity’s logo. The sizes may vary greatly, i.e., 50x50, 100x60, 400x400, so clients should handle the given height and width accordingly. For more information, see GET a single image
+False
+
+
+organizationStatus
+string
+Status of the organization, such as operating or out of business. Possible values: OPERATING: Currently operating OPERATING_SUBSIDIARY: Operating as a subsidiary REORGANIZING: Undergoing reorganization OUT_OF_BUSINESS: Out of business ACQUIRED: Acquired by another organization
+True
+
+
+organizationType
+string
+Type of organization. Possible values: PUBLIC_COMPANY: A public company EDUCATIONAL: An educational institution SELF_EMPLOYED: A self-employed business GOVERNMENT_AGENCY: A government agency NON_PROFIT: A non-profit organization SELF_OWNED: A self-owned business PRIVATELY_HELD: A privately held business PARTNERSHIP: A partnership
+True
+
+
+primaryOrganizationType
+string
+Type of primary organization being used in the lookup. Possible values: SCHOOL: Identifies the organizational entity as a schoolBRAND: identifies the organizational entity as a brand NONE: Identifies the organizational entity as not having a primary type.
+False
+
+
+
+Organization
+
+
+
+Field Name
+Type
+Description
+Admin Only
+
+
+
+
+alternativeNames
+LocaleString []
+Alternative names of the entity. There can be multiple names per locale.
+True
+
+
+coverPhotoV2
+CroppedImage
+The entity's background cover image. The sizes may vary, so clients should handle the given height and width accordingly.
+True
+
+
+defaultLocale
+Locale
+Default locale of the entity.
+True
+
+
+description
+MultiLocaleString
+Map of locale to localized entity's description.
+True
+
+
+foundedOn
+Date
+Date when the entity was founded.
+True
+
+
+id
+long
+Unique identifier for the entity.
+False
+
+
+industries
+IndustryURN[]
+The industries associated with the entity.
+True
+
+
+localizedDescription
+string
+The locale-specific description of the entity.
+True
+
+
+localizedName
+string
+The locale-specific name of the entity.
+False
+
+
+localizedSpecialties
+string[]
+The locale-specific, admin-defined specialty tags of the entity.
+True
+
+
+localizedWebsite
+string
+The locale-specific website of the entity.
+False
+
+
+name
+MultiLocaleString
+Entity's name.
+False
+
+
+parentRelationship. parent
+string
+URN of the parent organization.
+True
+
+
+specialties.tags[]
+string []
+Admin-defined specialty tags of the entity.
+True
+
+
+vanityName
+string
+Entity's unique name used in URLs.
+False
+
+
+versionTag
+string
+Tag indicating version.
+True
+
+
+website
+MultiLocaleString
+Entity's website.
+True
+
+
+logoV2
+CroppedImage
+The entity’s logo. The sizes may vary greatly, i.e., 50x50, 100x60, 400x400, so clients should handle the given height and width accordingly. For more information, see GET a single image
+False
+
+
+pinnedPost
+string
+The URN of the entity's pinned post.
+True
+
+
+autoCreated
+boolean
+Whether the entity was auto-created.
+True
+
+
+
+CroppedImage
+
+
+
+Field Name
+Type
+Description
+
+
+
+
+height
+int
+Height of the image
+
+
+width
+int
+Width of the image
+
+
+x
+int
+X coordinate of the corner
+
+
+y
+int
+Y coordinate of the corner
+
+
+cropped
+string
+Location of the cropped image
+
+
+original
+string
+Location of the original image
+
+
+
+Date
+
+
+
+Field Name
+Type
+Description
+
+
+
+
+day
+int
+Day
+
+
+month
+int
+Month
+
+
+year
+int
+Year
+
+
+
+Locale
+
+
+
+Field Name
+Type
+Description
+
+
+
+
+country
+string
+An uppercase, two-letter country code as defined by ISO-3,166.
+
+
+language
+string
+A lowercase, two-letter language code as defined by ISO-639.
+
+
+
+LocaleString
+
+
+
+Field Name
+Type
+Description
+
+
+
+
+locale
+Locale
+Locale key
+
+
+value
+string
+String value for locale
+
+
+
+MultiLocaleString
+
+
+
+Field Name
+Type
+Description
+
+
+
+
+localized
+map (string->string)
+Map of locale to localized entity's description.
+
+
+preferredLocale
+string
+The preferred locale to use for entity’s description.
+
+
+
+SchoolAttributes
+
+
+
+Field Name
+Type
+Description
+
+
+
+
+hierarchyClassification
+string
+The classification for school hierarchy. Possible values: CONSORTIUM_SYSTEM: A collection of schools and education providers. UNIVERSITY: A university, typically containing individual schools within it.  INDEPENDENT_SCHOOL_COLLEGE_PROVIDER: Provides degrees, certs, etc., but typically doesn't contain individual schools within it.  REMOTE_CAMPUS: A separate campus that's at a distance from the primary college area.  DISTANCE_LEARNING: A school that provides education solely through online channels.
+
+
+legacySchool
+string
+Legacy school URN for the organization.
+
+
+type
+string
+The type of institution. Possible values: PUBLIC: A public school operated by the state, as opposed to being a private enterprise. PRIVATE: A private school, also known as independent school, non-governmental, or non-state school, not administered by a government.PROFIT: A for-profit school operated by a private, profit-seeking business.
+
+
+yearLevel
+string
+Classification of the length of the institution's educational programs. These levels are defined by the National Center for Education Statistics (http://nces.ed.gov/pubs2015/2015097rev.pdf). Possible values: UNDER_TWO_YEAR: As defined by National Center for Education Statistics: 'This group includes any post-secondary institution that offers programs of less than 2 years’ duration below the baccalaureate level, as well as occupational and vocational schools with programs that don't exceed 1,800 contact hours.' TWO_YEAR: As defined by the National Center for Education Statistics: ': Any post-secondary institution that offers programs of at least 2 but less than 4 years’ duration, as well as occupational and vocational schools with programs of at least 1,800 hours and academic institutions with programs of less than 4 years. Does not include bachelor's-degree-granting institutions where the baccalaureate program can be completed in 3 years.'FOUR_YEAR: As defined by the National Center for Education Statistics: 'Any post-secondary institution that offers programs of at least 4 years’ duration or one that offers programs at or above the baccalaureate level, as well as schools that offer post-baccalaureate certificates only or those that offer graduate programs only.'
+
+
+
+
+					
+		
+	 
+		
+		
+	
+					
+		
+		
+			
+			Feedback
+			
+				
+					Was this page helpful?
+				
+				
+					
+						
+							
+						
+						Yes
+					
+					
+						
+							
+						
+						No
+					
+					
+						
+							
+								
+							
+							No
+						
+						
+							
+								Need help with this topic?
+							
+							
+								Want to try using Ask Learn to clarify or guide you through this topic?
+							
+							
+		
+			
+		
+			
+				
+			
+		
+		
+			
+				
+			
+			Ask Learn
+		
+		
+			
+				
+			
+			Ask Learn
+		
+	
+			
+				
+					
+				
+				 Suggest a fix? 
+			
+		
+	
+						
+					
+				
+			
+		
+		
+	
+				
+				
+		
+			
+			
+				Additional resources
+			
+			
+		
+	 
+		
+	 
+		
+	
+		
+	 
+		
+			
+			
+				
+			
+				Last updated on 
+		2026-04-30
+	
+			
+		
+			
+		
+	
+			
+		
+				

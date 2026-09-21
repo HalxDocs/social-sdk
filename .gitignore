@@ -50,3 +50,9 @@ coverage
 tmp
 temp
 .vercel
+
+# Local example storage
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+.blume-verify/

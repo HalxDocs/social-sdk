@@ -9,13 +9,17 @@ The direct X adapter uses an existing bearer token and user ID. For a multi-user
 
 <Steps>
   <Step title="Get API access">
-    Create an app in the X developer portal and confirm your API plan covers the operations you need. Request the `tweet.read`, `tweet.write`, `users.read`, `offline.access`, and `media.write` scopes for the implemented operations.
+    Create an app in the X developer portal and confirm your API plan covers the operations you
+    need. Request the `tweet.read`, `tweet.write`, `users.read`, `offline.access`, and `media.write`
+    scopes for the implemented operations.
   </Step>
   <Step title="Store credentials server-side">
-    Set `X_USER_ID` and `X_ACCESS_TOKEN` in server configuration. Never ship them to a browser bundle.
+    Set `X_USER_ID` and `X_ACCESS_TOKEN` in server configuration. Never ship them to a browser
+    bundle.
   </Step>
   <Step title="Configure the adapter">
-    Construct the backend with those credentials and select the account through a connected-account reference.
+    Construct the backend with those credentials and select the account through a connected-account
+    reference.
   </Step>
 </Steps>
 
