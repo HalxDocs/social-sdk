@@ -10,13 +10,15 @@
   --blume-code-background: #faf9f7;
 }
 
+/* Dark mode is the landing page inverted: its ink (#1c1a17) becomes the
+   paper, warm cream becomes the ink, and the marker orange stays true. */
 :root[data-theme="dark"] {
-  --blume-background: #171512;
-  --blume-foreground: #ece8e1;
-  --blume-muted: #211e1a;
-  --blume-muted-foreground: #a8a299;
-  --blume-border: #322e28;
-  --blume-code-background: #1d1a16;
+  --blume-background: #1c1a17;
+  --blume-foreground: #f4f1ea;
+  --blume-muted: #26231f;
+  --blume-muted-foreground: #b3aca0;
+  --blume-border: #38332c;
+  --blume-code-background: #211e1a;
 }
 
 /* Provider marks use real artwork, with dark-mode inversion only for brands
