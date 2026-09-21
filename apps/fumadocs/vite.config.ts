@@ -9,6 +9,8 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),
+      "collections/server": fileURLToPath(new URL("./.source/server.ts", import.meta.url)),
+      "collections/browser": fileURLToPath(new URL("./.source/browser.ts", import.meta.url)),
     },
   },
   plugins: [mdx(), tailwindcss(), tanstackStart({ prerender: { enabled: true, crawlLinks: true } }), react()],

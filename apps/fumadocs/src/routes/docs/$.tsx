@@ -1,16 +1,31 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
-import browserCollections from "../../../.source/browser";
+import { createServerFn } from "@tanstack/react-start";
+import browserCollections from "collections/browser";
 import { useFumadocsLoader } from "fumadocs-core/source/client";
 import { DocsLayout } from "fumadocs-ui/layouts/docs";
 import { DocsBody, DocsDescription, DocsPage, DocsTitle } from "fumadocs-ui/layouts/docs/page";
+import { z } from "zod";
 
 import { useMDXComponents } from "@/components/mdx";
 import { baseOptions } from "@/lib/layout.shared";
-import { markdownUrl, source } from "@/lib/source";
+type DocsRequest = { slugs: string[] };
+
+const getDocsData = createServerFn({ method: "GET" })
+  .inputValidator(z.object({ slugs: z.array(z.string()) }))
+  .handler(async ({ data }: { data: DocsRequest }) => {
+  const { source } = await import("@/lib/source");
+  const page = source.getPage(data.slugs);
+  if (!page) return null;
+  return {
+    path: page.path,
+    pageTree: await source.serializePageTree(source.getPageTree()),
+    markdownUrl: data.slugs.length ? `/docs/${data.slugs.join("/")}.md` : "/docs/index.md",
+  };
+  });
 
 type LoaderData = {
   path: string;
-  pageTree: Awaited<ReturnType<typeof source.serializePageTree>>;
+  pageTree: { $fumadocs_loader: "page-tree"; data: unknown };
   markdownUrl: string;
 };
 
@@ -18,13 +33,9 @@ export const Route = createFileRoute("/docs/$")({
   component: Page,
   loader: async ({ params }) => {
     const slugs = params._splat?.split("/").filter(Boolean) ?? [];
-    const page = source.getPage(slugs);
-    if (!page) throw notFound();
-    return {
-      path: page.path,
-      pageTree: await source.serializePageTree(source.getPageTree()),
-      markdownUrl: markdownUrl(page.slugs),
-    } satisfies LoaderData;
+    const data = await getDocsData({ data: { slugs } });
+    if (!data) throw notFound();
+    return data as LoaderData;
   },
 });
 
@@ -44,7 +55,7 @@ function Page() {
   const data = Route.useLoaderData() as LoaderData;
   const loaded = useFumadocsLoader(data);
   return (
-    <DocsLayout {...baseOptions()} tree={loaded.pageTree}>
+    <DocsLayout {...baseOptions()} tree={loaded.pageTree as never}>
       {contentLoader.useContent(loaded.path)}
     </DocsLayout>
   );
