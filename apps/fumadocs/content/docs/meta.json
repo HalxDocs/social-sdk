@@ -5,16 +5,7 @@
     "getting-started",
     "platforms",
     "backends",
-    "authentication",
-    "publishing",
-    "reads",
-    "comments",
-    "events",
     "concepts",
-    "reference",
-    "operations",
-    "testing",
-    "agents",
-    "contributing"
+    "reference"
   ]
 }
