@@ -20,6 +20,11 @@ export default defineConfig({
     pages: "pages",
   },
   navigation: {
+    tabs: [
+      { label: "Overview", path: "/overview", icon: "home" },
+      { label: "Platforms", path: "/platforms", icon: "globe-2" },
+      { label: "Reference", path: "/reference", icon: "book-open" },
+    ],
     sidebar: {
       display: "group",
       items: [
