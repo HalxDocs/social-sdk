@@ -120,10 +120,13 @@ it("shares timeout budget across multiple chunks", async () => {
         } as never,
         {
           accessToken: "token",
-          timeoutMs: 15,
+          // Generous enough that the first chunk always dispatches on a slow
+          // runner, and exhausted long before the response, so a second chunk
+          // can never be sent.
+          timeoutMs: 500,
           fetch: async () => {
             calls++;
-            await new Promise((resolve) => setTimeout(resolve, 20));
+            await new Promise((resolve) => setTimeout(resolve, 700));
             return new Response(null, { status: 308 });
           },
         },
