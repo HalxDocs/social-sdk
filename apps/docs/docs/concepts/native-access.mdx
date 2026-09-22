@@ -11,10 +11,10 @@ Adapters expose a typed native module for platform-specific operations: reposts,
 
 ```ts
 const native = social.native("default", { acknowledgeUnsafe: true });
-const thread = await native.getThread(account, { uri, cid });
+const profile = await native.getProfile({ account, context });
 ```
 
-Selected reactions also ship as credential-ready helpers importable straight from a platform entrypoint, such as `xLike` and `xUnlike`, for server code that manages its own credentials.
+Selected reactions also ship as credential-ready helpers importable straight from a platform entrypoint, such as `xLike` and `xUnlike`, for server code that manages its own credentials. Native modules also cover media workflows, graph operations, moderation and notification reads, platform search, captions, playlists, analytics products, and gated live or messaging routes where the provider exposes them.
 
 ## What acknowledgeUnsafe means
 

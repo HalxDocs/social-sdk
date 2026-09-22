@@ -25,11 +25,11 @@ const reply = await social.comments.reply(
 );
 ```
 
-This fragment uses Zernio’s returned comment ID and retains the post’s account and backend reference. Do not fabricate a `commentId`, account reference, or tenant grant. If `comments.read` or `comments.write` is absent, the client returns an unavailable-capability error; the application should expose that as unsupported rather than an empty inbox. The deterministic mock backend advertises comments for local contract tests; managed adapters still depend on provider permissions. Zernio currently advertises comments for X, Threads, Bluesky, YouTube, LinkedIn, Instagram, and Facebook. See [capabilities](/reference/capabilities).
+This fragment uses Zernio’s returned comment ID and retains the post’s account and backend reference. Do not fabricate a `commentId`, account reference, or tenant grant. If `comments.read` or `comments.write` is absent, the client returns an unavailable-capability error; the application should expose that as unsupported rather than an empty inbox. The deterministic mock backend advertises comments for local contract tests; managed adapters still depend on provider permissions. Zernio currently advertises comments for X, Threads, Bluesky, YouTube, LinkedIn, Instagram, and Facebook. The direct Threads adapter also advertises normalized comment reads and replies; TikTok, Threads messaging, and LinkedIn messaging remain governed by their platform declarations. See [capabilities](/reference/capabilities).
 
 ## Reactions
 
-Selected reactions are available as typed native helpers: [X like/unlike](/platforms/x) and [Bluesky like-record creation/deletion](/platforms/bluesky). They do not delete or hide comments. Their application authorization requirements and uncertain-write handling are documented on each platform page. No generic moderation API is claimed.
+Selected reactions are available as typed native helpers: [X like/unlike and engagement operations](/platforms/x), [Bluesky like/repost/quote operations](/platforms/bluesky), and platform-specific reaction operations documented in the LinkedIn guide. They do not delete or hide comments. Their application authorization requirements and uncertain-write handling are documented on each platform page. No generic moderation API is claimed.
 
 ## Messages
 

@@ -10,7 +10,9 @@ The direct YouTube adapter accepts an existing OAuth access token and channel ID
 <Steps>
   <Step title="Configure Google OAuth">
     Request `https://www.googleapis.com/auth/youtube.upload` when the connected workflow uploads
-    videos. Refresh with `refreshOAuthToken("youtube", ...)` and persist any rotated refresh token.
+    videos. Add `https://www.googleapis.com/auth/youtube.force-ssl` for captions and playlist
+    mutations, and `https://www.googleapis.com/auth/yt-analytics.readonly` for Analytics API
+    reports. Refresh with `refreshOAuthToken("youtube", ...)` and persist any rotated refresh token.
   </Step>
   <Step title="Store credentials server-side">
     Set `YOUTUBE_ACCESS_TOKEN` and `YOUTUBE_CHANNEL_ID` in server configuration. Upload bytes and
