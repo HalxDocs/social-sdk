@@ -13,7 +13,7 @@
     "directory": "packages/social-sdk"
   },
   "bin": {
-    "social-sdk": "./dist/cli.js"
+    "social-sdk": "dist/cli.js"
   },
   "files": [
     "dist",
