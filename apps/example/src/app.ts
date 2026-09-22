@@ -1,3 +1,5 @@
+/* oxlint-disable anti-slop/no-unsafe-dictionary-type, anti-slop/no-runtime-typeof, anti-slop/no-unknown-parameters, anti-slop/no-conditional-empty-object-spread -- this example parses JSON requests and provider events at explicit boundaries. */
+
 import { readFile } from "node:fs/promises";
 import { randomUUID } from "node:crypto";
 import {
@@ -28,7 +30,9 @@ import {
 } from "./storage.js";
 
 type Session = { readonly principal: string; readonly tenantId: string };
+
 type MembershipSource = (session: Session, accountId: string) => Promise<boolean> | boolean;
+
 export type ExampleOptions = {
   readonly backend?: SocialAdapter<unknown>;
   readonly backendName?: string;
@@ -42,31 +46,41 @@ export type ExampleOptions = {
     platforms: readonly string[];
   };
 };
+
 export interface ExampleHandler {
   handle(request: Request): Promise<Response>;
   client: SocialClient;
 }
+
 const record = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
+
 const json = (value: unknown, status = 200) => Response.json(value, { status });
+
 const fail = (message: string, status = 400): never => {
   throw new Response(message, { status });
 };
+
 const required = (input: Record<string, unknown>, key: string): string =>
   typeof input[key] === "string" && input[key].length > 0 ? input[key] : fail(`${key} is required`);
 
 async function bytes(request: Request, limit = 1_000_000): Promise<Uint8Array> {
   const declared = Number(request.headers.get("content-length"));
+
   if (Number.isFinite(declared) && declared > limit) fail("Request body too large", 413);
+
   if (!request.body) return new Uint8Array();
   const reader = request.body.getReader();
   const chunks: Uint8Array[] = [];
   let length = 0;
+
   try {
     for (;;) {
       const chunk = await reader.read();
+
       if (chunk.done) break;
       length += chunk.value.length;
+
       if (length > limit) fail("Request body too large", 413);
       chunks.push(chunk.value);
     }
@@ -76,22 +90,28 @@ async function bytes(request: Request, limit = 1_000_000): Promise<Uint8Array> {
   } finally {
     reader.releaseLock();
   }
+
   const result = new Uint8Array(length);
   let offset = 0;
+
   for (const chunk of chunks) {
     result.set(chunk, offset);
     offset += chunk.length;
   }
+
   return result;
 }
+
 async function body(request: Request): Promise<Record<string, unknown>> {
   const raw = await bytes(request);
   let value: unknown;
+
   try {
     value = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(raw));
   } catch {
     return fail("Malformed JSON");
   }
+
   return record(value) ? value : fail("JSON object required");
 }
 
@@ -100,15 +120,19 @@ export function createExampleHandler(options: ExampleOptions = {}): ExampleHandl
   const backend = options.backend ?? mockBackend({ backendInstance: backendName });
   const simulated = backend.id === "mock";
   const session = options.session ?? { principal: "demo-user", tenantId: "demo-tenant" };
+
   if (!simulated && (!options.session || !options.membership))
     throw new Error("A real backend requires authenticated session and membership handlers");
+
   const membership =
     options.membership ??
     ((s, id) => s.tenantId === "demo-tenant" && ["mock-account-1", "mock-account-2"].includes(id));
+
   const db = options.database ?? openExampleDatabase();
   const inbox = new SqliteEventInbox(db);
   const publications = new SqlitePublicationStore(db);
   const authorization = { tenantId: session.tenantId, principalId: session.principal };
+
   const social = createSocial({
     backends: { [backendName]: backend },
     idempotencyStore: new SqliteIdempotencyStore(db),
@@ -127,28 +151,35 @@ export function createExampleHandler(options: ExampleOptions = {}): ExampleHandl
       },
     },
   });
+
   async function accounts() {
     return (await social.accounts.list({ backend: backendName, authorization })).items;
   }
+
   async function authorizedAccount(id: string, platform?: string) {
     const account = (await accounts()).find(
       (item) =>
         item.ref.accountId === id && (platform === undefined || item.ref.platform === platform),
     );
+
     return account?.ref ?? fail("Account is not authorized for this tenant", 403);
   }
+
   async function post(input: Record<string, unknown>): Promise<PlatformPostRef> {
     const account = await authorizedAccount(
       required(input, "accountId"),
       required(input, "platform"),
     );
+
     return { ...account, kind: "platform-post", postId: required(input, "postId") };
   }
+
   async function reconcile(
     previous: PublishResult,
     includePublished = false,
   ): Promise<PublishResult> {
     const outcomes: DeliveryOutcome[] = [];
+
     for (const outcome of previous.outcomes) {
       if (
         !(
@@ -160,9 +191,11 @@ export function createExampleHandler(options: ExampleOptions = {}): ExampleHandl
         outcomes.push(outcome);
         continue;
       }
+
       const fresh = await social.posts.getDelivery(outcome.delivery, { authorization });
       outcomes.push({ ...fresh, targetIndex: outcome.targetIndex });
     }
+
     return {
       ...previous,
       outcomes,
@@ -175,17 +208,21 @@ export function createExampleHandler(options: ExampleOptions = {}): ExampleHandl
           : "partial",
     };
   }
+
   async function handle(request: Request): Promise<Response> {
     const path = new URL(request.url).pathname;
+
     try {
       if (request.method === "POST") {
         const origin = request.headers.get("origin");
+
         if (
           (origin && origin !== new URL(request.url).origin) ||
           request.headers.get("sec-fetch-site") === "cross-site"
         )
           return fail("Cross-origin mutations are not allowed", 403);
       }
+
       if (request.method === "GET" && ["/", "/example.js"].includes(path))
         return new Response(
           await readFile(
@@ -204,16 +241,21 @@ export function createExampleHandler(options: ExampleOptions = {}): ExampleHandl
             },
           },
         );
+
       if (request.method === "POST" && path === "/api/mock/advance") {
         if (!simulated || !("testing" in backend))
           return fail("Mock controls are unavailable", 404);
+        // SAFETY: The `testing` capability check above narrows this adapter to the mock implementation.
         (backend as MockSocialAdapter).testing.advanceProcessing();
+
         return json({ simulated: true, advanced: true });
       }
+
       if (request.method === "POST" && path === "/api/mock/scenario") {
         if (!simulated || !("testing" in backend))
           return fail("Mock controls are unavailable", 404);
         const scenario = required(await body(request), "scenario");
+
         if (
           ![
             "immediate-text-success",
@@ -223,19 +265,25 @@ export function createExampleHandler(options: ExampleOptions = {}): ExampleHandl
           ].includes(scenario)
         )
           return fail("Unsupported mock scenario");
+        // SAFETY: The scenario allowlist above proves this value is a supported mock scenario.
         (backend as MockSocialAdapter).testing.setScenario(scenario as MockScenario);
+
         return json({ simulated: true });
       }
+
       if (request.method === "GET" && path === "/api/accounts")
         return json({
           authenticatedPrincipal: session.principal,
           accounts: await accounts(),
           simulated,
         });
+
       if (request.method === "GET" && path === "/api/connect/start") {
         const connection = options.connection;
+
         if (!connection)
           return json({ simulated, accounts: await accounts(), mode: "select-existing-account" });
+
         return json(
           await connection.manager.begin({
             backend: backendName,
@@ -248,15 +296,18 @@ export function createExampleHandler(options: ExampleOptions = {}): ExampleHandl
           }),
         );
       }
+
       if (request.method === "POST" && path === "/api/connect/callback") {
         const input = await body(request);
         const connection = options.connection;
+
         if (!connection)
           return json({
             simulated,
             selected: await authorizedAccount(required(input, "accountId")),
             mode: "select-existing-account",
           });
+
         return json({
           accounts: await connection.manager.discover({
             attemptId: required(input, "attemptId"),
@@ -269,12 +320,16 @@ export function createExampleHandler(options: ExampleOptions = {}): ExampleHandl
           }),
         });
       }
+
       if (request.method === "POST" && path === "/api/connect/select") {
         const input = await body(request);
+
         if (!options.connection) return fail("OAuth is not configured", 501);
         const ids = input["accountIds"];
+
         if (!Array.isArray(ids) || !ids.every((id) => typeof id === "string"))
           return fail("accountIds must be strings");
+
         return json({
           grants: await options.connection.manager.select({
             attemptId: required(input, "attemptId"),
@@ -284,10 +339,12 @@ export function createExampleHandler(options: ExampleOptions = {}): ExampleHandl
           }),
         });
       }
+
       if (request.method === "POST" && ["/api/prepare", "/api/publish"].includes(path)) {
         const input = await body(request);
         const text = required(input, "text");
         const ids = input["accountIds"];
+
         if (
           !Array.isArray(ids) ||
           !ids.length ||
@@ -297,20 +354,29 @@ export function createExampleHandler(options: ExampleOptions = {}): ExampleHandl
         )
           return fail("Choose 1-20 distinct accounts from /api/accounts");
         const optionsByAccount = input["optionsByAccount"];
+
         if (optionsByAccount !== undefined && !record(optionsByAccount))
           return fail("optionsByAccount must be an object");
         const targets = [];
+
         for (const id of ids) {
           const choices = record(optionsByAccount) ? optionsByAccount[id] : undefined;
+
           if (choices !== undefined && !record(choices))
             return fail("Per-account options must be objects");
+
+          // SAFETY: `choices` passed the record boundary check immediately above.
+          const options = choices as JsonObject | undefined;
+
           targets.push({
             account: await authorizedAccount(id),
-            ...(choices === undefined ? {} : { options: choices as JsonObject }),
+            ...(options === undefined ? {} : { options }),
           });
         }
+
         if (input["format"] !== undefined && !["text", "video"].includes(String(input["format"])))
           return fail("format must be text or video");
+
         const content =
           input["format"] === "video"
             ? {
@@ -324,14 +390,18 @@ export function createExampleHandler(options: ExampleOptions = {}): ExampleHandl
                 ],
               }
             : { text };
+
         if (path === "/api/prepare")
           return json({ preparation: social.posts.prepare({ targets, content }) });
         const key = required(input, "idempotencyKey");
+
         if (key.length > 200) return fail("idempotencyKey must be at most 200 characters");
+
         const result = await social.posts.publish(
           { targets, content, idempotencyKey: key },
           { authorization },
         );
+
         // Replaying a publish key may return its original processing observation.
         // Preserve the separately reconciled projection once stored.
         if (
@@ -342,39 +412,52 @@ export function createExampleHandler(options: ExampleOptions = {}): ExampleHandl
         )
           return json({ idempotencyKey: key, result }, 409);
         const saved = publications.get(session.tenantId, key);
+
         if (!saved) publications.save(session.tenantId, key, result);
+
         return json({ simulated, idempotencyKey: key, result: saved ?? result });
       }
+
       if (request.method === "POST" && path === "/api/reconcile") {
         const input = await body(request);
         const key = required(input, "idempotencyKey");
         const previous = publications.get(session.tenantId, key);
+
         if (!previous) return fail("Unknown publication", 404);
         const result = await reconcile(previous);
         publications.save(session.tenantId, key, result);
+
         return json({
           idempotencyKey: key,
           result: publications.get(session.tenantId, key) ?? result,
         });
       }
+
       if (request.method === "POST" && path === "/api/events/reports") {
         const key = required(await body(request), "idempotencyKey");
+
         if (!publications.get(session.tenantId, key)) return fail("Unknown publication", 404);
+
         return json({ reports: publications.removalReports(session.tenantId, key) });
       }
+
       if (request.method === "POST" && path === "/api/metrics")
         return json({
           metrics: await social.analytics.getPostMetrics(await post(await body(request)), {
             authorization,
           }),
         });
+
       if (request.method === "POST" && path === "/api/comments/list")
         return json(await social.comments.list(await post(await body(request)), { authorization }));
+
       if (request.method === "POST" && path === "/api/comments/reply") {
         const input = await body(request);
         const parent = await post(input);
+
         if (!backend.comments)
           return fail("Comment replies are not supported by this backend", 501);
+
         return json({
           comment: await social.comments.reply(
             { ...parent, kind: "comment", commentId: required(input, "commentId") },
@@ -383,36 +466,48 @@ export function createExampleHandler(options: ExampleOptions = {}): ExampleHandl
           ),
         });
       }
+
       if (request.method === "POST" && path === "/api/events") {
         const raw = await bytes(request);
+
         const context = {
           backendInstance: backendName,
           correlationId: randomUUID(),
           retryBudget: { maxAttempts: 1, maxElapsedMs: 10_000 },
         };
+
         if (!backend.webhooks) return fail("Webhooks are not supported", 501);
+
         const verified = await backend.webhooks.verify(
           { headers: request.headers, body: raw },
           context,
         );
+
         if (!verified.valid) return fail("Invalid webhook authentication", 401);
+
         const decoded = await backend.webhooks.decode(
           { headers: request.headers, body: raw },
           context,
         );
+
         if (!simulated) {
+          // SAFETY: The selected backend decoder returns the normalized event contract for non-simulated requests.
+          // oxlint-disable-next-line anti-slop/no-chained-type-assertions -- the decoder's JsonObject must cross into the normalized event contract.
           const event = decoded as unknown as SocialEvent;
+
           if (
             event.version !== 1 ||
             event.backend !== backendName ||
             !Array.isArray(event.accountIds)
           )
             return fail("Malformed normalized event");
+
           const mapped =
             event.accountIds.length > 0 &&
             (await Promise.all(event.accountIds.map((id) => membership(session, id)))).every(
               Boolean,
             );
+
           const key =
             mapped && event.backendRecordId
               ? publications.findByDelivery(
@@ -422,9 +517,11 @@ export function createExampleHandler(options: ExampleOptions = {}): ExampleHandl
                   event.accountIds,
                 )
               : undefined;
+
           const quarantined =
             !key ||
             !["publication.updated", "post.removed", "backend-record.deleted"].includes(event.type);
+
           return json({
             state: inbox.accept(
               JSON.stringify([1, event.provider, backendName, "/api/events", event.id]),
@@ -434,14 +531,17 @@ export function createExampleHandler(options: ExampleOptions = {}): ExampleHandl
             quarantined,
           });
         }
+
         const eventId = required(decoded, "eventId");
         const key = typeof decoded["publicationKey"] === "string" ? decoded["publicationKey"] : "";
         const accountId = typeof decoded["accountId"] === "string" ? decoded["accountId"] : "";
         const publication = publications.get(session.tenantId, key);
+
         const quarantined =
           !publication ||
           !(await membership(session, accountId)) ||
           !publication.outcomes.some((outcome) => outcome.account.accountId === accountId);
+
         return json({
           state: inbox.accept(
             JSON.stringify([backendName, eventId]),
@@ -451,8 +551,10 @@ export function createExampleHandler(options: ExampleOptions = {}): ExampleHandl
           quarantined,
         });
       }
+
       if (request.method === "POST" && path === "/api/events/process") {
         let applied = 0;
+
         for (const entry of inbox.pending()) {
           if (
             !record(entry.payload) ||
@@ -462,7 +564,9 @@ export function createExampleHandler(options: ExampleOptions = {}): ExampleHandl
             continue;
           const key = entry.payload["publicationKey"];
           const previous = publications.get(session.tenantId, key);
+
           if (!previous) continue;
+
           if (
             !(
               await Promise.all(
@@ -472,13 +576,16 @@ export function createExampleHandler(options: ExampleOptions = {}): ExampleHandl
           )
             continue;
           const event = record(entry.payload["event"]) ? entry.payload["event"] : {};
+
           const removal =
             event["type"] === "post.removed" || event["type"] === "backend-record.deleted";
+
           // Native-removal webhooks are observations, not proof of permanent deletion.
           // Keep the publication history and flag the report for explicit verification.
           const result = removal
             ? previous
             : await reconcile(previous, event["originalType"] === "post.tiktok.url_resolved");
+
           if (
             publications.applyEvent(
               session.tenantId,
@@ -490,22 +597,30 @@ export function createExampleHandler(options: ExampleOptions = {}): ExampleHandl
           )
             applied++;
         }
+
         return json({ applied, pending: inbox.pendingCount() });
       }
+
       if (request.method === "POST" && path === "/api/events/replay")
         return json({ pending: inbox.pendingCount() });
+
       return new Response("Not found", { status: 404 });
     } catch (error) {
       if (error instanceof Response) return error;
+
       if (error instanceof SocialError)
         return json(
           { error: error.code, message: error.message },
           error.code === "unauthorized" ? 403 : error.code === "idempotency_conflict" ? 409 : 400,
         );
+
       return json({ error: "Request failed" }, 500);
     }
   }
+
   return { handle, client: social };
 }
+
 export const defaultExampleHandler = createExampleHandler();
+
 export const handleExample = defaultExampleHandler.handle;
