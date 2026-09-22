@@ -1,6 +1,6 @@
 ---
 title: Idempotency
-description: Use idempotency keys, fingerprints, and bounded retry budgets so at-least-once execution never double-posts.
+description: Use idempotency keys, content fingerprints, and bounded retry budgets so at-least-once schedulers and retries never double-post to a platform.
 ---
 
 Publishing is a public write. Social SDK's idempotency and retry model exists so a crashed process, a replayed job, or a double-submitted form cannot post the same content twice.

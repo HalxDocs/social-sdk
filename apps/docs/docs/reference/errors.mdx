@@ -1,6 +1,6 @@
 ---
 title: Errors
-description: Handle SocialError codes, retry dispositions, preparation issues, and redacted serialization in Social SDK.
+description: Handle every SocialError code with its retry disposition, carried context fields, preparation issues, and redacted JSON serialization.
 ---
 
 Every failure surfaces as a `SocialError` with a stable code, the operation that failed, and a machine-readable retry disposition. Errors are redacted by design: no credentials, tokens, media, or message content.

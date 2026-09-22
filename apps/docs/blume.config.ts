@@ -163,6 +163,9 @@ export default defineConfig({
       mono: "geist-mono",
     },
   },
+  seo: {
+    x: { handle: "@leodev" },
+  },
   ai: {
     llmsTxt: true,
     mcp: {

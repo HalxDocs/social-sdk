@@ -1,4 +1,4 @@
-import { readdir, readFile, unlink } from "node:fs/promises";
+import { readdir, readFile, unlink, writeFile } from "node:fs/promises";
 import { resolve, basename } from "node:path";
 
 const directory = resolve(import.meta.dir, "../apps/docs/dist");
@@ -30,3 +30,14 @@ for (const candidate of candidates) {
   await unlink(candidate);
 }
 console.log(`Removed ${candidates.length} unreachable disabled-feedback chunk(s).`);
+
+// The root landing page is a custom Astro route, so Blume's generated llms.txt
+// does not include it. Append it so the index matches the site's indexable routes.
+const llmsPath = `${directory}/llms.txt`;
+const llms = await readFile(llmsPath, "utf8");
+if (!/\]\(\/\)/.test(llms)) {
+  const entry =
+    "\n## Site\n\n- [Social SDK home](/): The landing page for the typed social platform toolkit.\n";
+  await writeFile(llmsPath, llms + entry);
+  console.log("Appended the landing page to llms.txt.");
+}
