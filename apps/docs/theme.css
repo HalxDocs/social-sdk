@@ -59,3 +59,9 @@ article img[src^="/integrations/"] {
 :root[data-theme="dark"] article img[src$="/inngest.svg"] {
   filter: invert(1);
 }
+
+/* No scroll chaining or rubber-band flash past the page edges. */
+html {
+  overscroll-behavior-y: none;
+  background-color: var(--blume-background);
+}

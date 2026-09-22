@@ -8,6 +8,20 @@
       name="description"
       content="Social SDK is a typed TypeScript toolkit for building social features into your app, with a real answer from every platform."
     />
+    <script>
+      (() => {
+        const stored = localStorage.getItem("blume-theme");
+        const dark = stored
+          ? stored === "dark"
+          : matchMedia("(prefers-color-scheme: dark)").matches;
+        document.documentElement.classList.toggle("dark", dark);
+        if (!stored) {
+          matchMedia("(prefers-color-scheme: dark)").addEventListener("change", (e) => {
+            document.documentElement.classList.toggle("dark", e.matches);
+          });
+        }
+      })();
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -561,6 +575,53 @@
         .node {
           transition: none;
         }
+      }
+      /* ---------- dark mode: the same hand-drawn page on warm ink paper ---------- */
+      html.dark {
+        --ink: #f2efe9;
+        --ink-soft: #b3aca0;
+        --paper: #131110;
+        --wire: #989184;
+        color-scheme: dark;
+      }
+      html.dark [stroke="#1c1a17"] {
+        stroke: var(--ink);
+      }
+      html.dark [fill="#1c1a17"] {
+        fill: var(--ink);
+      }
+      html.dark [stroke="#57534c"] {
+        stroke: var(--ink-soft);
+      }
+      html.dark [fill="#57534c"] {
+        fill: var(--ink-soft);
+      }
+      html.dark [stroke="#111111"] {
+        stroke: var(--ink);
+      }
+      html.dark [fill="#111111"] {
+        fill: var(--ink);
+      }
+      html.dark [fill="#9b968d"] {
+        fill: #86806f;
+      }
+      html.dark [fill="#2f6f4f"] {
+        fill: #79b995;
+      }
+      html.dark .c-str {
+        color: #79b995;
+      }
+      html.dark .c-dim {
+        color: #86806f;
+      }
+      html.dark .paper-note pre {
+        background: #1c1916;
+      }
+      html.dark .chip {
+        background: #1c1916;
+      }
+      html.dark .brush-btn {
+        color: var(--paper);
       }
     </style>
   </head>
