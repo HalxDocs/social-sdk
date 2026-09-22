@@ -1,5 +1,11 @@
 # @opencoredev/social-sdk
 
+## 0.1.1
+
+### Patch Changes
+
+- 75c6634: Run the CLI when invoked through the installed bin symlink. The entry guard now resolves the invoked path before comparing it to the module URL, so `social-sdk` from node_modules/.bin executes instead of exiting silently.
+
 ## 0.1.0
 
 ### Minor Changes
