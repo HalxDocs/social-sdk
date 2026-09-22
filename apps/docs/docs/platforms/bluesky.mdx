@@ -1,6 +1,6 @@
 ---
 title: Bluesky
-description: Publish Bluesky records with existing session authorization, bounded media inputs, native thread references, and explicit reconciliation.
+description: Publish Bluesky records and use typed AT Protocol parity operations with existing session authorization and explicit reconciliation.
 ---
 
 The direct Bluesky adapter accepts an existing access JWT or a restored OAuth session, together with a DID and HTTPS service URL. It intentionally leaves user-facing OAuth to the maintained `@atproto/oauth-client-node` library. That client implements the AT Protocol requirements for PKCE, PAR, DPoP, issuer checks, token refresh, and identity verification; do not replace it with a generic code exchange.

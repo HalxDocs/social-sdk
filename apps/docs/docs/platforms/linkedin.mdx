@@ -3,7 +3,7 @@ title: LinkedIn
 description: Publish as an explicit LinkedIn author while preserving native URNs, permissions, image processing states, comments, and metrics.
 ---
 
-The direct LinkedIn adapter supports text and one registered image, native post reads, comment reads/replies, and returned social-action counts. Configure a member or organization author URN and an explicit monthly API version. Existing authorization is server-owned; this adapter does not grant organization roles or perform account selection for you.
+The direct LinkedIn adapter supports normalized text and registered-image publishing, native post reads, comment reads/replies, and returned social-action counts. Its typed native module adds multi-image, video, document, poll, reaction, reshare, update, deletion, and organization analytics operations. Configure a member or organization author URN and an explicit monthly API version. Existing authorization is server-owned; this adapter does not grant organization roles or perform account selection for you.
 
 ## Setup
 
@@ -110,7 +110,7 @@ await social.comments.reply(
 
 ### Read organization metrics
 
-Organization account metrics read the total follower count from the versioned `networkSizes` endpoint. They require `rw_organization_admin` and an administrator role for the configured organization. Member-profile account metrics are unavailable in this slice.
+Organization account metrics read the total follower count from the versioned `networkSizes` endpoint. They require `rw_organization_admin` and an administrator role for the configured organization. Member-profile account metrics remain unavailable; organization analytics require the organization product and role.
 
 ```ts
 const metrics = await social.analytics.getAccountMetrics(account);

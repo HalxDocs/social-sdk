@@ -113,7 +113,7 @@ Reads, lifetime metrics, replies, quote posts, reposts, deletion, keyword search
 ## Limits and requirements
 
 :::note
-Scheduling is unavailable in this slice and must be implemented by an application-owned durable job runner.
+The direct Threads adapter does not advertise native scheduling. Schedule a publish through an application-owned durable job runner when your workflow needs it.
 :::
 
 - Text, one HTTPS image or video, and carousels are supported.

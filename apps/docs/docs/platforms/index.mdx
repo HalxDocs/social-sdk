@@ -3,19 +3,21 @@ title: Platforms
 description: Compare the social operations, content formats, permissions, and evidence available through each direct platform adapter.
 ---
 
-Use this page to choose a platform adapter before you read its setup guide. The matrix describes the normalized surface currently implemented in Social SDK; it does not certify credentials, app review, account eligibility, or a successful live request.
+Use this page to choose a platform adapter before you read its setup guide. The matrix describes the normalized surface currently implemented in Social SDK. Platform-native parity operations are listed in the capability matrix and each platform guide; they do not certify credentials, app review, account eligibility, or a successful live request.
 
 | Platform                                                           | Publish                        | Read             | Comments    | Analytics                 |
 | ------------------------------------------------------------------ | ------------------------------ | ---------------- | ----------- | ------------------------- |
 | [![](/integrations/x.svg) X](/platforms/x)                         | Text, images                   | Posts, feeds     | Write       | Post metrics              |
-| [![](/integrations/threads.svg) Threads](/platforms/threads)       | Text, images, video, carousels | Posts, feeds     | —           | Post and lifetime metrics |
+| [![](/integrations/threads.svg) Threads](/platforms/threads)       | Text, images, video, carousels | Posts, feeds     | Read, write | Post and lifetime metrics |
 | [![](/integrations/bluesky.svg) Bluesky](/platforms/bluesky)       | Text, images                   | Posts, feeds     | Read, write | Post and account          |
 | [![](/integrations/youtube.svg) YouTube](/platforms/youtube)       | Video                          | Videos, channels | Read, write | Post and account          |
 | [![](/integrations/tiktok.svg) TikTok](/platforms/tiktok)          | Images, video, carousels       | Posts, feeds     | —           | Account                   |
 | [![](/integrations/instagram.svg) Instagram](/platforms/instagram) | Images, video, carousels       | Posts, feeds     | Read, write | Post and account          |
 | [![](/integrations/linkedin.svg) LinkedIn](/platforms/linkedin)    | Text, images                   | Posts, feeds     | Read, write | Post and account          |
 
-A dash means the normalized direct adapter does not expose that operation. Content limits, permissions, account rules, upload behavior, API versions, and processing states remain platform-specific; open the platform guide for those details. Managed backends may expose additional operations for the same platform through their own route.
+A dash means the normalized direct adapter does not expose that operation. Native modules add typed platform-specific operations such as video uploads, reposts, profiles, captions, playlists, drafts, and approval-gated features; see the capability matrix for their exact status. Content limits, permissions, account rules, upload behavior, API versions, and processing states remain platform-specific; open the platform guide for those details. Managed backends may expose additional operations for the same platform through their own route.
+
+The normalized table is intentionally compact. For example, X native operations include video/GIF uploads, polls, bookmarks, follows, reposts, quotes, deletion, direct-message reads, and filtered streams; YouTube native operations include thumbnails, captions, playlists, video updates/deletion, Analytics API reports, and live broadcasts. The platform pages document the equivalent native surface for every direct adapter.
 
 ## Platform guides
 
