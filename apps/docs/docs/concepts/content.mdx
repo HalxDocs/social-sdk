@@ -1,0 +1,35 @@
+---
+title: Content
+description: Understand shared content, per-target options, formats, and local preparation in Social SDK.
+---
+
+A publication carries one shared content object to every selected target, plus per-target options for what platforms require individually. Preparation validates all of it locally before any network call.
+
+## Shared content, per-target options
+
+Content holds the text and media list. Target options hold platform-specific requirements: YouTube's title, visibility, and audience flags, TikTok's consent and privacy choices, Bluesky's languages and mentions. The shape keeps one intent reusable across destinations without pretending platforms want identical input.
+
+```ts
+await social.posts.publish({
+  targets: [
+    {
+      account: youtubeAccount,
+      options: { title: "Release", visibility: "private", madeForKids: false },
+    },
+    { account: xAccount },
+  ],
+  content: { text: "Release day", media: [video] },
+});
+```
+
+## Formats are declared per route
+
+Text, image, video, and carousel are content formats, and each capability declaration lists the formats it accepts. The same platform can differ by route: check the [capability matrix](/reference/capabilities) rather than assuming.
+
+## Validation is platform-real
+
+Preparation applies each platform's actual rules: X's weighted 280-character counting, Bluesky's grapheme lengths, byte-offset mentions, and four-image cap, Threads' ten-item carousels, YouTube's title bounds. Failures return structured issues naming the field and rule, before the platform is contacted.
+
+## Nothing is transformed silently
+
+Adapters do not crop images, truncate text, convert formats, or drop unsupported fields to force a request through. Unsupported input fails preparation loudly, and richer platform features stay reachable through [native access](/concepts/native-access) instead of being approximated. See the [publish content guide](/publishing) for the full request lifecycle.

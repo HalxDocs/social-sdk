@@ -1,0 +1,22 @@
+---
+title: Capabilities
+description: Understand how declared capabilities, formats, and evidence levels describe what each integration can do.
+---
+
+A capability is a declared, operation-specific claim: this backend, for this platform, supports this operation with these content formats. Social SDK ships the declarations as typed manifests and generates the [capability matrix](/reference/capabilities) from them.
+
+## Declarations are specific
+
+Support is never a platform-level checkmark. Each declaration names the backend, platform, operation, and formats, so "Zernio publishes carousels on Instagram" and "the direct X adapter uploads video through its native module" are separate facts. A dash in a matrix means the operation is not exposed on that route.
+
+## Unavailable is an answer
+
+Calling an undeclared operation fails fast with an `unsupported_capability` error before any network request. Applications should surface that as unsupported rather than an empty result, so users see the truth about a route instead of a silent gap.
+
+## Availability states
+
+Declarations distinguish available operations from gated ones. An approval-dependent operation has real code but needs a platform review, audit, or app product before public use. A platform-limited operation is one the upstream API does not offer standard apps at all. The distinction keeps roadmap honesty out of your error handling.
+
+## Evidence backs every claim
+
+A declaration says what the code implements; [evidence levels](/testing/evidence-levels) say how far it has been proven, from implemented through contract-tested to live-verified and released. A provider's upstream feature is not treated as supported until Social SDK has matching code and evidence. Conformance checks keep the manifests, runtime methods, and generated docs in agreement.

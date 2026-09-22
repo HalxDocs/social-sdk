@@ -56,7 +56,7 @@ export default defineConfig({
                 {
                   label: "Post for Me",
                   root: "/backends/post-for-me",
-                  icon: "/integrations/post-for-me.svg",
+                  icon: "/integrations/post-for-me.png",
                 },
               ],
             },
@@ -111,11 +111,14 @@ export default defineConfig({
           items: [
             "/concepts/integration-model",
             "/concepts/architecture",
-            "/concepts/references-and-outcomes",
+            "/concepts/accounts",
             "/concepts/tenant-authorization",
+            "/concepts/references-and-outcomes",
+            "/concepts/capabilities",
+            "/concepts/content",
+            "/concepts/media",
             "/concepts/idempotency",
             "/concepts/native-access",
-            "/concepts/media",
           ],
         },
         {

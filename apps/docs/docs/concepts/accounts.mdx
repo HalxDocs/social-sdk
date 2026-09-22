@@ -1,0 +1,41 @@
+---
+title: Accounts
+description: Understand connected accounts, discovery, references, and ownership in Social SDK.
+---
+
+A connected account is a platform identity a backend can act as: an X user, a Threads profile, a YouTube channel, a LinkedIn organization. Every operation in Social SDK is scoped to one.
+
+## Accounts belong to a backend
+
+An account record lives on the route that produced it. A direct adapter's account comes from your own credentials; a hosted platform's account is a provider record. The same human on the same platform through two backends is two distinct connected accounts, and nothing transfers between them automatically.
+
+## Discover, then select
+
+List accounts from the configured backend instead of constructing identities from user input:
+
+```ts
+const page = await social.accounts.list({ backend: "default" });
+for (const account of page.items) {
+  console.log(account.ref.platform, account.ref.accountId, account.displayName);
+}
+```
+
+Discovery tells you what the credential can act as. It does not prove a frontend-selected handle belongs to the current tenant; that mapping is application data.
+
+## The account reference
+
+Operations take a `connectedAccountRef`, a JSON-safe locator naming the backend instance, platform, and account ID:
+
+```ts
+const account = connectedAccountRef({
+  backend: "default",
+  platform: "x",
+  accountId: "12345",
+});
+```
+
+References detect routing mistakes: an account bound to one backend is rejected by another. They are not secrets and not authorization; see [Authorization](/concepts/tenant-authorization).
+
+## Ownership is application data
+
+Map each connected account to the tenants allowed to use it, in your own storage, at connection time. Check that mapping before every account-scoped operation and again when webhook events reference accounts. The [connect accounts guide](/authentication) covers the staged connection flow, credential storage, and recovery.

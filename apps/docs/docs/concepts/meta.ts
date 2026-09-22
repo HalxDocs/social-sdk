@@ -7,10 +7,13 @@ export default defineMeta({
   pages: [
     "integration-model",
     "architecture",
-    "references-and-outcomes",
+    "accounts",
     "tenant-authorization",
+    "references-and-outcomes",
+    "capabilities",
+    "content",
+    "media",
     "idempotency",
     "native-access",
-    "media",
   ],
 });
