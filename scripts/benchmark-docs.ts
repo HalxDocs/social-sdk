@@ -1,4 +1,4 @@
-import { readdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { gzipSync } from "node:zlib";
 
@@ -64,6 +64,7 @@ const report = {
   totals: { js: total("js"), css: total("css") },
   routes,
 };
+await mkdir(join(root, "planning/evidence"), { recursive: true });
 await writeFile(
   join(root, "planning/evidence/docs-assets.json"),
   JSON.stringify(report, null, 2) + "\n",

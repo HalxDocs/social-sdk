@@ -1,4 +1,5 @@
-import { readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { dirname } from "node:path";
 import { createDiagnosticAdapter, runCli } from "../packages/social-sdk/dist/cli.js";
 
 async function command(args: string[]) {
@@ -136,9 +137,21 @@ const files = new Map([
 ]);
 for (const [path, content] of files) {
   if (process.argv.includes("--check")) {
-    if ((await readFile(path, "utf8")) !== content)
-      throw new Error(`Generated capability data is stale: ${path}`);
-  } else await writeFile(path, content);
+    let existing: string;
+    try {
+      existing = await readFile(path, "utf8");
+    } catch (error) {
+      if (path.startsWith("planning/")) {
+        console.log(`Skipping ${path}: the untracked planning folder is absent here.`);
+        continue;
+      }
+      throw error;
+    }
+    if (existing !== content) throw new Error(`Generated capability data is stale: ${path}`);
+  } else {
+    await mkdir(dirname(path), { recursive: true });
+    await writeFile(path, content);
+  }
 }
 console.log(
   `Capability ${process.argv.includes("--check") ? "check" : "generation"} passed (${rows.length} declarations).`,
