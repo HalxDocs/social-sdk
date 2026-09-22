@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { realpathSync } from "node:fs";
 import { readFile, stat } from "node:fs/promises";
 import { pathToFileURL } from "node:url";
 import { createSocial } from "./core/client.js";
@@ -230,7 +231,16 @@ export async function runCli(args: readonly string[], io: CliIO): Promise<number
   }
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+const invokedPath = process.argv[1];
+let invokedRealPath = invokedPath;
+if (invokedPath) {
+  try {
+    invokedRealPath = realpathSync(invokedPath);
+  } catch {
+    // Keep the original path when it cannot be resolved.
+  }
+}
+if (invokedRealPath && import.meta.url === pathToFileURL(invokedRealPath).href) {
   process.exitCode = await runCli(process.argv.slice(2), {
     env: process.env,
     async readInput(path) {
