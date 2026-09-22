@@ -12,7 +12,17 @@
     "url": "git+https://github.com/opencoredev/social-sdk.git",
     "directory": "packages/social-sdk"
   },
+  "bin": {
+    "social-sdk": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md"
+  ],
   "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
@@ -65,13 +75,8 @@
       "import": "./dist/platforms/instagram.js"
     }
   },
-  "files": [
-    "dist",
-    "LICENSE",
-    "README.md"
-  ],
-  "bin": {
-    "social-sdk": "./dist/cli.js"
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json --noEmitOnError",
@@ -79,18 +84,13 @@
     "lint": "oxlint src tests type-tests",
     "test": "bun test tests"
   },
-  "sideEffects": false,
-  "engines": {
-    "node": ">=22.12"
-  },
   "dependencies": {
     "twitter-text": "3.1.0"
   },
   "devDependencies": {
     "@types/twitter-text": "^3.1.10"
   },
-  "main": "./dist/index.js",
-  "publishConfig": {
-    "access": "public"
+  "engines": {
+    "node": ">=22.12"
   }
 }

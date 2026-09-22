@@ -68,27 +68,66 @@ export default defineConfig({
           collapsed: false,
           items: [
             { label: "All integrations", root: "/integrations", icon: "layout-grid" },
-            { label: "Next.js", root: "/integrations/nextjs", icon: "/integrations/nextjs.svg" },
-            { label: "Convex", root: "/integrations/convex", icon: "/integrations/convex.svg" },
             {
-              label: "Supabase",
-              root: "/integrations/supabase",
-              icon: "/integrations/supabase.svg",
+              label: "Frameworks",
+              icon: "braces",
+              collapsed: true,
+              items: [
+                {
+                  label: "Next.js",
+                  root: "/integrations/nextjs",
+                  icon: "/integrations/nextjs.svg",
+                },
+                {
+                  label: "Express",
+                  root: "/integrations/express",
+                  icon: "/integrations/express.svg",
+                },
+                { label: "Hono", root: "/integrations/hono", icon: "/integrations/hono.svg" },
+                { label: "NestJS", root: "/integrations/nestjs", icon: "/integrations/nestjs.svg" },
+                {
+                  label: "TanStack Start",
+                  root: "/integrations/tanstack-start",
+                  icon: "/integrations/tanstack.svg",
+                },
+              ],
             },
-            { label: "Express", root: "/integrations/express", icon: "/integrations/express.svg" },
-            { label: "Hono", root: "/integrations/hono", icon: "/integrations/hono.svg" },
-            { label: "NestJS", root: "/integrations/nestjs", icon: "/integrations/nestjs.svg" },
             {
-              label: "TanStack Start",
-              root: "/integrations/tanstack-start",
-              icon: "/integrations/tanstack.svg",
+              label: "Data and state",
+              icon: "database",
+              collapsed: true,
+              items: [
+                { label: "Convex", root: "/integrations/convex", icon: "/integrations/convex.svg" },
+                {
+                  label: "Supabase",
+                  root: "/integrations/supabase",
+                  icon: "/integrations/supabase.svg",
+                },
+              ],
             },
             {
-              label: "Trigger.dev",
-              root: "/integrations/trigger-dev",
-              icon: "/integrations/trigger-dev.png",
+              label: "Runtime and deployment",
+              icon: "cloud",
+              collapsed: true,
+              items: [{ label: "Vercel Connect", root: "/integrations/vercel-connect" }],
             },
-            { label: "Inngest", root: "/integrations/inngest", icon: "/integrations/inngest.svg" },
+            {
+              label: "Job runners",
+              icon: "clock-3",
+              collapsed: true,
+              items: [
+                {
+                  label: "Trigger.dev",
+                  root: "/integrations/trigger-dev",
+                  icon: "/integrations/trigger-dev.png",
+                },
+                {
+                  label: "Inngest",
+                  root: "/integrations/inngest",
+                  icon: "/integrations/inngest.svg",
+                },
+              ],
+            },
           ],
         },
         {

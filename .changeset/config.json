@@ -7,10 +7,7 @@
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": [
-    "@social-sdk/config",
-    "@social-sdk/docs"
-  ],
+  "ignore": ["@social-sdk/config", "@social-sdk/docs"],
   "privatePackages": {
     "version": false,
     "tag": false
