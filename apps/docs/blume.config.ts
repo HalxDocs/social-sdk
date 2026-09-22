@@ -64,6 +64,7 @@ export default defineConfig({
         },
         {
           label: "Integrations",
+          root: "/integrations",
           icon: "blocks",
           collapsed: false,
           items: [
