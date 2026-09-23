@@ -1,4 +1,4 @@
-/* oxlint-disable anti-slop/require-safety-comment-for-type-assertion -- validated external boundary or fixture contract. */
+/* oxlint-disable anti-slop/require-safety-comment-for-type-assertion, anti-slop/require-readable-spacing -- validated external boundary or fixture contract. */
 import { strict as assert } from "node:assert";
 import { describe, it } from "node:test";
 import { bluesky } from "../src/platforms/bluesky.js";
@@ -25,8 +25,77 @@ function context(): AdapterOperationContext {
 }
 
 describe("Bluesky adapter", () => {
+  it("searches posts with typed filters and preserves pagination metadata", async () => {
+    const requests: string[] = [];
+    const adapter = bluesky({
+      backend: "direct",
+      auth: { service: "https://bsky.example", did: "did:plc:test", accessJwt: "jwt" },
+      fetch: async (input) => {
+        requests.push(String(input));
+        return response({
+          cursor: "next-cursor",
+          hitsTotal: 42,
+          posts: [{ uri: "at://did:plc:author/app.bsky.feed.post/p1", text: "hello" }],
+        });
+      },
+    });
+    const account = connectedAccountRef({
+      backend: "direct",
+      platform: "bluesky",
+      accountId: "did:plc:test",
+    });
+
+    const result = await adapter.native?.searchPosts({
+      account,
+      query: "hello world",
+      limit: 25,
+      sort: "top",
+      since: "2026-01-01",
+      until: "2026-02-01",
+      author: "alice.example",
+      tags: ["news", ""],
+      context: context(),
+    });
+
+    const url = new URL(requests[0]!);
+    assert.equal(url.pathname, "/xrpc/app.bsky.feed.searchPosts");
+    assert.equal(url.searchParams.get("q"), "hello world");
+    assert.equal(url.searchParams.get("sort"), "top");
+    assert.deepEqual(url.searchParams.getAll("tag"), ["news"]);
+    assert.equal(result?.posts[0]?.["uri"], "at://did:plc:author/app.bsky.feed.post/p1");
+    assert.equal(result?.cursor, "next-cursor");
+    assert.equal(result?.hitsTotal, 42);
+  });
+
+  it("rejects empty or out-of-range Bluesky search input before network access", async () => {
+    let requests = 0;
+    const adapter = bluesky({
+      backend: "direct",
+      auth: { service: "https://bsky.example", did: "did:plc:test", accessJwt: "jwt" },
+      fetch: async () => {
+        requests++;
+        return response({ posts: [] });
+      },
+    });
+    const account = connectedAccountRef({
+      backend: "direct",
+      platform: "bluesky",
+      accountId: "did:plc:test",
+    });
+
+    await assert.rejects(
+      adapter.native?.searchPosts({ account, query: "   ", context: context() }),
+      /search query is required/,
+    );
+    await assert.rejects(
+      adapter.native?.searchPosts({ account, query: "hello", limit: 101, context: context() }),
+      /page size must be between 1 and 100/,
+    );
+    assert.equal(requests, 0);
+  });
+
   it("performs typed like and unlike mutations with ownership checks", async () => {
-    const requests: Array<{ url: string; body?: string }> = [];
+    const requests: Array<{ url: string; body?: string; headers?: Headers }> = [];
 
     const adapter = bluesky({
       backend: "direct",
@@ -36,6 +105,7 @@ describe("Bluesky adapter", () => {
           url: String(input),
           // oxlint-disable-next-line anti-slop/no-conditional-empty-object-spread -- validated boundary or fixture contract.
           ...(init?.body === undefined ? {} : { body: String(init.body) }),
+          headers: new Headers(init?.headers),
         });
 
         return response({ uri: "at://did:plc:test/app.bsky.feed.like/r1", cid: "bafy" });
@@ -57,6 +127,7 @@ describe("Bluesky adapter", () => {
     assert.equal(like?.uri, "at://did:plc:test/app.bsky.feed.like/r1");
     assert.match(requests[0]?.url ?? "", /com\.atproto\.repo\.createRecord/);
     assert.match(requests[0]?.body ?? "", /app\.bsky\.feed\.like/);
+    assert.equal(requests[0]?.headers?.get("content-type"), "application/json");
     await adapter.native?.unlikePost({ account, likeUri: like?.uri ?? "", context: context() });
     assert.match(requests[1]?.url ?? "", /com\.atproto\.repo\.deleteRecord/);
     await assert.rejects(() =>
@@ -103,6 +174,7 @@ describe("Bluesky adapter", () => {
     assert.equal(requests.length, 1);
     const headers = new Headers(requests[0]?.headers);
     assert.equal(headers.has("authorization"), false);
+    assert.equal(headers.get("content-type"), "application/json");
   });
 
   it("lists only the configured credential-ready account", async () => {
@@ -420,4 +492,37 @@ it("serializes language tags and explicit DID mentions at UTF-8 boundaries witho
   }
 
   assert.equal(requests.length, 1);
+});
+
+it("exposes Bluesky notifications through the normalized paged adapter", async () => {
+  const requests: Array<{ url: string; body?: string }> = [];
+  const adapter = bluesky({
+    backend: "direct",
+    auth: { service: "https://bsky.example", did: "did:plc:test", accessJwt: "jwt" },
+    fetch: async (input, init) => {
+      requests.push({
+        url: String(input),
+        // oxlint-disable-next-line anti-slop/no-conditional-empty-object-spread -- validated boundary or fixture contract.
+        ...(init?.body === undefined ? {} : { body: String(init.body) }),
+      });
+      return response({
+        cursor: "next",
+        notifications: [{ reason: "like", author: { did: "did:plc:author" } }],
+      });
+    },
+  });
+  const account = connectedAccountRef({
+    backend: "direct",
+    platform: "bluesky",
+    accountId: "did:plc:test",
+  });
+
+  const page = await adapter.notifications!.list(account, { limit: 10 }, context());
+  assert.equal(page.nextCursor, "next");
+  assert.equal(page.items[0]?.["reason"], "like");
+  assert.match(requests[0]!.url, /app\.bsky\.notification\.listNotifications/);
+
+  await adapter.notifications!.markSeen(account, { seenAt: "2026-09-22T00:00:00.000Z" }, context());
+  assert.match(requests[1]!.url, /app\.bsky\.notification\.updateSeen/);
+  assert.match(requests[1]!.body ?? "", /2026-09-22T00:00:00.000Z/);
 });

@@ -1,0 +1,156 @@
+---
+title: Search posts and actors
+description: Search posts and actors across provider indexes, with platform-specific scopes, query limits, result fields, and cursor pagination for each supported platform.
+---
+
+Use `social.search.posts(account, input, options?)` for normalized post search.
+It returns `Page<JsonObject>`:
+
+```ts
+const page = await social.search.posts(account, {
+  query: "open source",
+  scope: "recent",
+  limit: 25,
+});
+```
+
+The input takes `query`, and optionally `scope` (`"recent"` or `"all"`),
+`cursor`, `limit`, `startTime`, and `endTime`. Items keep their provider fields.
+Reuse `nextCursor` only with the same account, query, scope, time bounds, and
+page size. Cursors are bound to the query, not to an authorization grant.
+`iteratePosts(account, input, options)` follows cursors lazily within
+`maxPages`, `maxItems`, and `signal` bounds.
+
+The examples assume one `social` client built with the platform's adapter and an
+`account` from `connectedAccountRef`. Native calls take a `native` handle from
+`social.native("default", { acknowledgeUnsafe: true })` and, where the method
+requires it, the operation `context` your application passes to adapter calls.
+
+## Platform support
+
+<PlatformTabs>
+<PlatformTab platform="x">
+
+**Normalized** `search.posts` with `recent` and `all` scopes, plus native
+`searchRecentPosts` and `searchAllPosts`. **Scopes:** `tweet.read` and
+`users.read`.
+
+Recent search uses `auth.accessToken`, covers the last 7 days, and accepts a
+limit of 10 to 100. Full-archive search (`scope: "all"`) uses `appBearerToken`,
+needs eligible pay-per-use or Enterprise access, and accepts 10 to 500.
+
+```ts
+const page = await social.search.posts(account, {
+  query: "distributed systems -is:retweet",
+  limit: 25,
+});
+```
+
+By default the adapter requests IDs, text, author, timestamps, metrics,
+language, entities, attachments, and referenced tweets. Recent queries are
+limited to 512 characters and full-archive queries to 4096. Invalid bounds or
+timestamps raise `invalid_input`; missing access raises `missing_permission`.
+The native methods expose X tweet fields, expansions, user fields, and media
+fields:
+
+```ts
+const page = await native.searchRecentPosts({
+  account,
+  search: { query: "open source", limit: 10 },
+  context,
+});
+```
+
+</PlatformTab>
+<PlatformTab platform="bluesky">
+
+**Normalized** `search.posts`, plus native post and actor search. No declared
+scope; the adapter calls public `app.bsky` endpoints.
+
+The adapter takes `service`, `did`, and an optional `accessJwt`. Post results
+are provider records and may include `metadata.hitsTotal`. Native post search
+adds sort, author, mentions, language, domain, URL, and tags.
+
+```ts
+const page = await social.search.posts(account, { query: "distributed systems", limit: 25 });
+```
+
+Actor and profile search is native only and returns actor page records:
+
+```ts
+const actors = await native.searchActors({ account, query: "opencore", limit: 10 });
+```
+
+Invalid or missing sessions raise `unauthorized` or `missing_permission`.
+
+</PlatformTab>
+<PlatformTab platform="threads">
+
+**Normalized** `search.posts`, plus native keyword and tag search. **Scopes:**
+`threads_basic` and `threads_keyword_search`.
+
+Search uses the authorized user ID and access token. Without
+`threads_keyword_search` approval, results are limited to the authorized user's
+posts. The normalized page holds provider post objects and a continuation
+cursor.
+
+Use native search for TOP or RECENT ordering, tag mode, media type, author, or
+time bounds:
+
+```ts
+const result = await native.search({
+  account,
+  query: "open source",
+  searchType: "RECENT",
+  searchMode: "KEYWORD",
+  context,
+});
+```
+
+Provider permission failures raise `missing_permission`.
+
+</PlatformTab>
+<PlatformTab platform="youtube">
+
+**Normalized** `search.posts` with `recent` only, plus native search.
+**Scope:** `https://www.googleapis.com/auth/youtube.readonly`.
+
+YouTube uses an OAuth `accessToken` and a `channelId`. Results are public video
+search records with provider IDs and `snippet`.
+
+```ts
+const page = await social.search.posts(account, { query: "distributed systems", limit: 50 });
+```
+
+`scope: "all"` raises `invalid_input`. The default limit is 25 and the maximum
+is 50. Time bounds map to `publishedAfter` and `publishedBefore`. Each request
+costs 100 quota units. A missing scope raises `missing_permission`.
+
+</PlatformTab>
+<PlatformTab platform="instagram">
+
+**Native** hashtag lookup and hashtag media only. There is no normalized
+`search.posts`. Requires Facebook Login (`auth.flavor: "facebook-login"`).
+
+Look up the hashtag ID first, then read its media with `kind: "recent"` or
+`"top"`:
+
+```ts
+const found = await native.hashtagSearch({ account, hashtag: "opensource", context });
+const media = await native.hashtagMedia({ account, hashtagId, kind: "recent", limit: 25, context });
+```
+
+The media page uses `paging.cursors.after`. With Instagram Login,
+`instagram.hashtags.search` raises `missing_permission`.
+
+</PlatformTab>
+</PlatformTabs>
+
+## Unsupported platforms and errors
+
+TikTok, LinkedIn, and Facebook do not declare bundled normalized
+`search.posts`; the facade raises `unsupported_capability`. Handle
+`invalid_input` for query, scope, limit, timestamps, or cursors,
+`missing_permission` or `unauthorized` for credentials,
+`rate_limited` for provider throttling, and `upstream_failure` for provider
+errors. Do not log tokens or private result data.

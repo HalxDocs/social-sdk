@@ -17,6 +17,8 @@ import { array, object, string, optionalString, optionalNumber } from "../transp
 import { upload } from "../transport/upload.js";
 import { publicFields } from "../cloud/common.js";
 
+/* oxlint-disable anti-slop/require-readable-spacing -- Existing adapter style keeps compact guards and native dispatch blocks. */
+
 export interface LinkedInOptions {
   readonly auth: {
     readonly accessToken: string;
@@ -26,6 +28,53 @@ export interface LinkedInOptions {
   readonly apiVersion: string;
   readonly fetch?: typeof globalThis.fetch;
   readonly clock?: () => Date;
+}
+
+export interface LinkedInTimeInterval {
+  readonly granularity: "DAY" | "WEEK" | "MONTH";
+  readonly start?: number;
+  readonly end?: number;
+}
+
+export interface LinkedInFollowerBreakdown {
+  readonly dimension:
+    | "function"
+    | "seniority"
+    | "industry"
+    | "geo"
+    | "geoCountry"
+    | "staffCountRange"
+    | "associationType";
+  readonly value: string;
+  readonly organicFollowerCount?: number | undefined;
+  readonly paidFollowerCount?: number | undefined;
+}
+
+export interface LinkedInFollowerStatistics {
+  readonly organization: string;
+  readonly interval?: LinkedInTimeInterval | undefined;
+  readonly organicFollowerGain?: number | undefined;
+  readonly paidFollowerGain?: number | undefined;
+  readonly breakdowns: readonly LinkedInFollowerBreakdown[];
+}
+
+export interface LinkedInPageStatistics {
+  readonly organization: string;
+  readonly interval?: LinkedInTimeInterval | undefined;
+  readonly views: Readonly<Record<string, number>>;
+  readonly clicks: Readonly<Record<string, number>>;
+  readonly breakdowns: {
+    readonly dimension: string;
+    readonly value: string;
+    readonly views: Readonly<Record<string, number>>;
+    readonly clicks: Readonly<Record<string, number>>;
+  }[];
+}
+
+export interface LinkedInShareStatistics {
+  readonly organization: string;
+  readonly interval?: LinkedInTimeInterval | undefined;
+  readonly metrics: Readonly<Record<string, number>>;
 }
 
 export interface LinkedInNative {
@@ -39,6 +88,7 @@ export interface LinkedInNative {
     readonly account: ConnectedAccountRef;
     readonly text: string;
     readonly options: readonly string[];
+    readonly duration?: "ONE_DAY" | "THREE_DAYS" | "SEVEN_DAYS" | "FOURTEEN_DAYS";
     readonly context: AdapterOperationContext;
   }) => Promise<JsonObject>;
   readonly react: (input: {
@@ -68,6 +118,25 @@ export interface LinkedInNative {
     readonly query?: JsonObject;
     readonly context: AdapterOperationContext;
   }) => Promise<JsonObject>;
+  readonly getOrganizationFollowerStatistics: (input: {
+    readonly account: ConnectedAccountRef;
+    readonly interval?: LinkedInTimeInterval;
+    readonly context: AdapterOperationContext;
+  }) => Promise<readonly LinkedInFollowerStatistics[]>;
+  readonly getOrganizationPageStatistics: (input: {
+    readonly account: ConnectedAccountRef;
+    readonly interval?: LinkedInTimeInterval;
+    readonly context: AdapterOperationContext;
+  }) => Promise<readonly LinkedInPageStatistics[]>;
+  readonly getOrganizationShareStatistics: (input: {
+    readonly account: ConnectedAccountRef;
+    readonly interval?: LinkedInTimeInterval;
+    readonly context: AdapterOperationContext;
+  }) => Promise<readonly LinkedInShareStatistics[]>;
+  readonly getOrganizationFollowerCount: (input: {
+    readonly account: ConnectedAccountRef;
+    readonly context: AdapterOperationContext;
+  }) => Promise<number | undefined>;
 }
 
 export function linkedin(
@@ -88,6 +157,7 @@ export function linkedin(
 
   const http = createHttp(options.fetch ? { fetch: options.fetch } : {});
   const now = () => (options.clock?.() ?? new Date()).toISOString();
+  const escapeCommentary = (text: string) => text.replace(/[|{}@()[\]<>#\\*_~]/g, "\\$&");
 
   const authorize = (
     ref: { backend: string; platform: string; accountId: string },
@@ -110,7 +180,8 @@ export function linkedin(
     context: AdapterOperationContext,
     body?: JsonObject,
     selectedHeaders?: readonly string[],
-    method: "GET" | "POST" | "PUT" | "DELETE" = body === undefined ? "GET" : "POST",
+    method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE" = body === undefined ? "GET" : "POST",
+    extraHeaders?: HeadersInit,
   ) {
     try {
       return await http({
@@ -121,6 +192,7 @@ export function linkedin(
           "Content-Type": "application/json",
           "Linkedin-Version": options.apiVersion,
           "X-Restli-Protocol-Version": "2.0.0",
+          ...extraHeaders,
         },
         method,
         // oxlint-disable-next-line anti-slop/no-conditional-empty-object-spread -- validated boundary or fixture contract.
@@ -142,17 +214,27 @@ export function linkedin(
       throw new SocialError({
         code: ambiguous
           ? "ambiguous_outcome"
-          : error.status === 401
-            ? "reconnect_required"
-            : error.status === 403
-              ? "missing_permission"
-              : error.status === 429
-                ? "rate_limited"
-                : "upstream_failure",
+          : error.kind === "timeout"
+            ? "timeout"
+            : error.kind === "cancelled"
+              ? "cancelled"
+              : error.status === 401
+                ? "reconnect_required"
+                : error.status === 403
+                  ? "missing_permission"
+                  : error.status === 404
+                    ? "not_found"
+                    : error.status === 429
+                      ? "rate_limited"
+                      : "upstream_failure",
         operation: path,
         message: error.message,
         upstreamStatus: error.status,
-        retryDisposition: ambiguous ? { kind: "reconcile-first" } : { kind: "never" },
+        retryDisposition: ambiguous
+          ? { kind: "reconcile-first" }
+          : error.status === 429 && error.retryAfterMs !== undefined
+            ? { kind: "after-delay", delayMs: error.retryAfterMs }
+            : { kind: "never" },
       });
     }
   }
@@ -247,6 +329,242 @@ export function linkedin(
     };
   }
 
+  /* oxlint-disable anti-slop/no-unknown-parameters, anti-slop/no-unsafe-dictionary-type, anti-slop/no-known-value-widening, anti-slop/no-conditional-empty-object-spread, anti-slop/no-runtime-typeof, anti-slop/require-readable-spacing -- These helpers normalize documented LinkedIn response facets at the transport boundary. */
+  const organizationOnly = (
+    account: ConnectedAccountRef,
+    context: AdapterOperationContext,
+    operation: string,
+  ) => {
+    authorize(account, context);
+    if (!account.accountId.startsWith("urn:li:organization:"))
+      throw new SocialError({
+        code: "unsupported_capability",
+        operation,
+        message:
+          "LinkedIn organization analytics require an organization account, not a member account.",
+      });
+  };
+
+  const statisticsPath = (
+    path: string,
+    finder: "organization" | "organizationalEntity",
+    account: ConnectedAccountRef,
+    interval?: LinkedInTimeInterval,
+  ) => {
+    const params = [`q=${finder}`, `${finder}=${encodeURIComponent(account.accountId)}`];
+    if (interval) {
+      if (
+        interval.start !== undefined &&
+        (!Number.isSafeInteger(interval.start) || interval.start < 0)
+      )
+        throw new SocialError({
+          code: "invalid_input",
+          operation: "analytics.organization.read",
+          message: "Interval start must be a nonnegative epoch-millisecond integer.",
+        });
+      if (interval.end !== undefined && (!Number.isSafeInteger(interval.end) || interval.end < 0))
+        throw new SocialError({
+          code: "invalid_input",
+          operation: "analytics.organization.read",
+          message: "Interval end must be a nonnegative epoch-millisecond integer.",
+        });
+      if (
+        interval.start !== undefined &&
+        interval.end !== undefined &&
+        interval.end <= interval.start
+      )
+        throw new SocialError({
+          code: "invalid_input",
+          operation: "analytics.organization.read",
+          message: "Interval end must be after interval start.",
+        });
+      if (interval.start === undefined)
+        throw new SocialError({
+          code: "invalid_input",
+          operation: "analytics.organization.read",
+          message: "Interval start is required for time-bound organization statistics.",
+        });
+      const rangeParts = [
+        `start:${interval.start}`,
+        ...(interval.end === undefined ? [] : [`end:${interval.end}`]),
+      ];
+      const range = `(timeRange:(${rangeParts.join(",")}),timeGranularityType:${interval.granularity})`;
+      if (!["DAY", "WEEK", "MONTH"].includes(interval.granularity))
+        throw new SocialError({
+          code: "invalid_input",
+          operation: "analytics.organization.read",
+          message: "Interval granularity must be DAY, WEEK or MONTH.",
+        });
+      params.push(`timeIntervals=${range}`);
+    }
+    return `${path}?${params.join("&")}`;
+  };
+
+  const numberMap = (value: unknown): Readonly<Record<string, number>> => {
+    const row = value === undefined ? {} : object(value);
+    const output: Record<string, number> = {};
+    for (const [key, item] of Object.entries(row)) {
+      const number = optionalNumber(item);
+      if (number !== undefined) output[key] = number;
+      else if (item !== null && typeof item === "object" && !Array.isArray(item)) {
+        const nestedObject = object(item);
+        const nested = ["pageViews", "uniquePageViews", "clicks", "count"]
+          .map((name) => optionalNumber(nestedObject[name]))
+          .find((candidate) => candidate !== undefined);
+        if (nested !== undefined) output[key] = nested;
+        else {
+          for (const [nestedKey, nestedValue] of Object.entries(nestedObject)) {
+            const nestedNumber = optionalNumber(nestedValue);
+            if (nestedNumber !== undefined) output[`${key}.${nestedKey}`] = nestedNumber;
+          }
+        }
+      }
+    }
+    return output;
+  };
+
+  const followerBreakdowns = (row: Record<string, unknown>): LinkedInFollowerBreakdown[] => {
+    const dimensions = [
+      ["function", "followerCountsByFunction", "function"],
+      ["seniority", "followerCountsBySeniority", "seniority"],
+      ["industry", "followerCountsByIndustry", "industry"],
+      ["geo", "followerCountsByGeo", "geo"],
+      ["geoCountry", "followerCountsByGeoCountry", "geo"],
+      ["staffCountRange", "followerCountsByStaffCountRange", "staffCountRange"],
+      ["associationType", "followerCountsByAssociationType", "associationType"],
+    ] as const;
+    const output: LinkedInFollowerBreakdown[] = [];
+    for (const [dimension, field, key] of dimensions) {
+      if (row[field] === undefined) continue;
+      for (const value of array(row[field])) {
+        const item = object(value);
+        const label = optionalString(item[key]);
+        if (!label) continue;
+        const counts = item["followerCounts"] === undefined ? {} : object(item["followerCounts"]);
+        output.push({
+          dimension,
+          value: label,
+          ...(optionalNumber(counts["organicFollowerCount"]) === undefined
+            ? {}
+            : { organicFollowerCount: optionalNumber(counts["organicFollowerCount"]) }),
+          ...(optionalNumber(counts["paidFollowerCount"]) === undefined
+            ? {}
+            : { paidFollowerCount: optionalNumber(counts["paidFollowerCount"]) }),
+        });
+      }
+    }
+    return output;
+  };
+
+  const parseInterval = (
+    row: Record<string, unknown>,
+    requestedGranularity?: LinkedInTimeInterval["granularity"],
+  ): LinkedInTimeInterval | undefined => {
+    if (row["timeRange"] === undefined) return undefined;
+    const range = object(row["timeRange"]);
+    const start = optionalNumber(range["start"]);
+    const end = optionalNumber(range["end"]);
+    const granularity = requestedGranularity ?? optionalString(row["timeGranularityType"]);
+    if (
+      (granularity !== "DAY" && granularity !== "WEEK" && granularity !== "MONTH") ||
+      (start === undefined && end === undefined)
+    )
+      return undefined;
+    return {
+      granularity,
+      ...(start === undefined ? {} : { start }),
+      ...(end === undefined ? {} : { end }),
+    };
+  };
+
+  const parseFollowerStatistics = (
+    result: Record<string, unknown>,
+    requestedGranularity?: LinkedInTimeInterval["granularity"],
+  ): LinkedInFollowerStatistics[] =>
+    array(result["elements"]).map((value) => {
+      const row = object(value);
+      const gains = row["followerGains"] === undefined ? {} : object(row["followerGains"]);
+      return {
+        organization: string(row["organizationalEntity"]),
+        ...(parseInterval(row, requestedGranularity) === undefined
+          ? {}
+          : { interval: parseInterval(row, requestedGranularity) }),
+        ...(optionalNumber(gains["organicFollowerGain"]) === undefined
+          ? {}
+          : { organicFollowerGain: optionalNumber(gains["organicFollowerGain"]) }),
+        ...(optionalNumber(gains["paidFollowerGain"]) === undefined
+          ? {}
+          : { paidFollowerGain: optionalNumber(gains["paidFollowerGain"]) }),
+        breakdowns: followerBreakdowns(row),
+      };
+    });
+
+  const pageBreakdowns = (row: Record<string, unknown>) => {
+    const output: LinkedInPageStatistics["breakdowns"] = [];
+    for (const [field, dimension, key] of [
+      ["pageStatisticsByFunction", "function", "function"],
+      ["pageStatisticsBySeniority", "seniority", "seniority"],
+      ["pageStatisticsByIndustryV2", "industryV2", "industryV2"],
+      ["pageStatisticsByIndustry", "industry", "industry"],
+      ["pageStatisticsByGeo", "geo", "geo"],
+      ["pageStatisticsByGeoCountry", "geoCountry", "geo"],
+      ["pageStatisticsByStaffCountRange", "staffCountRange", "staffCountRange"],
+    ] as const) {
+      if (row[field] === undefined) continue;
+      for (const value of array(row[field])) {
+        const item = object(value);
+        const label = optionalString(item[key]);
+        if (!label) continue;
+        const stats = item["pageStatistics"] === undefined ? {} : object(item["pageStatistics"]);
+        const views = stats["views"] === undefined ? {} : object(stats["views"]);
+        const clicks = stats["clicks"] === undefined ? {} : object(stats["clicks"]);
+        output.push({
+          dimension,
+          value: label,
+          views: numberMap(views),
+          clicks: numberMap(clicks),
+        });
+      }
+    }
+    return output;
+  };
+
+  const parsePageStatistics = (
+    result: Record<string, unknown>,
+    requestedGranularity?: LinkedInTimeInterval["granularity"],
+  ): LinkedInPageStatistics[] =>
+    array(result["elements"]).map((value) => {
+      const row = object(value);
+      const total =
+        row["totalPageStatistics"] === undefined ? {} : object(row["totalPageStatistics"]);
+      return {
+        organization: string(row["organization"]),
+        ...(parseInterval(row, requestedGranularity) === undefined
+          ? {}
+          : { interval: parseInterval(row, requestedGranularity) }),
+        views: numberMap(total["views"]),
+        clicks: numberMap(total["clicks"]),
+        breakdowns: pageBreakdowns(row),
+      };
+    });
+
+  const parseShareStatistics = (
+    result: Record<string, unknown>,
+    requestedGranularity?: LinkedInTimeInterval["granularity"],
+  ): LinkedInShareStatistics[] =>
+    array(result["elements"]).map((value) => {
+      const row = object(value);
+      return {
+        organization: string(row["organizationalEntity"]),
+        ...(parseInterval(row, requestedGranularity) === undefined
+          ? {}
+          : { interval: parseInterval(row, requestedGranularity) }),
+        metrics: numberMap(row["totalShareStatistics"]),
+      };
+    });
+
+  /* oxlint-enable anti-slop/no-unknown-parameters, anti-slop/no-unsafe-dictionary-type, anti-slop/no-known-value-widening, anti-slop/no-conditional-empty-object-spread, anti-slop/no-runtime-typeof */
+
   return defineAdapter({
     id: "linkedin",
     capabilities: {
@@ -283,16 +601,20 @@ export function linkedin(
         {
           platform: "linkedin",
           operation: "posts.multi-image",
-          availability: "available" as const,
+          availability: "not-implemented-by-adapter" as const,
           formats: ["carousel" as const],
         },
         {
           platform: "linkedin",
           operation: "posts.video",
-          availability: "available" as const,
+          availability: "not-implemented-by-adapter" as const,
           formats: ["video" as const],
         },
-        { platform: "linkedin", operation: "posts.document", availability: "available" as const },
+        {
+          platform: "linkedin",
+          operation: "posts.document",
+          availability: "not-implemented-by-adapter" as const,
+        },
         { platform: "linkedin", operation: "polls.create", availability: "available" as const },
         { platform: "linkedin", operation: "reactions.write", availability: "available" as const },
         { platform: "linkedin", operation: "reshares.write", availability: "available" as const },
@@ -300,8 +622,18 @@ export function linkedin(
         { platform: "linkedin", operation: "posts.delete", availability: "available" as const },
         {
           platform: "linkedin",
+          operation: "posts.removeFromPlatform",
+          availability: "available" as const,
+        },
+        {
+          platform: "linkedin",
           operation: "analytics.organization.read",
-          availability: "permission-required" as const,
+          availability: options.auth.author.startsWith("urn:li:organization:")
+            ? ("available" as const)
+            : ("account-ineligible" as const),
+          requiredScopes: ["rw_organization_admin"],
+          notes:
+            "Requires the Community Management API product and organization administrator access. Member accounts are not eligible.",
         },
         {
           platform: "linkedin",
@@ -323,6 +655,18 @@ export function linkedin(
           notes:
             "Organization total followers only; authenticated member must administer the organization. No member-profile analytics claimed.",
         },
+        ...["analytics.followers.read", "analytics.page.read", "analytics.shares.read"].map(
+          (operation) => ({
+            platform: "linkedin" as const,
+            operation,
+            availability: options.auth.author.startsWith("urn:li:organization:")
+              ? ("available" as const)
+              : ("account-ineligible" as const),
+            requiredScopes: ["rw_organization_admin"],
+            notes:
+              "Community Management API product and organization administrator access are required. Member accounts are not eligible.",
+          }),
+        ),
         {
           platform: "linkedin",
           operation: "posts.list",
@@ -332,7 +676,7 @@ export function linkedin(
               ? "r_organization_social"
               : "r_member_social",
           ],
-          notes: "Author feed requires approved read access for the configured author.",
+          notes: "Author-feed pagination uses the returned offset cursor.",
         },
         {
           platform: "linkedin",
@@ -341,9 +685,12 @@ export function linkedin(
           formats: ["image" as const],
         },
         ...["comments.read", "comments.write", "analytics.read"].map((operation) => ({
-          platform: "linkedin",
+          platform: "linkedin" as const,
           operation,
           availability: "available" as const,
+          ...(operation === "analytics.read"
+            ? { requiredScopes: ["r_member_social"] }
+            : { requiredScopes: ["w_member_social", "r_member_social"] }),
           notes:
             "Community Management product permissions and author post read access required. Analytics contains returned social-action counts only.",
         })),
@@ -419,18 +766,32 @@ export function linkedin(
         if (media?.source.kind === "media-ref") {
           authorize(media.source.ref, context);
 
-          const image = object(
-            await request(`/rest/images/${encodeURIComponent(media.source.ref.mediaId)}`, context),
-          );
+          let image: JsonObject | undefined;
+          try {
+            // SAFETY: object() validates the upstream response as a JSON object.
+            image = object(
+              await request(
+                `/rest/images/${encodeURIComponent(media.source.ref.mediaId)}`,
+                context,
+              ),
+            ) as JsonObject;
+          } catch (error) {
+            if (
+              !(error instanceof SocialError) ||
+              error.code !== "missing_permission" ||
+              !options.auth.author.startsWith("urn:li:person:")
+            )
+              throw error;
+          }
 
-          if (image["owner"] !== target.account.accountId)
+          if (image?.["owner"] !== undefined && image["owner"] !== target.account.accountId)
             throw new SocialError({
               code: "unauthorized",
               operation: "posts.publish",
               message: "LinkedIn image belongs to a different author.",
             });
 
-          if (image["status"] !== "AVAILABLE")
+          if (image?.["status"] !== undefined && image["status"] !== "AVAILABLE")
             throw new SocialError({
               code: "media_error",
               operation: "posts.publish",
@@ -451,7 +812,7 @@ export function linkedin(
             context,
             {
               author: target.account.accountId,
-              commentary: target.content.text ?? "",
+              commentary: escapeCommentary(target.content.text ?? ""),
               visibility: "PUBLIC",
               distribution: {
                 feedDistribution: "MAIN_FEED",
@@ -571,6 +932,16 @@ export function linkedin(
             : {}),
         };
       },
+      async removeFromPlatform(ref: PlatformPostRef, context: AdapterOperationContext) {
+        authorize(ref, context);
+        await request(
+          `/rest/posts/${encodeURIComponent(ref.postId)}`,
+          context,
+          undefined,
+          undefined,
+          "DELETE",
+        );
+      },
     },
     comments: {
       async list(
@@ -635,7 +1006,7 @@ export function linkedin(
             message: "Provide a comment of 1 to 1,250 characters.",
           });
         await readCommentablePost({ ...ref, kind: "platform-post" }, context);
-        const match = /^urn:li:comment:\(urn:li:activity:\d+,(\d+)\)$/.exec(ref.commentId);
+        const match = /^urn:li:comment:\(urn:li:activity:(\d+),(\d+)\)$/.exec(ref.commentId);
 
         if (!match)
           throw new SocialError({
@@ -646,7 +1017,7 @@ export function linkedin(
 
         const parent = object(
           await request(
-            `/rest/socialActions/${encodeURIComponent(ref.postId)}/comments/${match[1]}`,
+            `/rest/socialActions/${encodeURIComponent(ref.postId)}/comments/${match[2]}`,
             context,
           ),
         );
@@ -658,8 +1029,12 @@ export function linkedin(
             message: "Comment does not belong to the supplied post.",
           });
 
-        // oxlint-disable-next-line anti-slop/no-runtime-typeof -- validated boundary or fixture contract.
-        if (typeof parent["object"] === "string" && parent["object"] !== ref.postId)
+        const parentObject = optionalString(parent["object"]);
+        if (
+          parentObject !== undefined &&
+          parentObject !== ref.postId &&
+          parentObject !== `urn:li:activity:${match[1]}`
+        )
           throw new SocialError({
             code: "unauthorized",
             operation: "comments.write",
@@ -788,42 +1163,78 @@ export function linkedin(
 
         return publicFields(image, ["id", "owner", "status"]);
       },
-      async registerVideo({ account, byteSize, context }) {
+      async registerVideo({ account, context }) {
         authorize(account, context);
-
-        // oxlint-disable-next-line anti-slop/require-safety-comment-for-type-assertion -- validated boundary or fixture contract.
-        return (await request("/rest/videos?action=initializeUpload", context, {
-          initializeUploadRequest: { owner: account.accountId, fileSizeBytes: byteSize },
-        })) as JsonObject;
+        throw new SocialError({
+          code: "unsupported_capability",
+          operation: "posts.video",
+          message: "LinkedIn video publishing is not implemented by this adapter.",
+        });
       },
-      async createPoll({ account, text, options: pollOptions, context }) {
+      async createPoll({ account, text, options: pollOptions, duration = "THREE_DAYS", context }) {
         authorize(account, context);
 
-        // oxlint-disable-next-line anti-slop/require-safety-comment-for-type-assertion -- validated boundary or fixture contract.
-        return (await request("/rest/posts", context, {
-          author: account.accountId,
-          commentary: text,
-          distribution: { feedDistribution: "MAIN_FEED" },
-          content: { poll: { question: text, options: [...pollOptions] } },
-        })) as JsonObject;
+        const result = object(
+          await request(
+            "/rest/posts",
+            context,
+            {
+              author: account.accountId,
+              commentary: escapeCommentary(text),
+              visibility: "PUBLIC",
+              distribution: {
+                feedDistribution: "MAIN_FEED",
+                targetEntities: [],
+                thirdPartyDistributionChannels: [],
+              },
+              lifecycleState: "PUBLISHED",
+              content: {
+                poll: {
+                  question: text,
+                  options: pollOptions.map((option) => ({ text: option })),
+                  settings: { duration },
+                },
+              },
+            },
+            ["x-restli-id"],
+          ),
+        );
+        const id = optionalString(object(result["headers"])["x-restli-id"]);
+        // SAFETY: result is validated as a JSON object and id is a JSON string.
+        return (id === undefined ? result : { ...result, id }) as JsonObject;
       },
       async react({ account, postId, reaction, context }) {
         authorize(account, context);
-        await request(`/rest/reactions`, context, {
+        await request(`/rest/reactions?actor=${encodeURIComponent(account.accountId)}`, context, {
           root: postId,
           reactionType: reaction,
-          actor: account.accountId,
         });
       },
       async reshare({ account, postId, context }) {
         authorize(account, context);
 
-        // oxlint-disable-next-line anti-slop/require-safety-comment-for-type-assertion -- validated boundary or fixture contract.
-        return (await request("/rest/posts", context, {
-          author: account.accountId,
-          resharedPost: postId,
-          commentary: "",
-        })) as JsonObject;
+        const result = object(
+          await request(
+            "/rest/posts",
+            context,
+            {
+              author: account.accountId,
+              commentary: "",
+              visibility: "PUBLIC",
+              distribution: {
+                feedDistribution: "MAIN_FEED",
+                targetEntities: [],
+                thirdPartyDistributionChannels: [],
+              },
+              lifecycleState: "PUBLISHED",
+              reshareContext: { parent: postId },
+            },
+            ["x-restli-id"],
+          ),
+        );
+        const id = optionalString(object(result["headers"])["x-restli-id"]);
+        // SAFETY: result is validated as a JSON object and id is a JSON string.
+        return (id === undefined ? result : { ...result, id }) as JsonObject;
       },
       async updatePost({ account, postId, body, context }) {
         authorize(account, context);
@@ -832,9 +1243,10 @@ export function linkedin(
         return (await request(
           `/rest/posts/${encodeURIComponent(postId)}`,
           context,
-          body,
-          undefined,
-          "PUT",
+          { patch: { $set: body } },
+          ["x-restli-id"],
+          "POST",
+          { "X-RestLi-Method": "PARTIAL_UPDATE" },
         )) as JsonObject;
       },
       async deletePost({ account, postId, context }) {
@@ -847,7 +1259,7 @@ export function linkedin(
           "DELETE",
         );
       },
-      async organizationAnalytics({ account, query, context }) {
+      async organizationAnalytics({ account, context }) {
         authorize(account, context);
 
         if (!account.accountId.startsWith("urn:li:organization:"))
@@ -861,8 +1273,63 @@ export function linkedin(
         return (await request(
           `/rest/organizationalEntityShareStatistics?q=organizationalEntity&organizationalEntity=${encodeURIComponent(account.accountId)}`,
           context,
-          query,
         )) as JsonObject;
+      },
+      async getOrganizationFollowerStatistics({ account, interval, context }) {
+        organizationOnly(account, context, "analytics.followers.read");
+        return parseFollowerStatistics(
+          object(
+            await request(
+              statisticsPath(
+                "/rest/organizationalEntityFollowerStatistics",
+                "organizationalEntity",
+                account,
+                interval,
+              ),
+              context,
+            ),
+          ),
+          interval?.granularity,
+        );
+      },
+      async getOrganizationPageStatistics({ account, interval, context }) {
+        organizationOnly(account, context, "analytics.page.read");
+        return parsePageStatistics(
+          object(
+            await request(
+              statisticsPath("/rest/organizationPageStatistics", "organization", account, interval),
+              context,
+            ),
+          ),
+          interval?.granularity,
+        );
+      },
+      async getOrganizationShareStatistics({ account, interval, context }) {
+        organizationOnly(account, context, "analytics.shares.read");
+        return parseShareStatistics(
+          object(
+            await request(
+              statisticsPath(
+                "/rest/organizationalEntityShareStatistics",
+                "organizationalEntity",
+                account,
+                interval,
+              ),
+              context,
+            ),
+          ),
+          interval?.granularity,
+        );
+      },
+      async getOrganizationFollowerCount({ account, context }) {
+        organizationOnly(account, context, "analytics.account.read");
+        const response = object(
+          await request(
+            `/rest/networkSizes/${encodeURIComponent(account.accountId)}?edgeType=COMPANY_FOLLOWED_BY_MEMBER`,
+            context,
+          ),
+        );
+        return optionalNumber(response["firstDegreeSize"]);
       },
     },
   });

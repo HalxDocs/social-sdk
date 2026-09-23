@@ -1,9 +1,12 @@
-/* oxlint-disable anti-slop/no-conditional-empty-object-spread -- validated external boundary or fixture contract. */
+/* oxlint-disable anti-slop/no-conditional-empty-object-spread, anti-slop/no-runtime-typeof, anti-slop/require-safety-comment-for-type-assertion, anti-slop/require-readable-spacing, anti-slop/no-chained-type-assertions -- validated external boundary or fixture contract. */
 import { remainingBudget } from "../transport/budget.js";
 import { defineAdapter } from "../core/adapter.js";
 import { SocialError } from "../core/errors.js";
 import type {
   AccountRecord,
+  AnalyticsReport,
+  AnalyticsReportQuery,
+  AnalyticsReportRow,
   AdapterOperationContext,
   CommentRef,
   ConnectedAccountRef,
@@ -11,10 +14,13 @@ import type {
   JsonObject,
   MediaAttachment,
   MetricValue,
+  Page,
   PlatformPostRef,
   PreparedPublishTarget,
+  SearchPostsInput,
 } from "../core/types.js";
 import { managedHttp, publicFields } from "../cloud/common.js";
+import { createHttp, HttpError } from "../transport/http.js";
 import { array, object, optionalString, string } from "../transport/validation.js";
 import {
   beginYouTubeUpload,
@@ -49,16 +55,69 @@ export interface YouTubeNative {
     readonly context: AdapterOperationContext;
   }) => Promise<JsonObject>;
   readonly captions: (input: {
-    readonly action: "list" | "insert" | "delete";
+    readonly action: "list" | "insert" | "update" | "delete" | "download";
     readonly videoId: string;
     readonly caption?: MediaAttachment;
     readonly captionId?: string;
+    readonly body?: JsonObject;
     readonly context: AdapterOperationContext;
-  }) => Promise<JsonObject>;
+  }) => Promise<JsonObject | Blob>;
   readonly playlists: (input: {
     readonly action: "list" | "insert" | "update" | "delete";
     readonly playlistId?: string;
+    readonly channelId?: string;
+    readonly mine?: boolean;
+    readonly pageToken?: string;
+    readonly maxResults?: number;
     readonly body?: JsonObject;
+    readonly context: AdapterOperationContext;
+  }) => Promise<JsonObject>;
+  readonly playlistItems: (input: {
+    readonly action: "list" | "insert" | "update" | "delete";
+    readonly playlistId?: string;
+    readonly playlistItemId?: string;
+    readonly body?: JsonObject;
+    readonly pageToken?: string;
+    readonly context: AdapterOperationContext;
+  }) => Promise<JsonObject>;
+  readonly rateVideo: (input: {
+    readonly videoId: string;
+    readonly rating: "like" | "dislike" | "none";
+    readonly context: AdapterOperationContext;
+  }) => Promise<void>;
+  readonly getRating: (input: {
+    readonly videoIds: readonly string[];
+    readonly context: AdapterOperationContext;
+  }) => Promise<JsonObject>;
+  readonly subscriptions: (input: {
+    readonly action: "list" | "insert" | "delete";
+    readonly subscriptionId?: string;
+    readonly channelId?: string;
+    readonly pageToken?: string;
+    readonly context: AdapterOperationContext;
+  }) => Promise<JsonObject>;
+  readonly search: (input: {
+    readonly q: string;
+    readonly type?: string;
+    readonly channelId?: string;
+    readonly order?: string;
+    readonly publishedAfter?: string;
+    readonly publishedBefore?: string;
+    readonly pageToken?: string;
+    readonly maxResults?: number;
+    readonly context: AdapterOperationContext;
+  }) => Promise<JsonObject>;
+  readonly commentsModeration: (input: {
+    readonly action: "setModerationStatus" | "delete" | "update";
+    readonly commentId: string;
+    readonly moderationStatus?: "published" | "heldForReview" | "rejected";
+    readonly banAuthor?: boolean;
+    readonly body?: JsonObject;
+    readonly context: AdapterOperationContext;
+  }) => Promise<JsonObject | void>;
+  readonly heldComments: (input: {
+    readonly pageToken?: string;
+    readonly maxResults?: number;
     readonly context: AdapterOperationContext;
   }) => Promise<JsonObject>;
   readonly updateVideo: (input: {
@@ -78,6 +137,7 @@ export interface YouTubeNative {
     readonly action: "list" | "insert" | "transition";
     readonly body?: JsonObject;
     readonly id?: string;
+    readonly broadcastStatus?: "testing" | "live" | "complete";
     readonly context: AdapterOperationContext;
   }) => Promise<JsonObject>;
 }
@@ -95,6 +155,10 @@ export function youtube(
     apiKey: options.auth.accessToken,
     // oxlint-disable-next-line anti-slop/no-conditional-empty-object-spread -- validated boundary or fixture contract.
     ...(options.fetch ? { fetch: options.fetch } : {}),
+  });
+  const binaryRequest = createHttp({
+    ...(options.fetch ? { fetch: options.fetch } : {}),
+    timeoutMs: 30_000,
   });
 
   const now = () => (options.clock?.() ?? new Date()).toISOString();
@@ -239,6 +303,67 @@ export function youtube(
     };
   };
 
+  const nativeAuthorize = (context: AdapterOperationContext) =>
+    authorize(
+      { backend: context.backendInstance, platform: "youtube", accountId: options.auth.channelId },
+      context,
+    );
+
+  const mediaBlob = (media: MediaAttachment | undefined): Blob => {
+    if (!media || media.source.kind !== "blob")
+      throw new SocialError({
+        code: "invalid_input",
+        operation: "native",
+        message: "This YouTube operation requires a Blob media source.",
+      });
+    return media.source.blob;
+  };
+
+  const binaryJson = async (
+    path: string,
+    context: AdapterOperationContext,
+    body: BodyInit,
+    query: Record<string, string>,
+    method: "POST" | "PUT" = "POST",
+    contentType?: string,
+  ): Promise<JsonObject> => {
+    const url = new URL(`https://www.googleapis.com${path}`);
+    for (const [key, value] of Object.entries(query)) url.searchParams.set(key, value);
+    try {
+      const result = await binaryRequest({
+        url,
+        method,
+        body,
+        headers: {
+          Authorization: `Bearer ${options.auth.accessToken}`,
+          ...(contentType ? { "Content-Type": contentType } : {}),
+        },
+        timeoutMs: remainingBudget(context),
+        ...(context.signal ? { signal: context.signal } : {}),
+      });
+      return object(result) as JsonObject;
+    } catch (error) {
+      if (!(error instanceof HttpError)) throw error;
+      const ambiguous = error.dispatched && (error.kind !== "http" || (error.status ?? 0) >= 500);
+      throw new SocialError({
+        code: ambiguous
+          ? "ambiguous_outcome"
+          : error.status === 401
+            ? "reconnect_required"
+            : error.status === 403
+              ? "missing_permission"
+              : error.status === 429
+                ? "rate_limited"
+                : "upstream_failure",
+        operation: path,
+        message: error.message,
+        upstreamStatus: error.status,
+        retryDisposition: ambiguous ? { kind: "reconcile-first" } : { kind: "never" },
+        cause: error,
+      });
+    }
+  };
+
   return defineAdapter({
     id: "youtube",
     capabilities: {
@@ -275,12 +400,61 @@ export function youtube(
           platform: "youtube",
           availability: "available",
           requiredScopes: ["https://www.googleapis.com/auth/youtube.upload"],
+          notes: "Scheduled videos are uploaded private with a future ISO publishAt timestamp.",
+        },
+        {
+          operation: "posts.removeFromPlatform",
+          platform: "youtube",
+          availability: "available",
+          requiredScopes: ["https://www.googleapis.com/auth/youtube"],
+        },
+        {
+          operation: "playlists.read",
+          platform: "youtube",
+          availability: "available",
+          requiredScopes: ["https://www.googleapis.com/auth/youtube.readonly"],
+        },
+        {
+          operation: "playlists.write",
+          platform: "youtube",
+          availability: "available",
+          requiredScopes: ["https://www.googleapis.com/auth/youtube"],
         },
         {
           operation: "thumbnails.write",
           platform: "youtube",
           availability: "available",
           requiredScopes: ["https://www.googleapis.com/auth/youtube"],
+        },
+        {
+          operation: "videos.update",
+          platform: "youtube",
+          availability: "available",
+          requiredScopes: ["https://www.googleapis.com/auth/youtube"],
+        },
+        {
+          operation: "posts.update",
+          platform: "youtube",
+          availability: "available",
+          requiredScopes: ["https://www.googleapis.com/auth/youtube"],
+        },
+        {
+          operation: "videos.delete",
+          platform: "youtube",
+          availability: "available",
+          requiredScopes: ["https://www.googleapis.com/auth/youtube"],
+        },
+        {
+          operation: "posts.delete",
+          platform: "youtube",
+          availability: "available",
+          requiredScopes: ["https://www.googleapis.com/auth/youtube"],
+        },
+        {
+          operation: "videos.rate",
+          platform: "youtube",
+          availability: "available",
+          requiredScopes: ["https://www.googleapis.com/auth/youtube.force-ssl"],
         },
         {
           operation: "captions.read",
@@ -294,17 +468,53 @@ export function youtube(
           availability: "available",
           requiredScopes: ["https://www.googleapis.com/auth/youtube.force-ssl"],
         },
-        { operation: "playlists.read", platform: "youtube", availability: "available" },
-        { operation: "playlists.write", platform: "youtube", availability: "available" },
-        { operation: "posts.update", platform: "youtube", availability: "available" },
-        { operation: "posts.delete", platform: "youtube", availability: "available" },
+        {
+          operation: "subscriptions.read",
+          platform: "youtube",
+          availability: "available",
+          requiredScopes: ["https://www.googleapis.com/auth/youtube.readonly"],
+        },
+        {
+          operation: "subscriptions.write",
+          platform: "youtube",
+          availability: "available",
+          requiredScopes: ["https://www.googleapis.com/auth/youtube"],
+        },
+        { operation: "search.keyword", platform: "youtube", availability: "available" },
+        {
+          operation: "search.posts",
+          platform: "youtube",
+          availability: "available",
+          requiredScopes: ["https://www.googleapis.com/auth/youtube.readonly"],
+          notes: "Uses search.list with type=video. Each request costs 100 quota units.",
+        },
+        {
+          operation: "comments.moderate",
+          platform: "youtube",
+          availability: "available",
+          requiredScopes: ["https://www.googleapis.com/auth/youtube.force-ssl"],
+        },
         {
           operation: "analytics.youtube.read",
           platform: "youtube",
           availability: "available",
           requiredScopes: ["https://www.googleapis.com/auth/yt-analytics.readonly"],
         },
-        { operation: "live.broadcasts", platform: "youtube", availability: "approval-dependent" },
+        {
+          operation: "analytics.report.read",
+          platform: "youtube",
+          availability: "available",
+          requiredScopes: ["https://www.googleapis.com/auth/yt-analytics.readonly"],
+          notes: "Reports require an explicit bounded date range and provider-supported metrics.",
+        },
+        {
+          operation: "live.broadcasts",
+          platform: "youtube",
+          availability: "available",
+          requiredScopes: ["https://www.googleapis.com/auth/youtube"],
+          notes:
+            "The channel must have live streaming enabled in YouTube Studio. Use native access: liveBroadcasts.",
+        },
       ],
     },
     accounts: {
@@ -445,7 +655,8 @@ export function youtube(
           // oxlint-disable-next-line anti-slop/no-runtime-typeof -- validated boundary or fixture contract.
           typeof config["title"] !== "string" ||
           !config["title"] ||
-          [...config["title"]].length > 100
+          [...config["title"]].length > 100 ||
+          /[<>]/u.test(config["title"])
         )
           fail("youtube.title", "Select a title of 1 to 100 characters.");
 
@@ -456,11 +667,20 @@ export function youtube(
         if (typeof config["madeForKids"] !== "boolean")
           fail("youtube.audience", "Explicit made-for-kids declaration is required.");
 
-        if (target.schedule || target.replyTo)
-          fail(
-            "youtube.operation",
-            "Use a job runner for scheduling or comments.reply for replies.",
-          );
+        if (
+          target.content.text !== undefined &&
+          new TextEncoder().encode(target.content.text).byteLength > 5000
+        )
+          fail("youtube.description", "Description must be at most 5000 UTF-8 bytes.");
+
+        if (
+          target.schedule &&
+          (!Number.isFinite(Date.parse(target.schedule.at)) ||
+            Date.parse(target.schedule.at) <= (options.clock?.() ?? new Date()).getTime())
+        )
+          fail("youtube.schedule", "Schedule time must be a valid timestamp in the future.");
+
+        if (target.replyTo) fail("youtube.operation", "Use comments.reply for replies.");
 
         return issues;
       },
@@ -477,7 +697,7 @@ export function youtube(
         const config = object(target.options);
 
         const uploadOptions = {
-          timeoutMs: remainingBudget(context),
+          timeoutMs: Math.max(remainingBudget(context), 15 * 60_000),
           accessToken: options.auth.accessToken,
           // oxlint-disable-next-line anti-slop/no-conditional-empty-object-spread -- validated boundary or fixture contract.
           ...(options.fetch ? { fetch: options.fetch } : {}),
@@ -497,6 +717,12 @@ export function youtube(
               status: {
                 privacyStatus: string(config["visibility"]),
                 selfDeclaredMadeForKids: config["madeForKids"] === true,
+                ...(target.schedule
+                  ? {
+                      publishAt: new Date(target.schedule.at).toISOString(),
+                      privacyStatus: "private",
+                    }
+                  : {}),
               },
             },
           },
@@ -555,6 +781,56 @@ export function youtube(
         );
 
         return outcome(video, { account, targetIndex: 0 });
+      },
+      async removeFromPlatform(ref: PlatformPostRef, context: AdapterOperationContext) {
+        authorize(ref, context);
+
+        if (!ref.postId)
+          throw new SocialError({
+            code: "invalid_input",
+            operation: "posts.removeFromPlatform",
+            message: "postId is required.",
+          });
+
+        await request("/youtube/v3/videos", context, undefined, { id: ref.postId }, "DELETE");
+      },
+    },
+    search: {
+      async posts(
+        account: ConnectedAccountRef,
+        input: SearchPostsInput,
+        context: AdapterOperationContext,
+      ): Promise<Page<JsonObject>> {
+        authorize(account, context);
+        const limit = input.limit ?? 25;
+        if (input.scope !== undefined && input.scope !== "recent")
+          throw new SocialError({
+            code: "invalid_input",
+            operation: "search.posts",
+            message: "YouTube search supports only the recent scope.",
+          });
+        if (!Number.isSafeInteger(limit) || limit < 1 || limit > 50)
+          throw new SocialError({
+            code: "invalid_input",
+            operation: "search.posts",
+            message: "YouTube search limit must be between 1 and 50.",
+          });
+        const page = object(
+          await request("/youtube/v3/search", context, undefined, {
+            part: "snippet",
+            q: input.query,
+            type: "video",
+            maxResults: String(limit),
+            ...(input.cursor ? { pageToken: input.cursor } : {}),
+            ...(input.startTime ? { publishedAfter: input.startTime } : {}),
+            ...(input.endTime ? { publishedBefore: input.endTime } : {}),
+          }),
+        );
+        const nextCursor = optionalString(page["nextPageToken"]);
+        return {
+          items: array(page["items"]).map((value) => object(value)) as JsonObject[],
+          ...(nextCursor ? { nextCursor } : {}),
+        };
       },
     },
     analytics: {
@@ -632,6 +908,92 @@ export function youtube(
               ]
             : [];
         });
+      },
+      async getReport(
+        accountRef: ConnectedAccountRef,
+        query: AnalyticsReportQuery,
+        context: AdapterOperationContext,
+      ): Promise<AnalyticsReport> {
+        authorize(accountRef, context);
+
+        const date = /^\d{4}-\d{2}-\d{2}$/;
+
+        if (
+          !date.test(query.from) ||
+          !date.test(query.to) ||
+          query.from > query.to ||
+          query.metrics.length === 0 ||
+          query.metrics.some((metric) => !/^[A-Za-z][A-Za-z0-9_.-]*$/.test(metric)) ||
+          query.dimensions?.some((dimension) => !/^[A-Za-z][A-Za-z0-9_.-]*$/.test(dimension))
+        )
+          throw new SocialError({
+            code: "invalid_input",
+            operation: "analytics.report.read",
+            message:
+              "YouTube reports require YYYY-MM-DD dates (from <= to) and provider-safe metric names.",
+          });
+
+        const result = object(
+          await analyticsRequest("/v2/reports", context, undefined, {
+            ids: `channel==${options.auth.channelId}`,
+            startDate: query.from,
+            endDate: query.to,
+            metrics: query.metrics.join(","),
+            // oxlint-disable-next-line anti-slop/no-conditional-empty-object-spread -- validated boundary or fixture contract.
+            ...(query.dimensions && query.dimensions.length > 0
+              ? { dimensions: query.dimensions.join(",") }
+              : {}),
+          }),
+        );
+
+        const headers = array(result["columnHeaders"]).map((value) => {
+          const header = object(value);
+
+          return {
+            name: string(header["name"]),
+            type: optionalString(header["columnType"]) ?? "METRIC",
+          };
+        });
+
+        const rows: AnalyticsReportRow[] = [];
+
+        // Analytics omits `rows` entirely when the requested period has no data.
+        for (const value of Array.isArray(result["rows"]) ? result["rows"] : []) {
+          const cells = array(value);
+
+          const dimensions = Object.fromEntries(
+            headers.flatMap((header, index) => {
+              if (header.type !== "DIMENSION") return [];
+              const raw = cells[index];
+
+              // oxlint-disable-next-line anti-slop/no-runtime-typeof -- validated boundary or fixture contract.
+              return typeof raw === "string" || typeof raw === "number" || typeof raw === "boolean"
+                ? [[header.name, raw] as const]
+                : [];
+            }),
+          );
+
+          const metrics: Record<string, number> = {};
+
+          headers.forEach((header, index) => {
+            if (header.type === "DIMENSION") return;
+            const raw = cells[index];
+
+            // oxlint-disable-next-line anti-slop/no-runtime-typeof -- validated boundary or fixture contract.
+            const parsed =
+              typeof raw === "number"
+                ? raw
+                : typeof raw === "string" && raw.trim() !== ""
+                  ? Number(raw)
+                  : undefined;
+
+            if (parsed !== undefined && Number.isFinite(parsed)) metrics[header.name] = parsed;
+          });
+
+          rows.push({ dimensions, metrics });
+        }
+
+        return { query, rows, fetchedAt: now(), source: "youtube-analytics-v2" };
       },
     },
     comments: {
@@ -763,48 +1125,140 @@ export function youtube(
         });
       },
       async setThumbnail({ videoId, thumbnail, context }) {
-        void thumbnail;
-        authorize(
-          {
-            backend: context.backendInstance,
-            platform: "youtube",
-            accountId: options.auth.channelId,
-          },
+        nativeAuthorize(context);
+        return binaryJson(
+          "/upload/youtube/v3/thumbnails/set",
           context,
+          mediaBlob(thumbnail),
+          { videoId, uploadType: "media" },
+          "POST",
+          thumbnail.mimeType ?? "application/octet-stream",
         );
+      },
+      async captions({ action, videoId, captionId, caption, body, context }) {
+        nativeAuthorize(context);
+        if (action === "download") {
+          if (!captionId)
+            throw new SocialError({
+              code: "invalid_input",
+              operation: "captions.download",
+              message: "captionId is required.",
+            });
+          const url = new URL(
+            `https://www.googleapis.com/youtube/v3/captions/${encodeURIComponent(captionId)}`,
+          );
+          url.searchParams.set("tfmt", "vtt");
+          const response = await (options.fetch ?? globalThis.fetch)(url, {
+            headers: { Authorization: `Bearer ${options.auth.accessToken}` },
+            redirect: "error",
+            ...(context.signal ? { signal: context.signal } : {}),
+          });
+          if (!response.ok)
+            throw new SocialError({
+              code: "upstream_failure",
+              operation: "captions.download",
+              message: `YouTube returned HTTP ${response.status}.`,
+              upstreamStatus: response.status,
+              retryDisposition: { kind: "never" },
+            });
+          return response.blob();
+        }
+        if (action === "insert" || action === "update") {
+          if (!body || (action === "insert" && !caption))
+            throw new SocialError({
+              code: "invalid_input",
+              operation: `captions.${action}`,
+              message: "Caption metadata and media are required for insert.",
+            });
+          const snippet = object(body["snippet"] ?? {});
 
-        // oxlint-disable-next-line anti-slop/require-safety-comment-for-type-assertion -- validated boundary or fixture contract.
-        return object(
+          if (action === "insert" && (!videoId || (snippet["videoId"] ?? videoId) !== videoId))
+            throw new SocialError({
+              code: "invalid_input",
+              operation: "captions.insert",
+              message: "videoId is required and must match body.snippet.videoId.",
+            });
+
+          const metadata: JsonObject =
+            action === "update"
+              ? { ...body, id: captionId ?? body["id"] ?? null }
+              : { ...body, snippet: { ...snippet, videoId: videoId ?? null } };
+          if (action === "update" && typeof metadata["id"] !== "string")
+            throw new SocialError({
+              code: "invalid_input",
+              operation: "captions.update",
+              message: "captionId or body.id is required.",
+            });
+          if (action === "update" && !caption)
+            return binaryJson(
+              "/youtube/v3/captions",
+              context,
+              JSON.stringify(metadata),
+              { part: "snippet" },
+              "PUT",
+              "application/json",
+            );
+          if (!caption)
+            throw new SocialError({
+              code: "invalid_input",
+              operation: "captions.insert",
+              message: "Caption media is required.",
+            });
+          const boundary = `youtube-caption-${crypto.randomUUID()}`;
+          const media = mediaBlob(caption);
+          const filename = (caption.filename ?? "captions.vtt").replace(/[\r\n]/gu, "");
+          const encoded = new Blob([
+            `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n${JSON.stringify(metadata)}\r\n`,
+            `--${boundary}\r\nContent-Type: ${caption.mimeType ?? "text/vtt"}\r\nContent-Disposition: attachment; filename="${filename}"\r\n\r\n`,
+            media,
+            `\r\n--${boundary}--\r\n`,
+          ]);
+          return binaryJson(
+            "/upload/youtube/v3/captions",
+            context,
+            encoded,
+            { uploadType: "multipart", part: "snippet" },
+            action === "update" ? "PUT" : "POST",
+            `multipart/related; boundary=${boundary}`,
+          );
+        }
+        if (action === "delete") {
+          if (!captionId)
+            throw new SocialError({
+              code: "invalid_input",
+              operation: "captions.delete",
+              message: "captionId is required.",
+            });
           await request(
-            "/youtube/v3/thumbnails/set",
+            "/youtube/v3/captions",
             context,
             undefined,
-            { videoId, uploadType: "media" },
-            "POST",
-          ),
-        ) as JsonObject;
-      },
-      async captions({ action, videoId, captionId, context }) {
-        const method = action === "list" ? "GET" : action === "delete" ? "DELETE" : "POST";
-
-        // oxlint-disable-next-line anti-slop/require-safety-comment-for-type-assertion -- validated boundary or fixture contract.
+            { id: captionId ?? "" },
+            "DELETE",
+          );
+          return {};
+        }
         return object(
           await request(
             "/youtube/v3/captions",
             context,
-            action === "insert" ? { snippet: { videoId } } : undefined,
-            {
-              // oxlint-disable-next-line anti-slop/no-conditional-empty-object-spread -- validated boundary or fixture contract.
-              ...(action === "list" || action === "insert" ? { videoId } : {}),
-              // oxlint-disable-next-line anti-slop/no-conditional-empty-object-spread -- validated boundary or fixture contract.
-              ...(captionId ? { id: captionId } : {}),
-              part: "snippet",
-            },
-            method,
+            undefined,
+            { part: "snippet", videoId },
+            "GET",
           ),
         ) as JsonObject;
       },
-      async playlists({ action, playlistId, body, context }) {
+      async playlists({
+        action,
+        playlistId,
+        channelId,
+        mine,
+        pageToken,
+        maxResults,
+        body,
+        context,
+      }) {
+        nativeAuthorize(context);
         const method =
           action === "list"
             ? "GET"
@@ -814,32 +1268,280 @@ export function youtube(
                 ? "PUT"
                 : "POST";
 
+        if ((action === "delete" || action === "update") && !playlistId)
+          throw new SocialError({
+            code: "invalid_input",
+            operation: `playlists.${action}`,
+            message: "playlistId is required.",
+          });
+
         // oxlint-disable-next-line anti-slop/require-safety-comment-for-type-assertion -- validated boundary or fixture contract.
+        if (action === "delete") {
+          await request(
+            "/youtube/v3/playlists",
+            context,
+            undefined,
+            { id: playlistId ?? "" },
+            method,
+          );
+
+          return {};
+        }
         return object(
           await request(
             "/youtube/v3/playlists",
             context,
             body,
-            // oxlint-disable-next-line anti-slop/no-conditional-empty-object-spread -- validated boundary or fixture contract.
-            { ...(playlistId ? { id: playlistId } : {}), part: "snippet,status,contentDetails" },
+            {
+              part: "snippet,status,contentDetails",
+              ...(playlistId ? { id: playlistId } : {}),
+              ...(channelId ? { channelId } : {}),
+              ...(action === "list" && !playlistId && !channelId
+                ? { mine: "true" }
+                : mine
+                  ? { mine: "true" }
+                  : {}),
+              ...(pageToken ? { pageToken } : {}),
+              ...(maxResults ? { maxResults: String(maxResults) } : {}),
+            },
+            method,
+          ),
+        ) as JsonObject;
+      },
+      async playlistItems({ action, playlistId, playlistItemId, body, pageToken, context }) {
+        nativeAuthorize(context);
+        const method =
+          action === "list"
+            ? "GET"
+            : action === "delete"
+              ? "DELETE"
+              : action === "update"
+                ? "PUT"
+                : "POST";
+        if (action === "delete") {
+          if (!playlistItemId)
+            throw new SocialError({
+              code: "invalid_input",
+              operation: "playlistItems.delete",
+              message: "playlistItemId is required.",
+            });
+
+          await request(
+            "/youtube/v3/playlistItems",
+            context,
+            undefined,
+            { id: playlistItemId },
+            method,
+          );
+
+          return {};
+        }
+        return object(
+          await request(
+            "/youtube/v3/playlistItems",
+            context,
+            body,
+            {
+              part: "snippet,contentDetails",
+              ...(playlistId ? { playlistId } : {}),
+              ...(playlistItemId ? { id: playlistItemId } : {}),
+              ...(pageToken ? { pageToken } : {}),
+            },
             method,
           ),
         ) as JsonObject;
       },
       async updateVideo({ videoId, body, context }) {
-        // oxlint-disable-next-line anti-slop/require-safety-comment-for-type-assertion -- validated boundary or fixture contract.
+        nativeAuthorize(context);
+        if (!videoId)
+          throw new SocialError({
+            code: "invalid_input",
+            operation: "videos.update",
+            message: "videoId is required.",
+          });
+        const existing = await get(
+          {
+            kind: "platform-post",
+            version: 1,
+            backend: context.backendInstance,
+            platform: "youtube",
+            accountId: options.auth.channelId,
+            postId: videoId,
+          },
+          context,
+        );
+        const merged = {
+          ...existing,
+          ...body,
+          id: videoId,
+          snippet: { ...object(existing["snippet"]), ...object(body["snippet"] ?? {}) },
+          status: { ...object(existing["status"] ?? {}), ...object(body["status"] ?? {}) },
+        } as unknown as JsonObject;
+        return object(
+          await request("/youtube/v3/videos", context, merged, { part: "snippet,status" }, "PUT"),
+        ) as JsonObject;
+      },
+      async deleteVideo({ videoId, context }) {
+        nativeAuthorize(context);
+        if (!videoId)
+          throw new SocialError({
+            code: "invalid_input",
+            operation: "videos.delete",
+            message: "videoId is required.",
+          });
+        await request("/youtube/v3/videos", context, undefined, { id: videoId }, "DELETE");
+      },
+      async rateVideo({ videoId, rating, context }) {
+        nativeAuthorize(context);
+        await request(
+          "/youtube/v3/videos/rate",
+          context,
+          undefined,
+          { id: videoId, rating },
+          "POST",
+        );
+      },
+      async getRating({ videoIds, context }) {
+        nativeAuthorize(context);
+        return object(
+          await request("/youtube/v3/videos/getRating", context, undefined, {
+            id: videoIds.join(","),
+          }),
+        ) as JsonObject;
+      },
+      async subscriptions({ action, subscriptionId, channelId, pageToken, context }) {
+        nativeAuthorize(context);
+        const method = action === "list" ? "GET" : action === "delete" ? "DELETE" : "POST";
+        if (action === "delete" && !subscriptionId)
+          throw new SocialError({
+            code: "invalid_input",
+            operation: "subscriptions.delete",
+            message: "subscriptionId is required.",
+          });
+        const insertBody = channelId
+          ? ({
+              snippet: { resourceId: { kind: "youtube#channel", channelId } },
+            } as unknown as JsonObject)
+          : undefined;
+        if (action === "delete") {
+          await request(
+            "/youtube/v3/subscriptions",
+            context,
+            undefined,
+            { id: subscriptionId ?? "" },
+            method,
+          );
+
+          return {};
+        }
         return object(
           await request(
-            "/youtube/v3/videos",
+            "/youtube/v3/subscriptions",
             context,
-            { id: videoId, ...body },
-            { part: "snippet,status" },
+            insertBody,
+            {
+              part: "snippet,contentDetails",
+              ...(subscriptionId
+                ? { id: subscriptionId }
+                : channelId
+                  ? { channelId }
+                  : action === "list"
+                    ? { mine: "true" }
+                    : {}),
+              ...(pageToken ? { pageToken } : {}),
+            },
+            method,
+          ),
+        ) as JsonObject;
+      },
+      async search({
+        q,
+        type,
+        channelId,
+        order,
+        publishedAfter,
+        publishedBefore,
+        pageToken,
+        maxResults,
+        context,
+      }) {
+        nativeAuthorize(context);
+        return object(
+          await request("/youtube/v3/search", context, undefined, {
+            part: "snippet",
+            q,
+            ...(type ? { type } : {}),
+            ...(channelId ? { channelId } : {}),
+            ...(order ? { order } : {}),
+            ...(publishedAfter ? { publishedAfter } : {}),
+            ...(publishedBefore ? { publishedBefore } : {}),
+            ...(pageToken ? { pageToken } : {}),
+            ...(maxResults ? { maxResults: String(maxResults) } : {}),
+          }),
+        ) as JsonObject;
+      },
+      async commentsModeration({ action, commentId, moderationStatus, banAuthor, body, context }) {
+        nativeAuthorize(context);
+        if (!commentId)
+          throw new SocialError({
+            code: "invalid_input",
+            operation: "comments.moderate",
+            message: "commentId is required.",
+          });
+        if (action === "setModerationStatus") {
+          await request(
+            "/youtube/v3/comments/setModerationStatus",
+            context,
+            undefined,
+            {
+              id: commentId,
+              moderationStatus:
+                moderationStatus ??
+                (() => {
+                  throw new SocialError({
+                    code: "invalid_input",
+                    operation: "comments.moderate",
+                    message: "moderationStatus is required.",
+                  });
+                })(),
+              ...(banAuthor ? { banAuthor: "true" } : {}),
+            },
+            "POST",
+          );
+          return;
+        }
+        if (action === "delete") {
+          await request("/youtube/v3/comments", context, undefined, { id: commentId }, "DELETE");
+          return;
+        }
+        if (!body || (body["id"] ?? commentId) !== commentId)
+          throw new SocialError({
+            code: "invalid_input",
+            operation: "comments.update",
+            message: "Provide a comment body whose id, if present, matches commentId.",
+          });
+
+        return object(
+          await request(
+            "/youtube/v3/comments",
+            context,
+            { ...body, id: commentId },
+            { part: "snippet" },
             "PUT",
           ),
         ) as JsonObject;
       },
-      async deleteVideo({ videoId, context }) {
-        await request("/youtube/v3/videos", context, undefined, { id: videoId }, "DELETE");
+      async heldComments({ pageToken, maxResults, context }) {
+        nativeAuthorize(context);
+        return object(
+          await request("/youtube/v3/commentThreads", context, undefined, {
+            part: "snippet",
+            moderationStatus: "heldForReview",
+            allThreadsRelatedToChannelId: options.auth.channelId,
+            ...(pageToken ? { pageToken } : {}),
+            ...(maxResults ? { maxResults: String(maxResults) } : {}),
+          }),
+        ) as JsonObject;
       },
       async analytics({ query, context }) {
         // oxlint-disable-next-line anti-slop/require-safety-comment-for-type-assertion -- validated boundary or fixture contract.
@@ -847,28 +1549,35 @@ export function youtube(
           await analyticsRequest("/v2/reports", context, undefined, query),
         ) as JsonObject;
       },
-      async liveBroadcasts({ action, body, id, context }) {
+      async liveBroadcasts({ action, body, id, broadcastStatus, context }) {
         if (action === "list")
           // oxlint-disable-next-line anti-slop/require-safety-comment-for-type-assertion -- validated boundary or fixture contract.
           return object(
             await request("/youtube/v3/liveBroadcasts", context, undefined, {
               part: "snippet,status",
               // oxlint-disable-next-line anti-slop/no-conditional-empty-object-spread -- validated boundary or fixture contract.
-              ...(id ? { id } : {}),
+              ...(id ? { id } : { mine: "true" }),
             }),
           ) as JsonObject;
 
-        if (action === "transition")
+        if (action === "transition") {
+          if (!id || !broadcastStatus)
+            throw new SocialError({
+              code: "invalid_input",
+              operation: "live.broadcasts",
+              message: "id and broadcastStatus are required.",
+            });
           // oxlint-disable-next-line anti-slop/require-safety-comment-for-type-assertion -- validated boundary or fixture contract.
           return object(
             await request(
               "/youtube/v3/liveBroadcasts/transition",
               context,
-              body,
-              { part: "snippet,status", id: id ?? "" },
+              undefined,
+              { part: "snippet,status", id, broadcastStatus },
               "POST",
             ),
           ) as JsonObject;
+        }
 
         // oxlint-disable-next-line anti-slop/require-safety-comment-for-type-assertion -- validated boundary or fixture contract.
         return object(

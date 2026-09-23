@@ -1,6 +1,7 @@
 import { defineConfig } from "blume";
 
 import { posthogScript } from "./analytics";
+import { platformTabsMarkdown } from "./components/platforms.ts";
 
 export default defineConfig({
   title: "Social SDK",
@@ -35,6 +36,11 @@ export default defineConfig({
         { label: "Overview", root: "/", icon: "home" },
         { label: "Install", root: "/getting-started/installation", icon: "package" },
         { label: "Quickstart", root: "/getting-started/mock-quickstart", icon: "rocket" },
+        {
+          label: "Choose an integration",
+          root: "/getting-started/choose-an-integration",
+          icon: "route",
+        },
         {
           label: "Platforms",
           icon: "globe-2",
@@ -150,6 +156,10 @@ export default defineConfig({
             { label: "Connect accounts", root: "/authentication", icon: "key-round" },
             { label: "Publish content", root: "/publishing", icon: "send" },
             { label: "Read posts and analytics", root: "/reads", icon: "chart-no-axes-combined" },
+            { label: "Search posts", root: "/reads/search", icon: "search" },
+            { label: "Social graph", root: "/reads/graph", icon: "share-2" },
+            { label: "Notifications", root: "/reads/notifications", icon: "bell" },
+            { label: "Analytics reports", root: "/reads/reports", icon: "table-2" },
             { label: "Handle comments and messages", root: "/comments", icon: "message-circle" },
             { label: "Process webhooks", root: "/events", icon: "webhook" },
             {
@@ -219,6 +229,7 @@ export default defineConfig({
   },
   ai: {
     llmsTxt: true,
+    markdownComponents: { PlatformTabs: platformTabsMarkdown },
     mcp: {
       enabled: false,
     },

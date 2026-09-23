@@ -46,6 +46,111 @@
           "availability": "available"
         },
         {
+          "operation": "analytics.account.read",
+          "platform": "*",
+          "availability": "available"
+        },
+        {
+          "operation": "analytics.report.read",
+          "platform": "*",
+          "availability": "available"
+        },
+        {
+          "operation": "search.posts",
+          "platform": "*",
+          "availability": "available"
+        },
+        {
+          "operation": "profiles.read",
+          "platform": "*",
+          "availability": "available"
+        },
+        {
+          "operation": "graph.read",
+          "platform": "*",
+          "availability": "available"
+        },
+        {
+          "operation": "graph.follow",
+          "platform": "*",
+          "availability": "available"
+        },
+        {
+          "operation": "graph.unfollow",
+          "platform": "*",
+          "availability": "available"
+        },
+        {
+          "operation": "graph.block",
+          "platform": "*",
+          "availability": "available"
+        },
+        {
+          "operation": "graph.unblock",
+          "platform": "*",
+          "availability": "available"
+        },
+        {
+          "operation": "graph.mute",
+          "platform": "*",
+          "availability": "available"
+        },
+        {
+          "operation": "graph.unmute",
+          "platform": "*",
+          "availability": "available"
+        },
+        {
+          "operation": "posts.read",
+          "platform": "*",
+          "availability": "available"
+        },
+        {
+          "operation": "posts.list",
+          "platform": "*",
+          "availability": "available"
+        },
+        {
+          "operation": "posts.cancelScheduled",
+          "platform": "*",
+          "availability": "available"
+        },
+        {
+          "operation": "posts.deleteBackendRecord",
+          "platform": "*",
+          "availability": "available"
+        },
+        {
+          "operation": "posts.removeFromPlatform",
+          "platform": "*",
+          "availability": "available"
+        },
+        {
+          "operation": "media.upload",
+          "platform": "*",
+          "availability": "available"
+        },
+        {
+          "operation": "messages.read",
+          "platform": "*",
+          "availability": "available"
+        },
+        {
+          "operation": "messages.write",
+          "platform": "*",
+          "availability": "available"
+        },
+        {
+          "operation": "notifications.read",
+          "platform": "*",
+          "availability": "available"
+        },
+        {
+          "operation": "notifications.seen",
+          "platform": "*",
+          "availability": "available"
+        },
+        {
           "operation": "webhooks.verify",
           "platform": "*",
           "availability": "available"
@@ -1366,6 +1471,110 @@
           ]
         },
         {
+          "operation": "graph.read",
+          "platform": "bluesky",
+          "availability": "available",
+          "requiredScopes": [
+            "repo"
+          ]
+        },
+        {
+          "operation": "graph.follow",
+          "platform": "bluesky",
+          "availability": "available",
+          "requiredScopes": [
+            "repo"
+          ]
+        },
+        {
+          "operation": "graph.unfollow",
+          "platform": "bluesky",
+          "availability": "available",
+          "requiredScopes": [
+            "repo"
+          ]
+        },
+        {
+          "operation": "graph.block",
+          "platform": "bluesky",
+          "availability": "available",
+          "requiredScopes": [
+            "repo"
+          ]
+        },
+        {
+          "operation": "graph.unblock",
+          "platform": "bluesky",
+          "availability": "available",
+          "requiredScopes": [
+            "repo"
+          ]
+        },
+        {
+          "operation": "graph.mute",
+          "platform": "bluesky",
+          "availability": "available",
+          "requiredScopes": [
+            "repo"
+          ]
+        },
+        {
+          "operation": "graph.unmute",
+          "platform": "bluesky",
+          "availability": "available",
+          "requiredScopes": [
+            "repo"
+          ]
+        },
+        {
+          "operation": "likes.read",
+          "platform": "bluesky",
+          "availability": "available",
+          "requiredScopes": [
+            "repo"
+          ]
+        },
+        {
+          "operation": "likes.write",
+          "platform": "bluesky",
+          "availability": "available",
+          "requiredScopes": [
+            "repo"
+          ]
+        },
+        {
+          "operation": "lists.read",
+          "platform": "bluesky",
+          "availability": "available",
+          "requiredScopes": [
+            "repo"
+          ]
+        },
+        {
+          "operation": "lists.write",
+          "platform": "bluesky",
+          "availability": "available",
+          "requiredScopes": [
+            "repo"
+          ]
+        },
+        {
+          "operation": "profiles.search",
+          "platform": "bluesky",
+          "availability": "available",
+          "requiredScopes": [
+            "repo"
+          ]
+        },
+        {
+          "operation": "moderation.report",
+          "platform": "bluesky",
+          "availability": "available",
+          "requiredScopes": [
+            "repo"
+          ]
+        },
+        {
           "operation": "posts.list",
           "platform": "bluesky",
           "availability": "available",
@@ -1410,7 +1619,7 @@
         {
           "operation": "posts.publish.video",
           "platform": "bluesky",
-          "availability": "available",
+          "availability": "not-implemented-by-adapter",
           "formats": [
             "video"
           ],
@@ -1434,17 +1643,7 @@
           "availability": "available"
         },
         {
-          "operation": "graph.follow",
-          "platform": "bluesky",
-          "availability": "available"
-        },
-        {
-          "operation": "graph.block",
-          "platform": "bluesky",
-          "availability": "available"
-        },
-        {
-          "operation": "graph.mute",
+          "operation": "posts.removeFromPlatform",
           "platform": "bluesky",
           "availability": "available"
         },
@@ -1464,12 +1663,22 @@
           "availability": "available"
         },
         {
+          "operation": "profiles.read",
+          "platform": "bluesky",
+          "availability": "available"
+        },
+        {
           "operation": "profile.update",
           "platform": "bluesky",
           "availability": "available"
         },
         {
           "operation": "feeds.read",
+          "platform": "bluesky",
+          "availability": "available"
+        },
+        {
+          "operation": "search.posts",
           "platform": "bluesky",
           "availability": "available"
         },
@@ -1504,8 +1713,7 @@
           "availability": "available",
           "formats": [
             "text",
-            "image",
-            "video"
+            "image"
           ],
           "requiredScopes": [
             "tweet.read",
@@ -1523,7 +1731,11 @@
         {
           "platform": "x",
           "operation": "posts.list",
-          "availability": "available"
+          "availability": "available",
+          "requiredScopes": [
+            "tweet.read",
+            "users.read"
+          ]
         },
         {
           "platform": "x",
@@ -1533,6 +1745,11 @@
         {
           "platform": "x",
           "operation": "analytics.read",
+          "availability": "available"
+        },
+        {
+          "platform": "x",
+          "operation": "analytics.account.read",
           "availability": "available"
         },
         {
@@ -1548,12 +1765,22 @@
         {
           "platform": "x",
           "operation": "posts.quote",
-          "availability": "available"
+          "availability": "available",
+          "requiredScopes": [
+            "tweet.read",
+            "tweet.write",
+            "users.read"
+          ]
         },
         {
           "platform": "x",
           "operation": "posts.delete",
-          "availability": "available"
+          "availability": "available",
+          "requiredScopes": [
+            "tweet.read",
+            "tweet.write",
+            "users.read"
+          ]
         },
         {
           "platform": "x",
@@ -1577,8 +1804,198 @@
         },
         {
           "platform": "x",
-          "operation": "media.video",
+          "operation": "mentions.read",
           "availability": "available",
+          "requiredScopes": [
+            "tweet.read",
+            "users.read"
+          ]
+        },
+        {
+          "platform": "x",
+          "operation": "likes.read",
+          "availability": "available",
+          "requiredScopes": [
+            "like.read",
+            "tweet.read",
+            "users.read"
+          ]
+        },
+        {
+          "platform": "x",
+          "operation": "likes.write",
+          "availability": "available",
+          "requiredScopes": [
+            "like.write",
+            "tweet.read",
+            "users.read"
+          ]
+        },
+        {
+          "platform": "x",
+          "operation": "lists.read",
+          "availability": "available",
+          "requiredScopes": [
+            "list.read",
+            "tweet.read",
+            "users.read"
+          ]
+        },
+        {
+          "platform": "x",
+          "operation": "lists.write",
+          "availability": "available",
+          "requiredScopes": [
+            "list.write",
+            "tweet.read",
+            "users.read"
+          ]
+        },
+        {
+          "platform": "x",
+          "operation": "timelines.read",
+          "availability": "available",
+          "requiredScopes": [
+            "tweet.read",
+            "users.read"
+          ]
+        },
+        {
+          "platform": "x",
+          "operation": "posts.removeFromPlatform",
+          "availability": "available",
+          "requiredScopes": [
+            "tweet.read",
+            "tweet.write",
+            "users.read"
+          ]
+        },
+        {
+          "platform": "x",
+          "operation": "graph.read",
+          "availability": "available",
+          "requiredScopes": [
+            "users.read",
+            "follows.read",
+            "mute.read",
+            "block.read"
+          ],
+          "notes": "The required read scope depends on the requested relationship kind."
+        },
+        {
+          "platform": "x",
+          "operation": "profiles.read",
+          "availability": "available",
+          "requiredScopes": [
+            "users.read"
+          ]
+        },
+        {
+          "platform": "x",
+          "operation": "graph.follow",
+          "availability": "available",
+          "requiredScopes": [
+            "users.read",
+            "follows.write"
+          ],
+          "notes": "Follow writes require an eligible paid X API tier."
+        },
+        {
+          "platform": "x",
+          "operation": "graph.unfollow",
+          "availability": "available",
+          "requiredScopes": [
+            "users.read",
+            "follows.write"
+          ],
+          "notes": "Follow writes require an eligible paid X API tier."
+        },
+        {
+          "platform": "x",
+          "operation": "graph.mute",
+          "availability": "available",
+          "requiredScopes": [
+            "users.read",
+            "mute.write"
+          ]
+        },
+        {
+          "platform": "x",
+          "operation": "graph.unmute",
+          "availability": "available",
+          "requiredScopes": [
+            "users.read",
+            "mute.write"
+          ]
+        },
+        {
+          "platform": "x",
+          "operation": "graph.block",
+          "availability": "available",
+          "requiredScopes": [
+            "users.read",
+            "block.write"
+          ],
+          "notes": "Enterprise plan only."
+        },
+        {
+          "platform": "x",
+          "operation": "graph.unblock",
+          "availability": "available",
+          "requiredScopes": [
+            "users.read",
+            "block.write"
+          ],
+          "notes": "Enterprise plan only."
+        },
+        {
+          "platform": "x",
+          "operation": "lists.pinned.read",
+          "availability": "available",
+          "requiredScopes": [
+            "users.read",
+            "list.read"
+          ]
+        },
+        {
+          "platform": "x",
+          "operation": "lists.pinned.write",
+          "availability": "available",
+          "requiredScopes": [
+            "users.read",
+            "list.write"
+          ]
+        },
+        {
+          "platform": "x",
+          "operation": "messages.conversation.write",
+          "availability": "available",
+          "requiredScopes": [
+            "dm.write"
+          ]
+        },
+        {
+          "platform": "x",
+          "operation": "messages.group.write",
+          "availability": "available",
+          "requiredScopes": [
+            "dm.write"
+          ]
+        },
+        {
+          "platform": "x",
+          "operation": "search.posts",
+          "availability": "available",
+          "requiredScopes": [
+            "tweet.read",
+            "users.read"
+          ],
+          "notes": "Recent search covers the last 7 days. Full-archive search requires an eligible X API pay-per-use or Enterprise plan."
+        },
+        {
+          "platform": "x",
+          "operation": "media.video",
+          "availability": "not-implemented-by-adapter",
           "formats": [
             "video"
           ]
@@ -1586,21 +2003,36 @@
         {
           "platform": "x",
           "operation": "media.gif",
-          "availability": "available"
+          "availability": "not-implemented-by-adapter"
         },
         {
           "platform": "x",
           "operation": "messages.read",
-          "availability": "permission-required",
+          "availability": "available",
           "requiredScopes": [
-            "dm.read"
-          ]
+            "dm.read",
+            "users.read",
+            "tweet.read"
+          ],
+          "notes": "Requires a user-context token and an X API tier that includes Direct Messages."
+        },
+        {
+          "platform": "x",
+          "operation": "messages.write",
+          "availability": "available",
+          "requiredScopes": [
+            "dm.write",
+            "dm.read",
+            "users.read",
+            "tweet.read"
+          ],
+          "notes": "Requires a user-context token and an X API tier that includes Direct Messages."
         },
         {
           "platform": "x",
           "operation": "streams.read",
-          "availability": "approval-dependent",
-          "notes": "Filtered stream access depends on the X API tier."
+          "availability": "not-implemented-by-adapter",
+          "notes": "Filtered stream rules and streaming transport are not implemented by this adapter."
         }
       ]
     }
@@ -1630,6 +2062,10 @@
             "image",
             "video",
             "carousel"
+          ],
+          "requiredScopes": [
+            "threads_basic",
+            "threads_content_publish"
           ]
         },
         {
@@ -1650,32 +2086,83 @@
         {
           "operation": "analytics.read",
           "platform": "threads",
-          "availability": "available"
+          "availability": "available",
+          "requiredScopes": [
+            "threads_basic",
+            "threads_manage_insights"
+          ]
+        },
+        {
+          "operation": "analytics.account.read",
+          "platform": "threads",
+          "availability": "available",
+          "requiredScopes": [
+            "threads_basic",
+            "threads_manage_insights"
+          ]
         },
         {
           "operation": "comments.read",
           "platform": "threads",
-          "availability": "available"
+          "availability": "available",
+          "requiredScopes": [
+            "threads_basic",
+            "threads_read_replies"
+          ]
         },
         {
           "operation": "comments.write",
           "platform": "threads",
-          "availability": "available"
+          "availability": "available",
+          "requiredScopes": [
+            "threads_basic",
+            "threads_manage_replies"
+          ]
+        },
+        {
+          "operation": "comments.moderate",
+          "platform": "threads",
+          "availability": "available",
+          "requiredScopes": [
+            "threads_manage_replies"
+          ],
+          "notes": "Hiding replies and pending-reply moderation require Threads reply-management permissions."
         },
         {
           "operation": "posts.quote",
           "platform": "threads",
-          "availability": "available"
+          "availability": "available",
+          "requiredScopes": [
+            "threads_basic",
+            "threads_content_publish"
+          ]
         },
         {
           "operation": "posts.repost",
           "platform": "threads",
-          "availability": "available"
+          "availability": "available",
+          "requiredScopes": [
+            "threads_basic",
+            "threads_content_publish"
+          ]
         },
         {
           "operation": "posts.delete",
           "platform": "threads",
-          "availability": "available"
+          "availability": "available",
+          "requiredScopes": [
+            "threads_basic",
+            "threads_delete"
+          ]
+        },
+        {
+          "operation": "posts.removeFromPlatform",
+          "platform": "threads",
+          "availability": "available",
+          "requiredScopes": [
+            "threads_basic",
+            "threads_delete"
+          ]
         },
         {
           "operation": "profile.read",
@@ -1685,12 +2172,39 @@
         {
           "operation": "search.keyword",
           "platform": "threads",
-          "availability": "available"
+          "availability": "available",
+          "requiredScopes": [
+            "threads_basic",
+            "threads_keyword_search"
+          ]
+        },
+        {
+          "operation": "profiles.read",
+          "platform": "threads",
+          "availability": "available",
+          "requiredScopes": [
+            "threads_basic"
+          ],
+          "notes": "The profile endpoint reads the authorized app-scoped user; profile lookup requires threads_profile_discovery."
+        },
+        {
+          "operation": "search.posts",
+          "platform": "threads",
+          "availability": "available",
+          "requiredScopes": [
+            "threads_basic",
+            "threads_keyword_search"
+          ],
+          "notes": "Without threads_keyword_search approval, results are limited to the authorized user's posts."
         },
         {
           "operation": "mentions.read",
           "platform": "threads",
-          "availability": "available"
+          "availability": "available",
+          "requiredScopes": [
+            "threads_basic",
+            "threads_manage_mentions"
+          ]
         },
         {
           "operation": "messages.read",
@@ -1771,6 +2285,31 @@
           "availability": "available",
           "requiredScopes": [
             "https://www.googleapis.com/auth/youtube.upload"
+          ],
+          "notes": "Scheduled videos are uploaded private with a future ISO publishAt timestamp."
+        },
+        {
+          "operation": "posts.removeFromPlatform",
+          "platform": "youtube",
+          "availability": "available",
+          "requiredScopes": [
+            "https://www.googleapis.com/auth/youtube"
+          ]
+        },
+        {
+          "operation": "playlists.read",
+          "platform": "youtube",
+          "availability": "available",
+          "requiredScopes": [
+            "https://www.googleapis.com/auth/youtube.readonly"
+          ]
+        },
+        {
+          "operation": "playlists.write",
+          "platform": "youtube",
+          "availability": "available",
+          "requiredScopes": [
+            "https://www.googleapis.com/auth/youtube"
           ]
         },
         {
@@ -1779,6 +2318,46 @@
           "availability": "available",
           "requiredScopes": [
             "https://www.googleapis.com/auth/youtube"
+          ]
+        },
+        {
+          "operation": "videos.update",
+          "platform": "youtube",
+          "availability": "available",
+          "requiredScopes": [
+            "https://www.googleapis.com/auth/youtube"
+          ]
+        },
+        {
+          "operation": "posts.update",
+          "platform": "youtube",
+          "availability": "available",
+          "requiredScopes": [
+            "https://www.googleapis.com/auth/youtube"
+          ]
+        },
+        {
+          "operation": "videos.delete",
+          "platform": "youtube",
+          "availability": "available",
+          "requiredScopes": [
+            "https://www.googleapis.com/auth/youtube"
+          ]
+        },
+        {
+          "operation": "posts.delete",
+          "platform": "youtube",
+          "availability": "available",
+          "requiredScopes": [
+            "https://www.googleapis.com/auth/youtube"
+          ]
+        },
+        {
+          "operation": "videos.rate",
+          "platform": "youtube",
+          "availability": "available",
+          "requiredScopes": [
+            "https://www.googleapis.com/auth/youtube.force-ssl"
           ]
         },
         {
@@ -1798,24 +2377,42 @@
           ]
         },
         {
-          "operation": "playlists.read",
+          "operation": "subscriptions.read",
+          "platform": "youtube",
+          "availability": "available",
+          "requiredScopes": [
+            "https://www.googleapis.com/auth/youtube.readonly"
+          ]
+        },
+        {
+          "operation": "subscriptions.write",
+          "platform": "youtube",
+          "availability": "available",
+          "requiredScopes": [
+            "https://www.googleapis.com/auth/youtube"
+          ]
+        },
+        {
+          "operation": "search.keyword",
           "platform": "youtube",
           "availability": "available"
         },
         {
-          "operation": "playlists.write",
+          "operation": "search.posts",
           "platform": "youtube",
-          "availability": "available"
+          "availability": "available",
+          "requiredScopes": [
+            "https://www.googleapis.com/auth/youtube.readonly"
+          ],
+          "notes": "Uses search.list with type=video. Each request costs 100 quota units."
         },
         {
-          "operation": "posts.update",
+          "operation": "comments.moderate",
           "platform": "youtube",
-          "availability": "available"
-        },
-        {
-          "operation": "posts.delete",
-          "platform": "youtube",
-          "availability": "available"
+          "availability": "available",
+          "requiredScopes": [
+            "https://www.googleapis.com/auth/youtube.force-ssl"
+          ]
         },
         {
           "operation": "analytics.youtube.read",
@@ -1826,9 +2423,22 @@
           ]
         },
         {
+          "operation": "analytics.report.read",
+          "platform": "youtube",
+          "availability": "available",
+          "requiredScopes": [
+            "https://www.googleapis.com/auth/yt-analytics.readonly"
+          ],
+          "notes": "Reports require an explicit bounded date range and provider-supported metrics."
+        },
+        {
           "operation": "live.broadcasts",
           "platform": "youtube",
-          "availability": "approval-dependent"
+          "availability": "available",
+          "requiredScopes": [
+            "https://www.googleapis.com/auth/youtube"
+          ],
+          "notes": "The channel must have live streaming enabled in YouTube Studio. Use native access: liveBroadcasts."
         }
       ]
     }
@@ -1867,12 +2477,18 @@
         {
           "platform": "tiktok",
           "operation": "posts.read",
-          "availability": "available"
+          "availability": "available",
+          "requiredScopes": [
+            "video.list"
+          ]
         },
         {
           "platform": "tiktok",
           "operation": "posts.list",
-          "availability": "available"
+          "availability": "available",
+          "requiredScopes": [
+            "video.list"
+          ]
         },
         {
           "platform": "tiktok",
@@ -1912,6 +2528,14 @@
           "availability": "available",
           "requiredScopes": [
             "user.info.stats"
+          ]
+        },
+        {
+          "platform": "tiktok",
+          "operation": "analytics.read",
+          "availability": "available",
+          "requiredScopes": [
+            "video.list"
           ]
         }
       ]
@@ -1980,6 +2604,45 @@
           "availability": "available"
         },
         {
+          "operation": "analytics.account.read",
+          "platform": "instagram",
+          "availability": "available"
+        },
+        {
+          "platform": "instagram",
+          "operation": "comments.moderate",
+          "availability": "available",
+          "requiredScopes": [
+            "instagram_business_manage_comments"
+          ],
+          "notes": "Hide or unhide a comment, or enable or disable comments on media. Instagram Login and Facebook Login are supported where the account and app permissions qualify."
+        },
+        {
+          "platform": "instagram",
+          "operation": "comments.delete",
+          "availability": "available",
+          "requiredScopes": [
+            "instagram_business_manage_comments"
+          ]
+        },
+        {
+          "platform": "instagram",
+          "operation": "comments.replies.read",
+          "availability": "available",
+          "requiredScopes": [
+            "instagram_business_manage_comments"
+          ]
+        },
+        {
+          "platform": "instagram",
+          "operation": "profiles.read",
+          "availability": "available",
+          "requiredScopes": [
+            "instagram_business_basic",
+            "instagram_business_manage_insights"
+          ]
+        },
+        {
           "platform": "instagram",
           "operation": "reels.publish",
           "availability": "available",
@@ -1995,12 +2658,12 @@
         {
           "platform": "instagram",
           "operation": "posts.delete",
-          "availability": "available"
+          "availability": "not-implemented-by-adapter"
         },
         {
           "platform": "instagram",
-          "operation": "hashtags.search",
-          "availability": "available"
+          "operation": "posts.removeFromPlatform",
+          "availability": "not-implemented-by-adapter"
         },
         {
           "platform": "instagram",
@@ -2010,7 +2673,7 @@
         {
           "platform": "instagram",
           "operation": "mentions.read",
-          "availability": "available"
+          "availability": "not-implemented-by-adapter"
         },
         {
           "platform": "instagram",
@@ -2062,7 +2725,7 @@
         {
           "platform": "linkedin",
           "operation": "posts.multi-image",
-          "availability": "available",
+          "availability": "not-implemented-by-adapter",
           "formats": [
             "carousel"
           ]
@@ -2070,7 +2733,7 @@
         {
           "platform": "linkedin",
           "operation": "posts.video",
-          "availability": "available",
+          "availability": "not-implemented-by-adapter",
           "formats": [
             "video"
           ]
@@ -2078,7 +2741,7 @@
         {
           "platform": "linkedin",
           "operation": "posts.document",
-          "availability": "available"
+          "availability": "not-implemented-by-adapter"
         },
         {
           "platform": "linkedin",
@@ -2107,8 +2770,17 @@
         },
         {
           "platform": "linkedin",
+          "operation": "posts.removeFromPlatform",
+          "availability": "available"
+        },
+        {
+          "platform": "linkedin",
           "operation": "analytics.organization.read",
-          "availability": "permission-required"
+          "availability": "account-ineligible",
+          "requiredScopes": [
+            "rw_organization_admin"
+          ],
+          "notes": "Requires the Community Management API product and organization administrator access. Member accounts are not eligible."
         },
         {
           "platform": "linkedin",
@@ -2131,12 +2803,39 @@
         },
         {
           "platform": "linkedin",
+          "operation": "analytics.followers.read",
+          "availability": "account-ineligible",
+          "requiredScopes": [
+            "rw_organization_admin"
+          ],
+          "notes": "Community Management API product and organization administrator access are required. Member accounts are not eligible."
+        },
+        {
+          "platform": "linkedin",
+          "operation": "analytics.page.read",
+          "availability": "account-ineligible",
+          "requiredScopes": [
+            "rw_organization_admin"
+          ],
+          "notes": "Community Management API product and organization administrator access are required. Member accounts are not eligible."
+        },
+        {
+          "platform": "linkedin",
+          "operation": "analytics.shares.read",
+          "availability": "account-ineligible",
+          "requiredScopes": [
+            "rw_organization_admin"
+          ],
+          "notes": "Community Management API product and organization administrator access are required. Member accounts are not eligible."
+        },
+        {
+          "platform": "linkedin",
           "operation": "posts.list",
           "availability": "available",
           "requiredScopes": [
             "r_member_social"
           ],
-          "notes": "Author feed requires approved read access for the configured author."
+          "notes": "Author-feed pagination uses the returned offset cursor."
         },
         {
           "platform": "linkedin",
@@ -2150,18 +2849,29 @@
           "platform": "linkedin",
           "operation": "comments.read",
           "availability": "available",
+          "requiredScopes": [
+            "w_member_social",
+            "r_member_social"
+          ],
           "notes": "Community Management product permissions and author post read access required. Analytics contains returned social-action counts only."
         },
         {
           "platform": "linkedin",
           "operation": "comments.write",
           "availability": "available",
+          "requiredScopes": [
+            "w_member_social",
+            "r_member_social"
+          ],
           "notes": "Community Management product permissions and author post read access required. Analytics contains returned social-action counts only."
         },
         {
           "platform": "linkedin",
           "operation": "analytics.read",
           "availability": "available",
+          "requiredScopes": [
+            "r_member_social"
+          ],
           "notes": "Community Management product permissions and author post read access required. Analytics contains returned social-action counts only."
         }
       ]

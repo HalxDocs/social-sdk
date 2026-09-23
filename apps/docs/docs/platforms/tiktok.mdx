@@ -3,7 +3,7 @@ title: TikTok
 description: Prepare TikTok creator choices and publish verified media URLs with Social SDK, covering consent, privacy settings, drafts, and processing checks.
 ---
 
-The direct TikTok adapter accepts an existing access token and creator `openId`. The server package also provides `tiktokOAuth` for TikTok Login Kit authorization, PKCE, and creator discovery. OAuth consent does not replace the adapter's creator preview and publish consent requirements.
+The direct TikTok adapter accepts an existing access token and creator `openId`. The server package also provides `tiktokOAuth` for TikTok Login Kit web authorization and creator discovery. OAuth consent does not replace the adapter's creator preview and publish consent requirements.
 
 ## Setup
 
@@ -143,7 +143,7 @@ Draft/inbox and public posting have different upstream review and audit requirem
 
 ## Native operations
 
-The typed native module adds the inbox/draft upload path, own-video listing with display fields, and an explicit publish-status query. Polling is caller initiated and bounded; the SDK does not run background polling. Comments and direct messages remain platform limits for standard Content Posting and Display API apps.
+The typed native module adds the inbox/draft upload path, own-video listing with display fields, and an explicit publish-status query. Post metrics from `social.analytics.getPostMetrics` read like, comment, share, and view counts through the Display API video query and require `video.list`; account metrics require `user.info.stats`. Polling is caller initiated and bounded; the SDK does not run background polling. Comments and direct messages remain platform limits for standard Content Posting and Display API apps.
 
 ## Limits and requirements
 

@@ -1,4 +1,4 @@
-/* oxlint-disable anti-slop/no-chained-type-assertions, anti-slop/no-conditional-empty-object-spread, anti-slop/no-runtime-typeof -- validated external boundary or fixture contract. */
+/* oxlint-disable anti-slop/no-chained-type-assertions, anti-slop/no-conditional-empty-object-spread, anti-slop/no-runtime-typeof, anti-slop/require-readable-spacing, anti-slop/require-safety-comment-for-type-assertion -- validated external boundary or fixture contract. */
 import {
   connectedAccountRef,
   defineAdapter,
@@ -13,6 +13,9 @@ import {
   type ConnectedAccountRef,
   type PreparedPublishTarget,
   type Page,
+  type ProfileRecord,
+  profileRef,
+  type SearchPostsInput,
 } from "../core/index.js";
 import { SocialError } from "../core/errors.js";
 import { managedHttp, publicFields } from "../cloud/common.js";
@@ -44,6 +47,20 @@ export interface ThreadsWorkflowStore {
   update(id: string, update: Partial<ThreadsWorkflow>): Promise<ThreadsWorkflow>;
   claim(id: string): Promise<boolean>;
   release?(id: string): Promise<void>;
+}
+
+export interface ThreadsSearchInput {
+  readonly account: ConnectedAccountRef;
+  readonly query: string;
+  readonly cursor?: string;
+  readonly searchType?: "TOP" | "RECENT";
+  readonly searchMode?: "KEYWORD" | "TAG";
+  readonly mediaType?: "TEXT" | "IMAGE" | "VIDEO";
+  readonly since?: string;
+  readonly until?: string;
+  readonly limit?: number;
+  readonly authorUsername?: string;
+  readonly context: AdapterOperationContext;
 }
 
 export class MemoryThreadsWorkflowStore implements ThreadsWorkflowStore {
@@ -113,12 +130,7 @@ export interface ThreadsNative {
     readonly postId: string;
     readonly context: AdapterOperationContext;
   }) => Promise<void>;
-  readonly search: (input: {
-    readonly account: ConnectedAccountRef;
-    readonly query: string;
-    readonly cursor?: string;
-    readonly context: AdapterOperationContext;
-  }) => Promise<JsonObject>;
+  readonly search: (input: ThreadsSearchInput) => Promise<JsonObject>;
   readonly mentions: (input: {
     readonly account: ConnectedAccountRef;
     readonly cursor?: string;
@@ -126,6 +138,31 @@ export interface ThreadsNative {
   }) => Promise<JsonObject>;
   readonly getProfile: (input: {
     readonly account: ConnectedAccountRef;
+    readonly context: AdapterOperationContext;
+  }) => Promise<JsonObject>;
+  readonly hideReply: (input: {
+    readonly account: ConnectedAccountRef;
+    readonly replyId: string;
+    readonly hide: boolean;
+    readonly context: AdapterOperationContext;
+  }) => Promise<JsonObject>;
+  readonly listConversation: (input: {
+    readonly account: ConnectedAccountRef;
+    readonly mediaId: string;
+    readonly cursor?: string;
+    readonly context: AdapterOperationContext;
+  }) => Promise<JsonObject>;
+  readonly listPendingReplies: (input: {
+    readonly account: ConnectedAccountRef;
+    readonly mediaId: string;
+    readonly cursor?: string;
+    readonly approvalStatus?: "pending" | "ignored";
+    readonly context: AdapterOperationContext;
+  }) => Promise<JsonObject>;
+  readonly managePendingReply: (input: {
+    readonly account: ConnectedAccountRef;
+    readonly replyId: string;
+    readonly approve: boolean;
     readonly context: AdapterOperationContext;
   }) => Promise<JsonObject>;
 }
@@ -194,9 +231,25 @@ export function threads(options: ThreadsOptions): SocialAdapter<ThreadsNative> {
 
   const account = accountRef(backend, auth.userId);
 
+  function pageFrom(result: JsonObject): Page<JsonObject> {
+    const items = array(result["data"]).map((entry) => {
+      // SAFETY: object() validates each provider data entry as a JSON object.
+      return object(entry) as JsonObject;
+    });
+    const paging = result["paging"] === undefined ? {} : object(result["paging"]);
+    const cursors = paging["cursors"] === undefined ? {} : object(paging["cursors"]);
+    // Graph omits paging.next on the last page even when cursors.after is present.
+    const nextCursor =
+      typeof paging["next"] === "string" && paging["next"].length > 0
+        ? optionalString(cursors["after"])
+        : undefined;
+
+    return { items, ...(nextCursor === undefined ? {} : { nextCursor }) };
+  }
+
   async function readAccount(context: AdapterOperationContext) {
     const v = await request(
-      "/me?fields=id,username",
+      "/me?fields=id,username,threads_profile_picture_url,threads_biography",
       { method: "GET" },
       "threads.accounts.read",
       context,
@@ -301,7 +354,7 @@ export function threads(options: ThreadsOptions): SocialAdapter<ThreadsNative> {
       context,
     );
 
-    const allowed = new Set<string>(metricNames);
+    const allowed = new Set<string>([...metricNames, "link_total_values"]);
 
     return array(result["data"]).flatMap((entry) => {
       const row = object(entry);
@@ -342,7 +395,7 @@ export function threads(options: ThreadsOptions): SocialAdapter<ThreadsNative> {
 
       return [
         {
-          name,
+          name: name === "link_total_values" ? "clicks" : name,
           value,
           unit: "count" as const,
           period,
@@ -532,7 +585,14 @@ export function threads(options: ThreadsOptions): SocialAdapter<ThreadsNative> {
         // oxlint-disable-next-line anti-slop/no-conditional-empty-object-spread -- validated external boundary or fixture contract.
         // oxlint-disable-next-line anti-slop/no-runtime-typeof -- validated external boundary or fixture contract.
         ...(typeof cur.options["replyControl"] === "string"
-          ? { reply_control: cur.options["replyControl"] }
+          ? {
+              reply_control:
+                cur.options["replyControl"] === "accountsYouFollow"
+                  ? "accounts_you_follow"
+                  : cur.options["replyControl"] === "mentionedOnly"
+                    ? "mentioned_only"
+                    : "everyone",
+            }
           : {}),
         // oxlint-disable-next-line anti-slop/no-conditional-empty-object-spread -- validated boundary or fixture contract.
         // oxlint-disable-next-line anti-slop/no-runtime-typeof -- validated boundary or fixture contract.
@@ -650,19 +710,96 @@ export function threads(options: ThreadsOptions): SocialAdapter<ThreadsNative> {
         platform: "threads",
         availability: "available",
         formats: ["text", "image", "video", "carousel"],
+        requiredScopes: ["threads_basic", "threads_content_publish"],
       },
       { operation: "posts.read", platform: "threads", availability: "available" },
       { operation: "posts.list", platform: "threads", availability: "available" },
       { operation: "posts.status", platform: "threads", availability: "available" },
-      { operation: "analytics.read", platform: "threads", availability: "available" },
-      { operation: "comments.read", platform: "threads", availability: "available" },
-      { operation: "comments.write", platform: "threads", availability: "available" },
-      { operation: "posts.quote", platform: "threads", availability: "available" },
-      { operation: "posts.repost", platform: "threads", availability: "available" },
-      { operation: "posts.delete", platform: "threads", availability: "available" },
+      {
+        operation: "analytics.read",
+        platform: "threads",
+        availability: "available",
+        requiredScopes: ["threads_basic", "threads_manage_insights"],
+      },
+      {
+        operation: "analytics.account.read",
+        platform: "threads",
+        availability: "available",
+        requiredScopes: ["threads_basic", "threads_manage_insights"],
+      },
+      {
+        operation: "comments.read",
+        platform: "threads",
+        availability: "available",
+        requiredScopes: ["threads_basic", "threads_read_replies"],
+      },
+      {
+        operation: "comments.write",
+        platform: "threads",
+        availability: "available",
+        requiredScopes: ["threads_basic", "threads_manage_replies"],
+      },
+      {
+        operation: "comments.moderate",
+        platform: "threads",
+        availability: "available",
+        requiredScopes: ["threads_manage_replies"],
+        notes:
+          "Hiding replies and pending-reply moderation require Threads reply-management permissions.",
+      },
+      {
+        operation: "posts.quote",
+        platform: "threads",
+        availability: "available",
+        requiredScopes: ["threads_basic", "threads_content_publish"],
+      },
+      {
+        operation: "posts.repost",
+        platform: "threads",
+        availability: "available",
+        requiredScopes: ["threads_basic", "threads_content_publish"],
+      },
+      {
+        operation: "posts.delete",
+        platform: "threads",
+        availability: "available",
+        requiredScopes: ["threads_basic", "threads_delete"],
+      },
+      {
+        operation: "posts.removeFromPlatform",
+        platform: "threads",
+        availability: "available",
+        requiredScopes: ["threads_basic", "threads_delete"],
+      },
       { operation: "profile.read", platform: "threads", availability: "available" },
-      { operation: "search.keyword", platform: "threads", availability: "available" },
-      { operation: "mentions.read", platform: "threads", availability: "available" },
+      {
+        operation: "search.keyword",
+        platform: "threads",
+        availability: "available",
+        requiredScopes: ["threads_basic", "threads_keyword_search"],
+      },
+      {
+        operation: "profiles.read",
+        platform: "threads",
+        availability: "available",
+        requiredScopes: ["threads_basic"],
+        notes:
+          "The profile endpoint reads the authorized app-scoped user; profile lookup requires threads_profile_discovery.",
+      },
+      {
+        operation: "search.posts",
+        platform: "threads",
+        availability: "available",
+        requiredScopes: ["threads_basic", "threads_keyword_search"],
+        notes:
+          "Without threads_keyword_search approval, results are limited to the authorized user's posts.",
+      },
+      {
+        operation: "mentions.read",
+        platform: "threads",
+        availability: "available",
+        requiredScopes: ["threads_basic", "threads_manage_mentions"],
+      },
       {
         operation: "messages.read",
         platform: "threads",
@@ -704,8 +841,17 @@ export function threads(options: ThreadsOptions): SocialAdapter<ThreadsNative> {
     async quotePost({ account, postId, text, context }) {
       authorize(account, "threads.posts.quote");
 
+      const container = await request(
+        `${encodeURIComponent(account.accountId)}/threads?media_type=TEXT&text=${encodeURIComponent(text)}&quote_post_id=${encodeURIComponent(postId)}`,
+        { method: "POST" },
+        "threads.posts.quote",
+        context,
+      );
+      const creationId = optionalString(container["id"]);
+      if (creationId === undefined)
+        fail("threads.posts.quote", "Threads did not return a quote container ID.");
       return request(
-        `${encodeURIComponent(account.accountId)}/threads?media_type=TEXT&text=${encodeURIComponent(text)}&quote_id=${encodeURIComponent(postId)}`,
+        `${encodeURIComponent(account.accountId)}/threads_publish?creation_id=${encodeURIComponent(creationId)}`,
         { method: "POST" },
         "threads.posts.quote",
         context,
@@ -715,7 +861,7 @@ export function threads(options: ThreadsOptions): SocialAdapter<ThreadsNative> {
       authorize(account, "threads.posts.repost");
 
       return request(
-        `${encodeURIComponent(account.accountId)}/threads?media_type=TEXT&repost_id=${encodeURIComponent(postId)}`,
+        `${encodeURIComponent(postId)}/repost`,
         { method: "POST" },
         "threads.posts.repost",
         context,
@@ -730,11 +876,45 @@ export function threads(options: ThreadsOptions): SocialAdapter<ThreadsNative> {
         context,
       );
     },
-    async search({ account, query, cursor, context }) {
+    async search({
+      account,
+      query,
+      cursor,
+      searchType,
+      searchMode,
+      mediaType,
+      since,
+      until,
+      limit,
+      authorUsername,
+      context,
+    }) {
       authorize(account, "threads.search");
 
+      const q = query.trim();
+      if (!q) fail("threads.search", "A search query is required.", "invalid_input");
+      if (limit !== undefined && (!Number.isSafeInteger(limit) || limit < 1 || limit > 100))
+        fail(
+          "threads.search",
+          "Search limit must be an integer from 1 through 100.",
+          "invalid_input",
+        );
+
+      const params = new URLSearchParams({
+        q,
+        fields: "id,text,media_type,media_url,permalink,timestamp,username,shortcode,is_quote_post",
+      });
+      if (searchType !== undefined) params.set("search_type", searchType);
+      if (searchMode !== undefined) params.set("search_mode", searchMode);
+      if (mediaType !== undefined) params.set("media_type", mediaType);
+      if (since !== undefined) params.set("since", since);
+      if (until !== undefined) params.set("until", until);
+      if (limit !== undefined) params.set("limit", String(limit));
+      if (authorUsername !== undefined) params.set("author_username", authorUsername);
+      if (cursor !== undefined) params.set("after", cursor);
+
       return request(
-        `keyword_search?query=${encodeURIComponent(query)}${cursor ? `&after=${encodeURIComponent(cursor)}` : ""}`,
+        `keyword_search?${params.toString()}`,
         { method: "GET" },
         "threads.search",
         context,
@@ -744,7 +924,7 @@ export function threads(options: ThreadsOptions): SocialAdapter<ThreadsNative> {
       authorize(account, "threads.mentions");
 
       return request(
-        `${encodeURIComponent(account.accountId)}/mentions${cursor ? `?after=${encodeURIComponent(cursor)}` : ""}`,
+        `${encodeURIComponent(account.accountId)}/mentions?fields=id,text,username,media_type,media_url,permalink,timestamp${cursor ? `&after=${encodeURIComponent(cursor)}` : ""}`,
         { method: "GET" },
         "threads.mentions",
         context,
@@ -754,9 +934,50 @@ export function threads(options: ThreadsOptions): SocialAdapter<ThreadsNative> {
       authorize(account, "threads.profile.read");
 
       return request(
-        `${encodeURIComponent(account.accountId)}?fields=id,username,name,threads_profile_picture_url`,
+        `${encodeURIComponent(account.accountId)}?fields=id,username,name,threads_profile_picture_url,threads_biography,is_verified`,
         { method: "GET" },
         "threads.profile.read",
+        context,
+      );
+    },
+    async hideReply({ account, replyId, hide, context }) {
+      authorize(account, "threads.comments.moderate");
+      return request(
+        `${encodeURIComponent(replyId)}/manage_reply?hide=${String(hide)}`,
+        { method: "POST" },
+        "threads.comments.moderate",
+        context,
+      );
+    },
+    async listConversation({ account, mediaId, cursor, context }) {
+      authorize(account, "threads.comments.conversation");
+      return request(
+        `${encodeURIComponent(mediaId)}/conversation?fields=id,text,username,permalink,timestamp,is_reply,hide_status${cursor ? `&after=${encodeURIComponent(cursor)}` : ""}`,
+        { method: "GET" },
+        "threads.comments.conversation",
+        context,
+      );
+    },
+    async listPendingReplies({ account, mediaId, cursor, approvalStatus, context }) {
+      authorize(account, "threads.comments.pending");
+      const params = new URLSearchParams({
+        fields: "id,text,username,timestamp,is_reply,hide_status,reply_approval_status",
+      });
+      if (cursor !== undefined) params.set("after", cursor);
+      if (approvalStatus !== undefined) params.set("approval_status", approvalStatus);
+      return request(
+        `${encodeURIComponent(mediaId)}/pending_replies?${params.toString()}`,
+        { method: "GET" },
+        "threads.comments.pending",
+        context,
+      );
+    },
+    async managePendingReply({ account, replyId, approve, context }) {
+      authorize(account, "threads.comments.moderate");
+      return request(
+        `${encodeURIComponent(replyId)}/manage_pending_reply?approve=${String(approve)}`,
+        { method: "POST" },
+        "threads.comments.moderate",
         context,
       );
     },
@@ -772,6 +993,95 @@ export function threads(options: ThreadsOptions): SocialAdapter<ThreadsNative> {
         authorize(ref, "threads.accounts.get");
 
         return readAccount(context);
+      },
+    },
+    graph: {
+      async getProfile(account, input, context): Promise<ProfileRecord> {
+        authorize(account, "profiles.read");
+        let result: JsonObject;
+        if (input.handle !== undefined) {
+          result = await request(
+            `profile_lookup?username=${encodeURIComponent(input.handle)}&fields=id,username,name,profile_picture_url,biography,is_verified`,
+            { method: "GET" },
+            "profiles.read",
+            context,
+          );
+        } else {
+          const profileId = input.profileId ?? account.accountId;
+          if (profileId !== account.accountId)
+            fail(
+              "profiles.read",
+              "Threads profile reads are limited to the authorized app-scoped user.",
+              "unauthorized",
+            );
+          result = await request(
+            `${encodeURIComponent(profileId)}?fields=id,username,name,threads_profile_picture_url,threads_biography,is_verified`,
+            { method: "GET" },
+            "profiles.read",
+            context,
+          );
+        }
+        const returnedProfileId = optionalString(result["id"]);
+        const profileId =
+          returnedProfileId ??
+          input.profileId ??
+          (input.handle ? `lookup:${input.handle}` : undefined);
+        if (profileId === undefined)
+          fail("profiles.read", "Threads profile response did not return a profile ID.");
+        const handle = optionalString(result["username"]) ?? input.handle;
+        const displayName = optionalString(result["name"]);
+        const avatarUrl =
+          optionalString(result["profile_picture_url"]) ??
+          optionalString(result["threads_profile_picture_url"]);
+        const bio =
+          optionalString(result["biography"]) ?? optionalString(result["threads_biography"]);
+        return {
+          ref: profileRef({
+            backend,
+            platform: "threads",
+            accountId: account.accountId,
+            profileId,
+          }),
+          ...(displayName === undefined ? {} : { displayName }),
+          ...(handle === undefined ? {} : { handle }),
+          ...(avatarUrl === undefined ? {} : { avatarUrl }),
+          ...(bio === undefined ? {} : { bio }),
+          native:
+            returnedProfileId === undefined ? { ...result, _profileIdUnavailable: true } : result,
+        };
+      },
+    },
+    search: {
+      async posts(account, input: SearchPostsInput, context): Promise<Page<JsonObject>> {
+        authorize(account, "search.posts");
+        if (input.scope === "all")
+          fail("search.posts", "Threads search does not support scope 'all'.", "invalid_input");
+        const query = input.query.trim();
+        if (!query) fail("search.posts", "A search query is required.", "invalid_input");
+        const params = new URLSearchParams({
+          q: query,
+          fields:
+            "id,text,media_type,media_url,permalink,timestamp,username,shortcode,is_quote_post",
+        });
+        if (input.limit !== undefined) {
+          if (!Number.isSafeInteger(input.limit) || input.limit < 1 || input.limit > 100)
+            fail(
+              "search.posts",
+              "Search limit must be an integer from 1 through 100.",
+              "invalid_input",
+            );
+          params.set("limit", String(input.limit));
+        }
+        if (input.cursor !== undefined) params.set("after", input.cursor);
+        if (input.startTime !== undefined) params.set("since", input.startTime);
+        if (input.endTime !== undefined) params.set("until", input.endTime);
+        const result = await request(
+          `keyword_search?${params.toString()}`,
+          { method: "GET" },
+          "search.posts",
+          context,
+        );
+        return pageFrom(result);
       },
     },
     posts: {
@@ -844,7 +1154,7 @@ export function threads(options: ThreadsOptions): SocialAdapter<ThreadsNative> {
 
         return issues;
       },
-      async publishTarget(target) {
+      async publishTarget(target, context) {
         authorize(target.account, "threads.posts.publish");
         const media = target.content.media ?? [];
 
@@ -888,17 +1198,39 @@ export function threads(options: ThreadsOptions): SocialAdapter<ThreadsNative> {
         });
 
         // oxlint-disable-next-line anti-slop/require-safety-comment-for-type-assertion -- validated boundary or fixture contract.
-        return {
-          ...base(target.account, w.id, "processing", "CREATED"),
-          targetIndex: target.targetIndex,
-        } as DeliveryOutcome;
+        if (!(await store.claim(w.id))) return base(target.account, w.id, "processing", "CLAIMED");
+        try {
+          try {
+            const outcome = await resume((await store.get(w.id)) ?? w, target.account, context);
+            return { ...outcome, targetIndex: target.targetIndex } as DeliveryOutcome;
+          } catch (error) {
+            if (error instanceof SocialError && error.code === "ambiguous_outcome")
+              return {
+                ...base(target.account, w.id, "unknown", "AMBIGUOUS"),
+                targetIndex: target.targetIndex,
+                reason: "ambiguous-submission",
+                diagnostic: error.message,
+              } as DeliveryOutcome;
+            throw error;
+          }
+        } finally {
+          await store.release?.(w.id);
+        }
       },
       async get(ref, c) {
         authorize(ref, "threads.posts.get");
 
         return native.getPost(ref.postId, c);
       },
-      async getDelivery(ref, _c): Promise<DeliveryOutcome> {
+      async removeFromPlatform(ref, c) {
+        authorize(ref, "threads.posts.delete");
+        return native.deletePost({
+          account: accountRef(backend, ref.accountId),
+          postId: ref.postId,
+          context: c,
+        });
+      },
+      async getDelivery(ref, c): Promise<DeliveryOutcome> {
         authorize(ref, "threads.posts.status");
         const w = await store.get(ref.deliveryId);
 
@@ -929,7 +1261,13 @@ export function threads(options: ThreadsOptions): SocialAdapter<ThreadsNative> {
             diagnostic: "Explicit resumePublication is required.",
           } as DeliveryOutcome;
 
-        return base(accountRef(backend, ref.accountId), w.id, "processing", w.stage.toUpperCase());
+        if (!(await store.claim(w.id)))
+          return base(accountRef(backend, ref.accountId), w.id, "processing", "CLAIMED");
+        try {
+          return await resume((await store.get(w.id)) ?? w, accountRef(backend, ref.accountId), c);
+        } finally {
+          await store.release?.(w.id);
+        }
       },
     },
     comments: {
@@ -966,9 +1304,14 @@ export function threads(options: ThreadsOptions): SocialAdapter<ThreadsNative> {
           // oxlint-disable-next-line anti-slop/require-safety-comment-for-type-assertion -- validated external boundary or fixture contract.
           // oxlint-disable-next-line anti-slop/no-runtime-typeof -- validated external boundary or fixture contract.
           // oxlint-disable-next-line anti-slop/require-safety-comment-for-type-assertion -- validated external boundary or fixture contract.
-          typeof (result["paging"] as JsonObject)["next"] === "string"
-            ? // oxlint-disable-next-line anti-slop/require-safety-comment-for-type-assertion -- validated boundary or fixture contract.
-              { nextCursor: String((result["paging"] as JsonObject)["next"]) }
+          typeof (result["paging"] as JsonObject)["cursors"] === "object" &&
+          (result["paging"] as JsonObject)["cursors"] !== null &&
+          typeof ((result["paging"] as JsonObject)["cursors"] as JsonObject)["after"] === "string"
+            ? {
+                nextCursor: String(
+                  ((result["paging"] as JsonObject)["cursors"] as JsonObject)["after"],
+                ),
+              }
             : {}),
         };
       },
@@ -978,18 +1321,23 @@ export function threads(options: ThreadsOptions): SocialAdapter<ThreadsNative> {
         if (!content.text.trim())
           fail("threads.comments.reply", "Comment text is required.", "invalid_input");
 
-        const result = await request(
-          `${encodeURIComponent(comment.postId)}/replies`,
+        const container = await request(
+          `${encodeURIComponent(comment.accountId)}/threads?media_type=TEXT&text=${encodeURIComponent(content.text)}&reply_to_id=${encodeURIComponent(comment.commentId)}`,
           { method: "POST" },
           "threads.comments.reply",
           context,
         );
 
-        return {
-          ...comment,
-          // oxlint-disable-next-line anti-slop/no-runtime-typeof -- validated boundary or fixture contract.
-          commentId: typeof result["id"] === "string" ? result["id"] : comment.commentId,
-        };
+        const creationId = optionalString(container["id"]);
+        if (creationId === undefined)
+          fail("threads.comments.reply", "Threads did not return a reply container ID.");
+        const result = await request(
+          `${encodeURIComponent(comment.accountId)}/threads_publish?creation_id=${encodeURIComponent(creationId)}`,
+          { method: "POST" },
+          "threads.comments.reply",
+          context,
+        );
+        return { ...comment, commentId: optionalString(result["id"]) ?? comment.commentId };
       },
     },
     analytics: {
@@ -998,7 +1346,7 @@ export function threads(options: ThreadsOptions): SocialAdapter<ThreadsNative> {
         authorize(post, "threads.analytics");
 
         const r = await request(
-          `${encodeURIComponent(post.postId)}/insights?metric=views,likes,replies,reposts,quotes,shares`,
+          `${encodeURIComponent(post.postId)}/insights?metric=views,likes,replies,reposts,quotes,shares,link_total_values`,
           // oxlint-disable-next-line anti-slop/no-conditional-empty-object-spread -- validated boundary or fixture contract.
           { method: "GET", ...(c.signal ? { signal: c.signal } : {}) },
           "threads.analytics",
@@ -1015,7 +1363,8 @@ export function threads(options: ThreadsOptions): SocialAdapter<ThreadsNative> {
               ? optionalNumber(object(first)["value"])
               : optionalNumber(row["value"]);
 
-          const name = row["name"];
+          const rawName = row["name"];
+          const name = rawName === "link_total_values" ? "clicks" : rawName;
 
           // oxlint-disable-next-line anti-slop/no-runtime-typeof -- validated boundary or fixture contract.
           return value === undefined || typeof name !== "string"

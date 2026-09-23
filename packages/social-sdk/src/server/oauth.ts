@@ -1,4 +1,4 @@
-/* oxlint-disable anti-slop/no-runtime-typeof, anti-slop/no-unknown-parameters, anti-slop/no-unsafe-dictionary-type, anti-slop/require-safety-comment-for-type-assertion -- OAuth responses are unknown by contract and validated at this boundary. */
+/* oxlint-disable anti-slop/no-runtime-typeof, anti-slop/no-unknown-parameters, anti-slop/no-unsafe-dictionary-type, anti-slop/require-safety-comment-for-type-assertion, anti-slop/require-readable-spacing -- OAuth responses are unknown by contract and validated at this boundary. */
 import { SocialError } from "../core/errors.js";
 import { connectedAccountRef, type Platform } from "../core/types.js";
 import type { ConnectionAccount, ConnectionAttempt, ConnectionProvider } from "./connections.js";
@@ -25,6 +25,14 @@ export interface OAuthProviderOptions {
   readonly redirectUri?: string;
   readonly fetch?: typeof globalThis.fetch;
   readonly credentialSink?: OAuthCredentialSink;
+  /**
+   * Selects which validated discovered accounts receive persisted credentials.
+   * When omitted, credentials are persisted for every discovered account.
+   */
+  readonly selectAccounts?: (
+    accounts: readonly ConnectionAccount[],
+    attempt: ConnectionAttempt,
+  ) => readonly string[] | Promise<readonly string[]>;
   /** Optional label for callers; the attempt's backend is always authoritative. */
   readonly backend?: string;
   readonly scopes?: readonly string[];
@@ -59,15 +67,16 @@ const configs: Record<ProviderKind, ProviderConfig> = {
       "openid",
       "https://www.googleapis.com/auth/userinfo.profile",
       "https://www.googleapis.com/auth/youtube.readonly",
+      "https://www.googleapis.com/auth/youtube.upload",
     ],
     scopeDelimiter: " ",
     pkce: false,
     clientKey: "client_id",
   },
   x: {
-    auth: "https://api.x.com/2/oauth2/authorize",
+    auth: "https://x.com/i/oauth2/authorize",
     token: "https://api.x.com/2/oauth2/token",
-    scopes: ["tweet.read", "users.read", "offline.access"],
+    scopes: ["tweet.read", "tweet.write", "users.read", "offline.access", "media.write"],
     scopeDelimiter: " ",
     pkce: true,
     clientKey: "client_id",
@@ -85,7 +94,7 @@ const configs: Record<ProviderKind, ProviderConfig> = {
     token: "https://open.tiktokapis.com/v2/oauth/token/",
     scopes: ["user.info.basic", "video.publish"],
     scopeDelimiter: ",",
-    pkce: true,
+    pkce: false,
     clientKey: "client_key",
   },
   instagram: {
@@ -148,7 +157,14 @@ function optionalString(value: unknown): string | undefined {
   return typeof value === "string" && value.length > 0 && value.length <= 8192 ? value : undefined;
 }
 
-function errorForResponse(status: number, operation: string): never {
+function errorForResponse(status: number, operation: string, providerCode?: string): never {
+  if (status === 400 && providerCode === "invalid_grant")
+    fail(
+      operation,
+      "OAuth authorization is no longer valid; reconnect the account",
+      "reconnect_required",
+    );
+
   if (status === 401)
     fail(
       operation,
@@ -231,9 +247,26 @@ async function body(
   maxBytes: number,
 ): Promise<Record<string, unknown>> {
   const raw = await readBounded(response, maxBytes, operation);
-
-  if (!response.ok) return errorForResponse(response.status, operation);
   const contentType = response.headers.get("content-type")?.toLowerCase() ?? "";
+
+  if (!response.ok) {
+    let providerCode: string | undefined;
+
+    try {
+      const parsed: unknown =
+        contentType.includes("json") || raw.trimStart().startsWith("{")
+          ? JSON.parse(raw)
+          : Object.fromEntries(new URLSearchParams(raw).entries());
+      if (typeof parsed === "object" && parsed !== null && !Array.isArray(parsed)) {
+        const error = (parsed as Record<string, unknown>)["error"];
+        providerCode = typeof error === "string" ? error : undefined;
+      }
+    } catch {
+      // Preserve the HTTP error classification when an upstream error body is malformed.
+    }
+
+    return errorForResponse(response.status, operation, providerCode);
+  }
 
   if (raw.trim() === "") fail(operation, "OAuth provider returned an empty response");
 
@@ -316,8 +349,13 @@ interface TokenResult {
 }
 
 function tokenResult(data: Record<string, unknown>, kind: ProviderKind): TokenResult {
-  const nested =
-    kind === "tiktok" && data["data"] !== undefined ? asRecord(data["data"], "oauth.token") : data;
+  let nested = data;
+  if (kind === "tiktok" && data["data"] !== undefined)
+    nested = asRecord(data["data"], "oauth.token");
+  if (kind === "instagram" && Array.isArray(data["data"])) {
+    const first = data["data"][0];
+    nested = asRecord(first, "oauth.token");
+  }
 
   const token = tokenSet(nested);
   const accountHint = optionalString(nested["user_id"]) ?? optionalString(nested["open_id"]);
@@ -463,6 +501,34 @@ function providerIdentity(
     );
 }
 
+function validateDiscoveredAccounts(
+  attempt: ConnectionAttempt,
+  accounts: readonly ConnectionAccount[],
+): void {
+  if (accounts.length === 0)
+    fail("oauth.accounts", "The provider returned no connected accounts", "invalid_input");
+  const seen = new Set<string>();
+
+  for (const item of accounts) {
+    const { ref } = item;
+
+    if (
+      ref.kind !== "connected-account" ||
+      ref.version !== 1 ||
+      ref.backend !== attempt.backend ||
+      !attempt.platforms.includes(ref.platform) ||
+      !ref.accountId ||
+      seen.has(ref.accountId)
+    )
+      fail(
+        "oauth.accounts",
+        "Provider returned an invalid or duplicate account for this connection attempt",
+        "unauthorized",
+      );
+    seen.add(ref.accountId);
+  }
+}
+
 export function oauthProvider(
   kind: ProviderKind,
   options: OAuthProviderOptions,
@@ -544,17 +610,23 @@ export function oauthProvider(
 
       if (cfg.pkce) form.set("code_verifier", input.attempt.codeVerifier);
 
-      if (options.clientSecret) form.set("client_secret", options.clientSecret);
+      const tokenHeaders = new Headers({
+        "content-type": "application/x-www-form-urlencoded",
+        accept: "application/json",
+      });
+      if (kind === "x" && options.clientSecret)
+        tokenHeaders.set(
+          "authorization",
+          `Basic ${btoa(`${options.clientId}:${options.clientSecret}`)}`,
+        );
+      else if (options.clientSecret) form.set("client_secret", options.clientSecret);
 
       const raw = await request(
         fetcher,
         cfg.token,
         {
           method: "POST",
-          headers: {
-            "content-type": "application/x-www-form-urlencoded",
-            accept: "application/json",
-          },
+          headers: tokenHeaders,
           body: form,
         },
         "oauth.token",
@@ -582,14 +654,32 @@ export function oauthProvider(
       );
 
       providerIdentity(kind, result.accountHint, accounts);
+      validateDiscoveredAccounts(input.attempt, accounts);
 
-      for (const item of accounts)
-        if (options.credentialSink)
-          await options.credentialSink.save({
-            account: item,
-            token: result.token,
-            attempt: input.attempt,
-          });
+      if (options.credentialSink) {
+        const selectedIds = options.selectAccounts
+          ? await options.selectAccounts(accounts, input.attempt)
+          : accounts.map((item) => item.ref.accountId);
+        const selected = new Set(selectedIds);
+
+        if (
+          selected.size !== selectedIds.length ||
+          selectedIds.some((id) => !accounts.some((item) => item.ref.accountId === id))
+        )
+          fail(
+            "oauth.accounts",
+            "Credential selection must contain distinct discovered account IDs",
+            "invalid_input",
+          );
+
+        for (const item of accounts)
+          if (selected.has(item.ref.accountId))
+            await options.credentialSink.save({
+              account: item,
+              token: result.token,
+              attempt: input.attempt,
+            });
+      }
 
       return accounts;
     },
@@ -599,7 +689,7 @@ export function oauthProvider(
 async function discover(
   kind: ProviderKind,
   token: OAuthTokenSet,
-  _hint: string | undefined,
+  hint: string | undefined,
   backend: string,
   fetcher: typeof fetch,
   options: OAuthProviderOptions,
@@ -711,11 +801,22 @@ async function discover(
       options,
     );
 
+    const discoveredId = requiredString(
+      data["id"] ?? data["user_id"],
+      "user id",
+      "instagram.account",
+    );
+    const discoveredUserId = optionalString(data["user_id"]);
+    const discoveredAccountId =
+      hint !== undefined && (hint === discoveredId || hint === discoveredUserId)
+        ? hint
+        : discoveredId;
+
     return [
       account(
         "instagram",
         backend,
-        requiredString(data["user_id"] ?? data["id"], "user id", "instagram.account"),
+        discoveredAccountId,
         typeof data["username"] === "string" ? data["username"] : "Instagram account",
       ),
     ];
@@ -745,7 +846,7 @@ async function discover(
   try {
     acl = await request(
       fetcher,
-      "https://api.linkedin.com/v2/organizationalEntityAcls?q=roleAssignee&projection=(elements*(organizationalTarget,role))",
+      "https://api.linkedin.com/rest/organizationAcls?q=roleAssignee",
       { headers: { ...auth, "LinkedIn-Version": version } },
       "linkedin.organizations",
       options,
@@ -763,12 +864,18 @@ async function discover(
     const row = asRecord(entry, "linkedin.organizations");
 
     const target =
-      typeof row["organizationalTarget"] === "string" ? row["organizationalTarget"] : "";
+      typeof row["organizationTarget"] === "string"
+        ? row["organizationTarget"]
+        : typeof row["organizationalTarget"] === "string"
+          ? row["organizationalTarget"]
+          : "";
 
     const role = row["role"];
 
     if (
-      (role !== "ADMINISTRATOR" && role !== "DIRECT_SPONSORED_CONTENT_POSTER") ||
+      (role !== "ADMINISTRATOR" &&
+        role !== "CONTENT_ADMINISTRATOR" &&
+        role !== "DIRECT_SPONSORED_CONTENT_POSTER") ||
       !/^urn:li:organization:[a-zA-Z0-9_-]+$/.test(target)
     )
       return [];
@@ -883,7 +990,16 @@ export async function refreshOAuthToken(
     [cfg.clientKey]: options.clientId,
   });
 
-  if (options.clientSecret) form.set("client_secret", options.clientSecret);
+  const refreshHeaders = new Headers({
+    "content-type": "application/x-www-form-urlencoded",
+    accept: "application/json",
+  });
+  if (kind === "x" && options.clientSecret)
+    refreshHeaders.set(
+      "authorization",
+      `Basic ${btoa(`${options.clientId}:${options.clientSecret}`)}`,
+    );
+  else if (options.clientSecret) form.set("client_secret", options.clientSecret);
 
   const next = tokenSet(
     await request(
@@ -891,10 +1007,7 @@ export async function refreshOAuthToken(
       cfg.token,
       {
         method: "POST",
-        headers: {
-          "content-type": "application/x-www-form-urlencoded",
-          accept: "application/json",
-        },
+        headers: refreshHeaders,
         body: form,
       },
       "oauth.refresh",
