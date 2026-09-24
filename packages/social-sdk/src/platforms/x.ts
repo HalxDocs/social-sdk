@@ -895,6 +895,307 @@ export function x(options: XOptions): import("../core/adapter.js").SocialAdapter
     return string(data["id"]);
   }
 
+  const xChunkBytes = 1024 * 1024;
+  const xMaxVideoBytes = 512 * 1024 * 1024;
+  const xMaxGifBytes = 15 * 1024 * 1024;
+  const xMaxStatusPolls = 30;
+
+  type XChunkedCategory = "tweet_video" | "tweet_gif";
+
+  function chunkedCategory(media: MediaAttachment): XChunkedCategory | undefined {
+    if (media.source.kind !== "blob") return undefined;
+
+    if (media.kind === "video" && media.mimeType === "video/mp4") return "tweet_video";
+
+    if (media.kind === "image" && media.mimeType === "image/gif") return "tweet_gif";
+
+    return undefined;
+  }
+
+  function chunkedLimits(media: MediaAttachment, category: XChunkedCategory): void {
+    const size = media.source.kind === "blob" ? media.source.blob.size : 0;
+    const maxBytes = category === "tweet_video" ? xMaxVideoBytes : xMaxGifBytes;
+
+    if (size <= 0 || size > maxBytes)
+      throw new SocialError({
+        code: "invalid_input",
+        operation: "media.upload",
+        message:
+          category === "tweet_video"
+            ? "X video uploads require a non-empty MP4 Blob up to 512 MiB."
+            : "X GIF uploads require a non-empty GIF Blob up to 15 MiB.",
+      });
+  }
+
+  function mediaHttpError(error: HttpError): SocialError {
+    if (error.kind === "cancelled")
+      return new SocialError({
+        code: "cancelled",
+        operation: "media.upload",
+        message: "X media upload was cancelled before completion.",
+        upstreamStatus: error.status,
+      });
+
+    if (error.kind === "timeout")
+      return new SocialError({
+        code: "timeout",
+        operation: "media.upload",
+        message: "X media upload exceeded its elapsed budget. Reconcile before retrying.",
+        upstreamStatus: error.status,
+        retryDisposition: { kind: "never" },
+      });
+
+    if (error.status === 401)
+      return new SocialError({
+        code: "reconnect_required",
+        operation: "media.upload",
+        message: "X rejected the media upload credentials. Reconnect before retrying.",
+        upstreamStatus: error.status,
+        retryDisposition: { kind: "after-reconnect" },
+      });
+
+    if (error.status === 429)
+      return new SocialError({
+        code: "rate_limited",
+        operation: "media.upload",
+        message: "X rate-limited the media upload.",
+        upstreamStatus: error.status,
+        retryDisposition:
+          error.retryAfterMs === undefined
+            ? { kind: "never" }
+            : { kind: "after-delay", delayMs: error.retryAfterMs },
+      });
+
+    if (error.status === 413)
+      return new SocialError({
+        code: "media_error",
+        operation: "media.upload",
+        message: "Media chunk rejected by X (payload too large).",
+        upstreamStatus: error.status,
+        retryDisposition: { kind: "never" },
+      });
+
+    return new SocialError({
+      code: "media_error",
+      operation: "media.upload",
+      message: error.message,
+      upstreamStatus: error.status,
+      retryDisposition: { kind: "never" },
+    });
+  }
+
+  async function chunkedJson(
+    path: string,
+    body: JsonObject,
+    context: AdapterOperationContext,
+  ): Promise<JsonObject> {
+    requireUserToken("media.upload");
+    let result: unknown;
+
+    try {
+      result = await http({
+        url: new URL(`https://api.x.com${path}`),
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${options.auth.accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+        timeoutMs: remainingBudget(context),
+        // oxlint-disable-next-line anti-slop/no-conditional-empty-object-spread -- validated boundary or fixture contract.
+        ...(context.signal ? { signal: context.signal } : {}),
+      });
+    } catch (error) {
+      if (!(error instanceof HttpError)) throw error;
+
+      throw mediaHttpError(error);
+    }
+
+    return object(object(result)["data"]);
+  }
+
+  async function appendChunk(
+    mediaId: string,
+    segmentIndex: number,
+    chunk: Blob,
+    context: AdapterOperationContext,
+  ): Promise<void> {
+    requireUserToken("media.upload");
+    const body = new FormData();
+    body.set("segment_index", String(segmentIndex));
+    body.set("media", chunk, `chunk-${segmentIndex}`);
+
+    try {
+      await http({
+        url: new URL(`https://api.x.com/2/media/upload/${encodeURIComponent(mediaId)}/append`),
+        method: "POST",
+        headers: { Authorization: `Bearer ${options.auth.accessToken}` },
+        body,
+        timeoutMs: remainingBudget(context),
+        // oxlint-disable-next-line anti-slop/no-conditional-empty-object-spread -- validated boundary or fixture contract.
+        ...(context.signal ? { signal: context.signal } : {}),
+      });
+    } catch (error) {
+      if (!(error instanceof HttpError)) throw error;
+
+      throw mediaHttpError(error);
+    }
+  }
+
+  async function readMediaStatus(
+    mediaId: string,
+    context: AdapterOperationContext,
+  ): Promise<{ state: string; checkAfterSecs: number }> {
+    requireUserToken("media.upload");
+    let result: unknown;
+
+    try {
+      result = await http({
+        url: new URL(
+          `https://api.x.com/2/media/upload?media_id=${encodeURIComponent(mediaId)}`,
+        ),
+        method: "GET",
+        headers: { Authorization: `Bearer ${options.auth.accessToken}` },
+        timeoutMs: remainingBudget(context),
+        // oxlint-disable-next-line anti-slop/no-conditional-empty-object-spread -- validated boundary or fixture contract.
+        ...(context.signal ? { signal: context.signal } : {}),
+      });
+    } catch (error) {
+      if (!(error instanceof HttpError)) throw error;
+
+      throw mediaHttpError(error);
+    }
+
+    const data = object(object(result)["data"]);
+    const processing = data["processing_info"];
+
+    if (processing === undefined) return { state: "succeeded", checkAfterSecs: 0 };
+
+    const info = object(processing);
+    const state = optionalString(info["state"]) ?? "unknown";
+    const checkAfter = optionalNumber(info["check_after_secs"]);
+
+    return {
+      state,
+      checkAfterSecs:
+        checkAfter !== undefined && Number.isFinite(checkAfter) && checkAfter >= 0
+          ? Math.min(checkAfter, 60)
+          : 0,
+    };
+  }
+
+  function boundedWait(milliseconds: number, context: AdapterOperationContext): Promise<void> {
+    if (milliseconds <= 0) return Promise.resolve();
+
+    context.signal?.throwIfAborted();
+
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => {
+        context.signal?.removeEventListener("abort", onAbort);
+        resolve();
+      }, milliseconds);
+
+      const onAbort = () => {
+        clearTimeout(timer);
+        reject(context.signal?.reason ?? new Error("Aborted"));
+      };
+
+      context.signal?.addEventListener("abort", onAbort, { once: true });
+    });
+  }
+
+  async function uploadVideoOrGif(
+    media: MediaAttachment,
+    context: AdapterOperationContext,
+  ): Promise<string> {
+    requireUserToken("media.upload");
+    const category = chunkedCategory(media);
+
+    if (category === undefined || media.source.kind !== "blob")
+      throw new SocialError({
+        code: "invalid_input",
+        operation: "media.upload",
+        message: "X chunked upload requires a video/mp4 or image/gif Blob.",
+      });
+
+    chunkedLimits(media, category);
+    const blob = media.source.blob;
+    const totalBytes = blob.size;
+
+    const initialized = await chunkedJson(
+      "/2/media/upload/initialize",
+      {
+        media_category: category,
+        total_bytes: totalBytes,
+        mime_type: media.mimeType ?? "",
+      },
+      context,
+    );
+    const mediaId = string(initialized["id"]);
+    const segmentCount = Math.ceil(totalBytes / xChunkBytes);
+
+    for (let segmentIndex = 0; segmentIndex < segmentCount; segmentIndex++) {
+      context.signal?.throwIfAborted();
+      const start = segmentIndex * xChunkBytes;
+      const end = Math.min(start + xChunkBytes, totalBytes);
+      const chunk = blob.slice(start, end, media.mimeType ?? "");
+
+      await appendChunk(mediaId, segmentIndex, chunk, context);
+    }
+
+    const finalized = await chunkedJson(
+      `/2/media/upload/${encodeURIComponent(mediaId)}/finalize`,
+      {},
+      context,
+    );
+    const finalizedId = optionalString(finalized["id"]) ?? mediaId;
+    const processing = finalized["processing_info"];
+
+    if (processing === undefined) return finalizedId;
+
+    let state = optionalString(object(processing)["state"]) ?? "pending";
+    let checkAfter = optionalNumber(object(processing)["check_after_secs"]) ?? 0;
+
+    for (let poll = 0; poll < xMaxStatusPolls; poll++) {
+      if (state === "succeeded") return finalizedId;
+
+      if (state === "failed")
+        throw new SocialError({
+          code: "media_error",
+          operation: "media.upload",
+          message: "X failed to process the uploaded media. No post was created.",
+          retryDisposition: { kind: "never" },
+        });
+
+      await boundedWait(
+        Number.isFinite(checkAfter) && checkAfter > 0 ? Math.min(checkAfter, 60) * 1000 : 0,
+        context,
+      );
+
+      const status = await readMediaStatus(finalizedId, context);
+      state = status.state;
+      checkAfter = status.checkAfterSecs;
+    }
+
+    if (state === "succeeded") return finalizedId;
+
+    throw new SocialError({
+      code: "timeout",
+      operation: "media.upload",
+      message: "X media processing did not complete in time. Reconcile before retrying.",
+      retryDisposition: { kind: "never" },
+    });
+  }
+
+  async function uploadXMedia(
+    media: MediaAttachment,
+    context: AdapterOperationContext,
+  ): Promise<string> {
+    if (chunkedCategory(media) !== undefined) return uploadVideoOrGif(media, context);
+
+    return uploadImage(media, context);
+  }
+
   async function createPost(
     account: ConnectedAccountRef,
     text: string,
@@ -943,10 +1244,10 @@ export function x(options: XOptions): import("../core/adapter.js").SocialAdapter
           platform: "x",
           operation: "posts.publish",
           availability: "available" as const,
-          formats: ["text" as const, "image" as const],
+          formats: ["text" as const, "image" as const, "video" as const],
           requiredScopes: ["tweet.read", "tweet.write", "users.read", "media.write"],
           notes:
-            "User-context OAuth2 token; current X API access/billing required. Up to four static JPEG/PNG image Blobs, each at most 5 MiB. Video/GIF processing is outside this slice.",
+            "User-context OAuth2 token; current X API access/billing required. Up to four static JPEG/PNG image Blobs, each at most 5 MiB, or one MP4 video up to 512 MiB / one GIF up to 15 MiB via 1 MiB chunked upload with bounded processing poll. Post attach can still reject over-duration video with 403.",
         },
         ...[
           "accounts.read",
@@ -1080,13 +1381,18 @@ export function x(options: XOptions): import("../core/adapter.js").SocialAdapter
         {
           platform: "x",
           operation: "media.video",
-          availability: "not-implemented-by-adapter" as const,
+          availability: "available" as const,
           formats: ["video" as const],
+          requiredScopes: ["tweet.read", "tweet.write", "users.read", "media.write"],
+          notes:
+            "MP4 Blob chunked INIT/APPEND/FINALIZE with 1 MiB segments and bounded STATUS poll honoring check_after_secs.",
         },
         {
           platform: "x",
           operation: "media.gif",
-          availability: "not-implemented-by-adapter" as const,
+          availability: "available" as const,
+          requiredScopes: ["tweet.read", "tweet.write", "users.read", "media.write"],
+          notes: "GIF Blob chunked upload; large GIFs process asynchronously before attach.",
         },
         {
           platform: "x",
@@ -1299,11 +1605,23 @@ export function x(options: XOptions): import("../core/adapter.js").SocialAdapter
         )
           fail("x.options", "Provide only a supported replySettings value.");
         const media = target.content.media ?? [];
+        const hasChunked = media.some((item) => chunkedCategory(item) !== undefined);
 
-        if (media.length > 4) fail("x.media_count", "Attach up to four images.");
+        if (hasChunked && media.length !== 1)
+          fail("x.media_count", "Attach a single video or GIF per post.");
+        else if (!hasChunked && media.length > 4)
+          fail("x.media_count", "Attach up to four images.");
 
         for (const item of media) {
-          if (
+          const category = chunkedCategory(item);
+
+          if (category === "tweet_video") {
+            if (item.source.kind !== "blob" || item.source.blob.size > xMaxVideoBytes)
+              fail("x.video_size", "Video exceeds the 512 MiB limit.");
+          } else if (category === "tweet_gif") {
+            if (item.source.kind !== "blob" || item.source.blob.size > xMaxGifBytes)
+              fail("x.gif_size", "GIF exceeds the 15 MiB limit.");
+          } else if (
             item.kind !== "image" ||
             item.source.kind !== "blob" ||
             !["image/jpeg", "image/png"].includes(item.mimeType ?? "")
@@ -1325,7 +1643,7 @@ export function x(options: XOptions): import("../core/adapter.js").SocialAdapter
         authorize(target.account, context);
         const ids: string[] = [];
 
-        for (const media of target.content.media ?? []) ids.push(await uploadImage(media, context));
+        for (const media of target.content.media ?? []) ids.push(await uploadXMedia(media, context));
         const settings = target.options === undefined ? {} : object(target.options);
 
         return createPost(
