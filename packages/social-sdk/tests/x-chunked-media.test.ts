@@ -531,3 +531,69 @@ it("X native uploadVideo and uploadGif return attachable media IDs", async () =>
   });
   assert.deepEqual(categories, ["tweet_video", "tweet_gif"]);
 });
+
+it("X reports a failure on the final STATUS poll as media_error", async () => {
+  let statusCalls = 0;
+  const social = createSocial({
+    backend: x({
+      auth,
+      fetch: chunkedFetch({
+        finalize: () =>
+          Response.json({
+            data: { id: "m1", processing_info: { state: "pending", check_after_secs: 0 } },
+          }),
+        status: () => {
+          statusCalls++;
+
+          return Response.json({
+            data: {
+              id: "m1",
+              processing_info: {
+                state: statusCalls === 30 ? "failed" : "in_progress",
+                check_after_secs: 0,
+              },
+            },
+          });
+        },
+      }),
+    }),
+  });
+
+  const result = await social.posts.publish({
+    targets: [{ account }],
+    content: videoContent(videoBlob(10)),
+  });
+
+  assert.equal(statusCalls, 30);
+  assert.equal(result.outcomes[0]?.state, "failed");
+
+  if (result.outcomes[0]?.state === "failed") assert.equal(result.outcomes[0].code, "media_error");
+});
+
+it("X treats a malformed INITIALIZE response as a definite media failure", async () => {
+  let tweets = 0;
+  const social = createSocial({
+    backend: x({
+      auth,
+      fetch: async (input) => {
+        const url = new URL(String(input));
+
+        if (url.pathname === "/2/media/upload/initialize") return Response.json({ data: {} });
+
+        tweets++;
+
+        return Response.json({ data: { id: "post" } });
+      },
+    }),
+  });
+
+  const result = await social.posts.publish({
+    targets: [{ account }],
+    content: videoContent(videoBlob(10)),
+  });
+
+  assert.equal(tweets, 0);
+  assert.equal(result.outcomes[0]?.state, "failed");
+
+  if (result.outcomes[0]?.state === "failed") assert.equal(result.outcomes[0].code, "media_error");
+});

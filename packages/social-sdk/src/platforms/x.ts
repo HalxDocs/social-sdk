@@ -1102,9 +1102,7 @@ export function x(options: XOptions): import("../core/adapter.js").SocialAdapter
       state: optionalString(info["state"]) ?? "pending",
       // X always sends check_after_secs while processing; a missing value must not spin the poll.
       checkAfterSecs:
-        checkAfter !== undefined && Number.isFinite(checkAfter) && checkAfter >= 0
-          ? Math.min(checkAfter, 60)
-          : 1,
+        checkAfter !== undefined && Number.isFinite(checkAfter) && checkAfter >= 0 ? checkAfter : 1,
     };
   }
 
@@ -1150,6 +1148,20 @@ export function x(options: XOptions): import("../core/adapter.js").SocialAdapter
   }
 
   async function uploadVideoOrGif(
+    media: MediaAttachment,
+    context: AdapterOperationContext,
+  ): Promise<string> {
+    try {
+      return await chunkedUpload(media, context);
+    } catch (error) {
+      // Malformed upload responses fail before any post request, so they are definite failures.
+      if (error instanceof HttpError) throw mediaHttpError(error);
+
+      throw error;
+    }
+  }
+
+  async function chunkedUpload(
     media: MediaAttachment,
     context: AdapterOperationContext,
   ): Promise<string> {
@@ -1200,7 +1212,7 @@ export function x(options: XOptions): import("../core/adapter.js").SocialAdapter
 
     let { state, checkAfterSecs } = processingState(object(processing));
 
-    for (let poll = 0; poll < xMaxStatusPolls; poll++) {
+    for (let poll = 0; ; poll++) {
       if (state === "succeeded") return finalizedId;
 
       if (state === "failed")
@@ -1211,12 +1223,12 @@ export function x(options: XOptions): import("../core/adapter.js").SocialAdapter
           retryDisposition: { kind: "never" },
         });
 
+      if (poll >= xMaxStatusPolls) break;
+
       await processingWait(checkAfterSecs * 1000, context);
 
       ({ state, checkAfterSecs } = await readMediaStatus(finalizedId, context));
     }
-
-    if (state === "succeeded") return finalizedId;
 
     throw new SocialError({
       code: "timeout",
